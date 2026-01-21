@@ -1,0 +1,3079 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracker Donaciones Pocket Ants</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0f9f1 0%, #e6f7ee 100%);
+            color: #333;
+            padding-top: clamp(8px, 2vw, 12px);
+            padding-bottom: clamp(8px, 2vw, 12px);
+            padding-left: 3mm;
+            padding-right: 3mm;
+            margin: 0 auto;
+            min-height: 100vh;
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+            font-weight: 700; /* Make all text bold */
+        }
+
+        .container {
+            width: 100%;
+            max-width: 100%; /* Allow it to fill the available space */
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: clamp(8px, 2vw, 12px);
+        }
+
+        /* Header principal */
+        .header {
+            background: linear-gradient(135deg, #1a8c42 0%, #2db75e 100%);
+            color: white;
+            padding: clamp(12px, 3vw, 16px);
+            border-radius: clamp(10px, 2.5vw, 14px);
+            box-shadow: 0 4px 12px rgba(26, 140, 66, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+            transform: rotate(30deg);
+        }
+
+        .header h1 {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(6px, 1.5vw, 8px);
+            font-size: clamp(16px, 4.5vw, 19px);
+            font-weight: 700;
+            position: relative;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        /* Botones de acción */
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: clamp(8px, 2vw, 10px);
+            width: 100%;
+        }
+
+        .btn {
+            padding: clamp(8px, 2vw, 10px) clamp(10px, 2.5vw, 12px);
+            border-radius: clamp(10px, 2.5vw, 12px);
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(2px, 0.5vw, 4px);
+            font-size: clamp(11px, 2.5vw, 14px);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            min-height: clamp(32px, 8vw, 40px);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+            border: none;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-manual {
+            background: linear-gradient(135deg, #8e24aa 0%, #ab47bc 100%);
+            flex: 1;
+            min-width: 0;
+        }
+
+        .btn-config {
+            background: linear-gradient(135deg, #f57c00 0%, #ff9800 100%);
+            flex: 1;
+            min-width: 0;
+        }
+
+        .btn-help {
+            background: linear-gradient(135deg, #ff9800 0%, #ffca28 100%);
+            width: clamp(36px, 9vw, 40px);
+            height: clamp(36px, 9vw, 40px);
+            border-radius: 50%;
+            font-size: clamp(18px, 5vw, 20px);
+            padding: 0;
+            gap: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: none;
+            color: #222;
+            font-weight: bold;
+            min-height: unset;
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            width: clamp(32px, 8vw, 36px);
+            height: clamp(32px, 8vw, 36px);
+            border-radius: 50%;
+            font-size: clamp(14px, 3.5vw, 16px);
+            padding: 0;
+            gap: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: none;
+            color: white;
+            font-weight: bold;
+            min-height: unset;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+        }
+
+        .btn-edit:active {
+            transform: scale(0.95);
+        }
+
+        .btn-edit-mode {
+            background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+            width: clamp(36px, 9vw, 40px);
+            height: clamp(36px, 9vw, 40px);
+            border-radius: 50%;
+            font-size: clamp(16px, 4vw, 18px);
+            padding: 0;
+            gap: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: none;
+            color: white;
+            font-weight: bold;
+            min-height: unset;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+        }
+
+        .btn-edit-mode.active {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            box-shadow: 0 0 15px rgba(40, 167, 69, 0.5);
+        }
+
+        .btn-undo {
+            background: linear-gradient(135deg, #fd7e14 0%, #e55d00 100%);
+            padding: clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 10px);
+            border-radius: clamp(6px, 1.5vw, 8px);
+            color: white;
+            font-weight: 600;
+            font-size: clamp(11px, 2.8vw, 13px);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            transition: all 0.2s;
+        }
+
+        .btn-undo:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(253, 126, 20, 0.3);
+        }
+
+        .btn-undo:active {
+            transform: scale(0.95);
+        }
+
+        .btn-undo:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+            transform: none;
+        }
+
+        /* Secciones (modales) */
+        .section {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .section.active {
+            display: flex;
+        }
+
+        .section-content {
+            background: white;
+            border-radius: 16px;
+            padding: clamp(20px, 5vw, 30px);
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .section-content h2 {
+            font-size: clamp(18px, 4vw, 22px);
+            margin-bottom: 15px;
+            color: #1a8c42;
+            text-align: center;
+        }
+
+        .section-content p {
+            margin-bottom: 10px;
+            font-size: clamp(12px, 3vw, 14px);
+        }
+
+        .section-content textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            margin-bottom: 15px;
+            resize: vertical;
+        }
+
+        .section-content input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            margin: 8px 0 15px 0;
+        }
+
+        .section-content label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: clamp(12px, 3vw, 14px);
+        }
+
+        .section-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .section-buttons .btn {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);
+        }
+
+        .btn-cancel {
+            background: linear-gradient(135deg, #6c757d 0%, #868e96 100%);
+        }
+
+        /* Status mensajes */
+        #status {
+            display: none;
+            padding: clamp(10px, 2.5vw, 12px);
+            border-radius: clamp(8px, 2vw, 10px);
+            margin: 10px 0;
+            text-align: center;
+            font-weight: 600;
+            font-size: clamp(12px, 3vw, 14px);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        #status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+            display: block;
+        }
+
+        #status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+            display: block;
+        }
+
+        #status.processing {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffeeba;
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Leyenda */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: clamp(10px, 3vw, 15px);
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: clamp(10px, 2.5vw, 12px);
+            color: #555;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .legend-color.green {
+            background: #d4edda;
+        }
+
+        .legend-color.yellow {
+            background: #fff3cd;
+        }
+
+        .legend-color.red {
+            background: #f8d7da;
+        }
+
+        /* Tabla estilo Excel */
+        .data-table {
+            background-color: white;
+            border-radius: clamp(10px, 2.5vw, 14px);
+            /* overflow-x: auto; - Removed to allow sticky header */
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+            border: 1px solid rgba(0,0,0,0.05);
+            width: calc(100% - 2mm);
+            margin: 0 1mm;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Sin márgenes en móvil */
+        @media screen and (max-width: 768px) {
+            .data-table {
+                margin: 0;
+                width: 100%;
+            }
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: clamp(8px, 2vw, 10px);
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #8A2BE2 0%, #9932CC 100%); /* Purple gradient */
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 6px rgba(138, 43, 226, 0.25); /* Adjusted shadow for purple */
+        }
+
+        thead th {
+            padding: clamp(8px, 2vw, 10px) clamp(3px, 1vw, 5px);
+            text-align: center;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: clamp(7px, 1.8vw, 9px);
+            border-right: 1px solid rgba(255,255,255,0.5);
+            white-space: nowrap;
+            line-height: 1.2;
+        }
+
+        thead th:last-child {
+            border-right: none;
+        }
+
+        tbody tr {
+            border-bottom: 1.5px solid black;
+            transition: background-color 0.2s;
+        }
+
+        tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        tbody td {
+            padding: clamp(6px, 1.5vw, 8px) clamp(3px, 1vw, 5px);
+            text-align: center;
+            border-right: 1px solid black;
+            font-size: clamp(9px, 2.2vw, 11px);
+            word-break: break-word;
+        }
+
+        tbody td:last-child {
+            border-right: none;
+        }
+
+        tbody td:first-child {
+            font-weight: 600;
+            text-align: left;
+            padding-left: clamp(4px, 1.5vw, 8px);
+        }
+
+        tfoot td {
+            padding: clamp(8px, 2vw, 10px) clamp(3px, 1vw, 5px);
+            text-align: center;
+            font-weight: 700;
+            background: #f8f9fa;
+            border-top: 2px solid #0d47a1;
+            border-right: 1px solid #e0e0e0;
+            font-size: clamp(9px, 2.2vw, 11px);
+        }
+
+        tfoot td:last-child {
+            border-right: none;
+        }
+
+        /* Colores por rendimiento */
+        .green {
+            background-color: #d4edda !important;
+            color: #155724;
+        }
+
+        .yellow {
+            background-color: #fff3cd !important;
+            color: #856404;
+        }
+
+        .red {
+            background-color: #f8d7da !important;
+            color: #721c24;
+        }
+
+        .absent-player td {
+            background: #f1f3f5 !important;
+            color: #adb5bd !important;
+            font-style: italic;
+        }
+
+        /* Estilo para la fila seleccionada */
+        .selected-row td {
+            border: 4px solid #8A2BE2 !important; /* Borde morado para resaltar */
+            /* No cambiar color de fondo ni de texto */
+        }
+        .selected-row td:first-child {
+            border-left: 4px solid #8A2BE2 !important;
+        }
+        .selected-row td:last-child {
+            border-right: 4px solid #8A2BE2 !important;
+        }
+        .selected-row + tr td {
+            border-top: 0 !important; /* Evitar doble borde entre filas seleccionadas */
+        }
+        .selected-row td:not(:first-child) {
+            border-left: 0 !important; /* Para que parezca un borde continuo */
+        }
+        .selected-row td:not(:last-child) {
+            border-right: 0 !important;
+        }
+        .selected-row td span {
+            /* Revertir cambios de color de texto */
+            color: inherit !important;
+            text-shadow: inherit !important;
+        }
+
+        /* Medallas de ranking */
+        .rank-medal {
+            display: inline-block;
+            margin-left: 4px;
+            font-size: clamp(12px, 3vw, 14px);
+        }
+
+        /* Footer de info */
+        .footer-info {
+            text-align: center;
+            color: #6c757d;
+            font-size: clamp(10px, 2.5vw, 12px);
+            margin-top: 15px;
+            padding: 10px;
+        }
+
+        .footer-info p {
+            margin: 5px 0;
+        }
+
+        .btn-backup {
+            background: transparent;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .btn-backup:hover {
+            background: #f8f9fa;
+            color: #495057;
+            border-color: #adb5bd;
+        }
+
+        .btn-check-similarity {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);
+            width: clamp(36px, 9vw, 40px);
+            height: clamp(36px, 9vw, 40px);
+            border-radius: 50%;
+            font-size: clamp(18px, 5vw, 20px);
+            padding: 0;
+            gap: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: none;
+            color: white;
+            font-weight: bold;
+            min-height: unset;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+        }
+
+        .btn-sync {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            width: clamp(36px, 9vw, 40px);
+            height: clamp(36px, 9vw, 40px);
+            border-radius: 50%;
+            font-size: clamp(16px, 4vw, 18px);
+            padding: 0;
+            gap: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: none;
+            color: white;
+            font-weight: bold;
+            min-height: unset;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+        }
+
+        .btn-sync:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(23, 162, 184, 0.3);
+        }
+
+        .btn-sync:active {
+            transform: scale(0.95);
+        }
+
+        .btn-sync:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+            transform: none;
+        }
+
+        .unsaved-indicator {
+            display: none;
+            color: #ff9800;
+            font-size: clamp(11px, 2.8vw, 13px);
+            font-weight: bold;
+            text-align: center;
+            margin-top: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .unsaved-indicator.show {
+            display: block;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Panel de revisión de similitud */
+        .review-content {
+            background: white;
+            border-radius: 16px;
+            padding: 15px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .review-content h2 {
+            font-size: clamp(16px, 3.5vw, 20px);
+            margin-bottom: 8px;
+            color: #1a8c42;
+            text-align: center;
+        }
+
+        .review-content p {
+            text-align: center;
+            color: #666;
+            margin-bottom: 10px;
+            font-size: clamp(11px, 2.8vw, 13px);
+        }
+
+        .review-items-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .review-item {
+            background: white;
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 8px;
+            border: 1px solid #dee2e6;
+            transition: all 0.2s;
+            min-height: 50px;
+        }
+
+        .review-item:hover {
+            border-color: #007bff;
+            box-shadow: 0 4px 12px rgba(0,123,255,0.1);
+        }
+
+        .review-item.matched {
+            border-left: 4px solid #ffc107;
+            background: #fffdf5;
+        }
+
+        .review-item.identical {
+            border-left: 4px solid #007bff;
+            background: #e7f3ff;
+        }
+
+        .review-item.new {
+            border-left: 4px solid #28a745;
+            background: #f0fff4;
+        }
+
+        .review-item.selected {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .review-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 0;
+            flex-wrap: nowrap;
+        }
+
+        .review-name-section {
+            flex: 0 0 auto;
+            min-width: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2px;
+        }
+
+        .review-name-section .review-similarity,
+        .review-name-section .review-donation {
+            font-size: clamp(9px, 2.2vw, 11px);
+            padding: 1px 4px;
+        }
+
+        .review-label {
+            font-size: clamp(8px, 2vw, 10px);
+            color: #666;
+            margin-bottom: 1px;
+            font-weight: 600;
+        }
+
+        .review-name {
+            font-size: clamp(12px, 3vw, 14px);
+            font-weight: 700;
+            color: #333;
+            padding: 4px 6px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+
+        .review-name-input {
+            font-size: clamp(11px, 2.8vw, 13px);
+            font-weight: 700;
+            color: #333;
+            padding: 3px 5px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            width: 100px;
+            height: 26px;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            flex-shrink: 0;
+        }
+
+        .review-name-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+        }
+
+        .review-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: nowrap;
+            align-items: center;
+        }
+
+        .review-donation {
+            font-size: clamp(10px, 2.5vw, 12px);
+            color: #666;
+            padding: 3px 6px;
+            background: #fff3cd;
+            border-radius: 4px;
+            border: 1px solid #ffeeba;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .review-similarity {
+            font-size: clamp(10px, 2.5vw, 12px);
+            color: #666;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .similarity-high {
+            background: #d1ecf1;
+            color: #0056b3;
+        }
+
+        .similarity-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .similarity-perfect {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-assign {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: clamp(10px, 2.5vw, 12px);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-assign:not([disabled]) {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        }
+
+        .btn-create-new:not([disabled]) {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        }
+
+        .btn-assign:hover {
+            transform: scale(1.02);
+            box-shadow: 0 1px 4px rgba(0,123,255,0.2);
+        }
+
+        .btn-assign:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+            transform: none;
+        }
+
+        .btn-create-new {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: clamp(10px, 2.5vw, 12px);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-create-new:hover {
+            transform: scale(1.02);
+            box-shadow: 0 1px 4px rgba(40,167,69,0.2);
+        }
+
+        .btn-create-new:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+            transform: none;
+        }
+
+        .review-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Responsive para móviles */
+        @media screen and (max-width:768px) {
+            .review-row {
+                flex-direction: column;
+            }
+
+            .review-name-section {
+                min-width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .review-actions {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Modal de ayuda */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: clamp(20px, 5vw, 30px);
+            border-radius: 16px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #888;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .modal-content h2 {
+            color: #1a8c42;
+            margin-bottom: 15px;
+            font-size: clamp(18px, 4vw, 22px);
+        }
+
+        .modal-content ul {
+            list-style-position: inside;
+            padding-left: 0;
+        }
+
+        .modal-content li {
+            margin-bottom: 10px;
+            font-size: clamp(12px, 3vw, 14px);
+            line-height: 1.5;
+        }
+
+        /* Responsividad para pantallas muy pequeñas */
+        @media screen and (max-width: 360px) {
+            .btn-manual span,
+            .btn-config span {
+                display: none;
+            }
+            
+            .btn-manual::after {
+                content: '⌨️';
+                font-size: 18px;
+            }
+            
+            .btn-config::after {
+                content: '⚙️';
+                font-size: 18px;
+            }
+        }
+
+        /* Asegurar que nada se salga del viewport */
+        * {
+            max-width: 100%;
+        }
+
+        /* Botón de configuración */
+        .btn-settings {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            width: clamp(36px, 9vw, 40px);
+            height: clamp(36px, 9vw, 40px);
+            border-radius: 50%;
+            font-size: clamp(16px, 4vw, 18px);
+            padding: 0;
+            gap: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: none;
+            color: white;
+            font-weight: bold;
+            min-height: unset;
+        }
+
+        /* Items de configuración */
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #ddd;
+            font-size: clamp(14px, 3.5vw, 16px);
+            font-weight: 600;
+        }
+
+        .setting-item input[type="checkbox"] {
+            transform: scale(1.5);
+            margin-left: 10px;
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+        }
+
+        .setting-description {
+            font-size: clamp(11px, 2.8vw, 13px);
+            font-weight: 400;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        /* Botón de instalación */
+        .btn-install {
+            width: 100%;
+            margin-top: 15px;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            padding: 12px 20px;
+            font-size: clamp(13px, 3.3vw, 15px);
+        }
+
+        .btn-install:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header principal -->
+        <div class="header">
+            <h1>🐜 Donaciones Invencibles</h1>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="action-buttons">
+            <button class="btn btn-manual" onclick="showManual()">
+                <span>⌨️ Entrada Manual</span>
+            </button>
+            <button class="btn btn-help" onclick="showInfo()">?</button>
+            <button class="btn-save" id="saveBtn" onclick="manualSave()">✓</button>
+            <button class="btn-sync" id="syncBtn" onclick="forceSync()" style="display:none;" title="Sincronizar datos">🔄</button>
+            <button class="btn btn-edit-mode" id="editModeBtn" onclick="toggleEditMode()" style="display:none;" title="Modo Edición">📝</button>
+            <button class="btn btn-settings" onclick="showSettings()">⚙️</button>
+            <button class="btn btn-config" onclick="configGoal()">
+                <span>⚙️ Configurar Meta</span>
+            </button>
+        </div>
+
+        <!-- Indicador de cambios sin guardar -->
+        <div class="unsaved-indicator" id="unsavedIndicator">⚠️ Hay cambios sin guardar en Firebase</div>
+
+        <!-- Status mensajes -->
+        <div id="status"></div>
+
+        <!-- Tabla de datos -->
+        <div class="data-table">
+            <table id="table">
+                <thead class="table-header" id="tableHeader">
+                    <tr>
+                        <th>NOMBRE</th>
+                        <th>TENÍA</th>
+                        <th>TIENE</th>
+                        <th>SEMANAL</th>
+                        <th>Ø DIARIO</th>
+                        <th>%META</th>
+                        <th>ACUMULADO</th>
+                        <th>TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+                <tfoot></tfoot>
+            </table>
+        </div>
+
+        <!-- Footer info -->
+        <div class="footer-info">
+            <p>📱 Última actualización: <span id="lastUpdateTime">-</span></p>
+            <p>🔄 Última sincronización: <span id="lastSyncTime">Nunca</span></p>
+            <p>🗓️ Semana iniciada: <span id="weekStartTime">-</span></p>
+            <p id="admin-login-container" style="margin-top: 10px;"></p>
+            <div id="backupButtons" style="display: none; margin-top: 10px;">
+                <button class="btn-backup" id="backupBtn" onclick="backupData()">💾 Copia de Seguridad</button>
+                <button class="btn-backup" id="restoreBtn" onclick="document.getElementById('restoreFile').click()">📂 Restaurar Copia</button>
+                <input type="file" id="restoreFile" accept=".txt" style="display: none;" onchange="restoreBackup(event)">
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de entrada manual -->
+    <div id="manualSection" class="section">
+        <div class="section-content">
+            <h2>📝 Entrada Manual de Datos</h2>
+            <p><strong>Formato:</strong> nombre,donación (una por línea)</p>
+            <p><strong>Ejemplo:</strong><br>Juan,25000<br>María,18500</p>
+            <textarea id="manualInput" placeholder="Ingresa los datos aquí..."></textarea>
+            <div class="section-buttons">
+                <button class="btn btn-success" onclick="processManual()">✅ Iniciar Semana</button>
+                <button class="btn btn-check-similarity" onclick="checkSimilarity()">🔍 Verificar Similitud</button>
+                <button class="btn btn-cancel" onclick="hideManual()">❌ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de configuración -->
+    <div id="configSection" class="section">
+        <div class="section-content">
+            <h2>⚙️ Configuración de Meta</h2>
+            <label for="newGoal"><strong>Meta diaria por jugador:</strong></label>
+            <input type="number" id="newGoal" value="15000" min="1000" max="100000" step="1000">
+            <div class="section-buttons">
+                <button class="btn btn-success" onclick="saveGoal()">💾 Guardar Meta</button>
+                <button class="btn btn-cancel" onclick="hideConfig()">❌ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de revisión de similitud -->
+    <div id="reviewSection" class="section">
+        <div class="review-content">
+            <h2>🔍 Revisar Similitud de Nombres</h2>
+            <p>Verifica los nombres nuevos y asigna a usuarios existentes si hay similitud.</p>
+
+            <div id="reviewItemsList" class="review-items-list"></div>
+
+            <div id="reviewSummary" class="review-summary"></div>
+
+            <div class="review-buttons">
+                <button class="btn btn-success" onclick="confirmNameMapping()">✅ Confirmar y Procesar</button>
+                <button class="btn btn-cancel" onclick="hideReview()">❌ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de ayuda -->
+    <div id="infoModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideInfo()">&times;</span>
+            <h2>📖 Guía de Columnas</h2>
+            <ul>
+                <li><strong>NOMBRE:</strong> Nombre del jugador. Top 5 muestran medallas: 🥇🥈🥉🏅🏅</li>
+                <li><strong>TENÍA:</strong> Donación total antes de la última actualización.</li>
+                <li><strong>TIENE:</strong> Donación total actual del jugador.</li>
+                <li><strong>SEMANAL:</strong> Total donado durante la semana actual.</li>
+                <li><strong>Ø DIARIO:</strong> Promedio de donación diaria.</li>
+                <li><strong>%META:</strong> Porcentaje de la meta semanal completado.</li>
+                <li><strong>ACUMULADO:</strong> Excedente de donaciones que cubre déficits.</li>
+                <li><strong>TOTAL:</strong> Suma de todas las donaciones registradas.</li>
+                <li><strong>ACCIONES:</strong> Botón para editar los datos del jugador (solo visible para admin).</li>
+            </ul>
+            <h2 style="margin-top: 20px;">📊 Leyenda de Colores</h2>
+            <div class="legend" style="margin-top: 5px;">
+                <div class="legend-item">
+                    <div class="legend-color green"></div>
+                    <span>≥90% Meta</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color yellow"></div>
+                    <span>70-89% Meta</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color red"></div>
+                    <span>&lt;70% Meta</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de Login -->
+    <div id="loginSection" class="section">
+        <div class="section-content">
+            <h2>🔐 Iniciar Sesión de Administrador</h2>
+            <label for="loginEmail"><strong>Correo electrónico:</strong></label>
+            <input type="email" id="loginEmail" placeholder="correo@ejemplo.com">
+            <label for="loginPass"><strong>Contraseña:</strong></label>
+            <input type="password" id="loginPass" placeholder="Ingresa la contraseña">
+            <div class="section-buttons">
+                <button class="btn btn-success" onclick="login()">✅ Iniciar Sesión</button>
+                <button class="btn btn-cancel" onclick="hideLogin()">❌ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de configuración -->
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideSettings()">&times;</span>
+            <h2>⚙️ Configuración</h2>
+
+            <div class="setting-item">
+                <div>
+                    <div>🔔 Notificaciones</div>
+                    <div class="setting-description">Recibe avisos cuando hay cambios de datos</div>
+                </div>
+                <input type="checkbox" id="notifToggle" onchange="toggleNotifications()">
+            </div>
+
+            <button class="btn btn-install" id="installBtn" onclick="installApp()" style="display:none;">
+                📱 Instalar App
+            </button>
+
+            <div class="section-buttons" style="margin-top: 20px;">
+                <button class="btn btn-cancel" onclick="hideSettings()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- INICIO DE LA INTEGRACIÓN CON FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBey3djeWd5dvhRWpt_RZcqVq3BtwugdIw",
+            authDomain: "donacionespwav2.firebaseapp.com",
+            projectId: "donacionespwav2",
+            storageBucket: "donacionespwav2.firebasestorage.app",
+            messagingSenderId: "854523614232",
+            appId: "1:854523614232:web:0b537fa35a0d9f47ef9f6d",
+            measurementId: "G-5N0MWZT1QC"
+        };
+
+        // Configuración global
+        const CONFIG = {
+            DEFAULT_GOAL: 15000
+        };
+
+        // Variables globales
+        let players = {};
+        let goalDaily = CONFIG.DEFAULT_GOAL;
+        let lastUpdate = Date.now();
+        let weekStart = getWeekStart();
+        let auth;
+        let firestoreDB;
+
+        // Nuevas variables para PWA
+        let db;
+        let notificationsEnabled = false;
+        let deferredPrompt = null;
+        let lastDataTimestamp = null;
+        let indexedDBInitialized = false;
+
+        const DB_NAME = 'DonacionesDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'data';
+
+        // --- FUNCIONES DE INDEXEDDB (OFFLINE) ---
+
+        function initIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = (event) => {
+                    console.error('Error al abrir IndexedDB:', event.target.error);
+                    reject(event.target.error);
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    console.log('IndexedDB inicializado correctamente');
+                    indexedDBInitialized = true;
+                    resolve(db);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        const objectStore = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        objectStore.createIndex('timestamp', 'timestamp', { unique: false });
+                    }
+                    console.log('IndexedDB actualizado a versión', DB_VERSION);
+                };
+            });
+        }
+
+        async function saveToLocal(data) {
+            if (!db) return;
+
+            try {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const objectStore = transaction.objectStore(STORE_NAME);
+
+                const record = {
+                    id: 'main',
+                    timestamp: Date.now(),
+                    players: data.players,
+                    goalDaily: data.goalDaily,
+                    lastUpdate: data.lastUpdate,
+                    weekStart: data.weekStart
+                };
+
+                objectStore.put(record);
+
+                return new Promise((resolve, reject) => {
+                    transaction.oncomplete = () => {
+                        console.log('Datos guardados en IndexedDB');
+                        resolve();
+                    };
+                    transaction.onerror = () => {
+                        console.error('Error al guardar en IndexedDB');
+                        reject();
+                    };
+                });
+            } catch (error) {
+                console.error('Error en saveToLocal:', error);
+            }
+        }
+
+        async function loadFromLocal() {
+            if (!db) return null;
+
+            try {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const objectStore = transaction.objectStore(STORE_NAME);
+                const request = objectStore.get('main');
+
+                return new Promise((resolve, reject) => {
+                    request.onsuccess = () => {
+                        const result = request.result;
+                        if (result) {
+                            console.log('Datos cargados desde IndexedDB');
+                            lastDataTimestamp = result.timestamp;
+                        }
+                        resolve(result);
+                    };
+                    request.onerror = () => {
+                        console.error('Error al cargar desde IndexedDB');
+                        reject();
+                    };
+                });
+            } catch (error) {
+                console.error('Error en loadFromLocal:', error);
+                return null;
+            }
+        }
+
+        function notifyNewData() {
+            if (!notificationsEnabled || Notification.permission !== 'granted') return;
+
+            const playerCount = Object.keys(players).length;
+            new Notification('📊 Datos actualizados', {
+                body: `${playerCount} jugadores con nuevas donaciones`,
+                icon: 'icon-192x192.png',
+                badge: 'icon-192x192.png',
+                tag: 'data-update',
+                renotify: true
+            });
+        }
+
+        // --- FUNCIONES DE CONFIGURACIÓN ---
+
+        function toggleNotifications() {
+            const toggle = document.getElementById('notifToggle');
+
+            if (toggle.checked) {
+                if (!('Notification' in window)) {
+                    showStatus('❌ Tu navegador no soporta notificaciones', 'error');
+                    toggle.checked = false;
+                    return;
+                }
+
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        notificationsEnabled = true;
+                        localStorage.setItem('notificationsEnabled', true);
+                        showStatus('✅ Notificaciones activadas', 'success');
+
+                        new Notification('Donaciones Invencibles', {
+                            body: '¡Notificaciones activadas correctamente!',
+                            icon: 'icon-192x192.png'
+                        });
+                    } else {
+                        toggle.checked = false;
+                        showStatus('❌ Permisos de notificación denegados', 'error');
+                    }
+                });
+            } else {
+                notificationsEnabled = false;
+                localStorage.setItem('notificationsEnabled', false);
+                showStatus('🔕 Notificaciones desactivadas', 'success');
+            }
+        }
+
+        function loadNotificationPreference() {
+            notificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
+            const toggle = document.getElementById('notifToggle');
+            if (toggle) toggle.checked = notificationsEnabled;
+        }
+
+        function showSettings() {
+            hideAllSections();
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function hideSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        function installApp() {
+            if (!deferredPrompt) {
+                showStatus('❌ No se puede instalar la app en este momento', 'error');
+                return;
+            }
+
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('Usuario aceptó la instalación');
+                    document.getElementById('installBtn').style.display = 'none';
+                    showStatus('✅ App instalada correctamente', 'success');
+                } else {
+                    console.log('Usuario rechazó la instalación');
+                }
+                deferredPrompt = null;
+            });
+        }
+
+        // --- INICIALIZACIÓN Y AUTENTICACIÓN ---
+
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                // Inicializar Firebase y los servicios
+                const app = firebase.initializeApp(firebaseConfig);
+                firestoreDB = firebase.firestore();
+                auth = firebase.auth();
+
+                initAuth();
+                initDB();
+                updateEditModeButton();
+                updateAdminButtons();
+            } catch (error) {
+                console.error("Error inicializando Firebase:", error);
+                showStatus('Error crítico al iniciar la app.', 'error');
+            }
+
+            // Guardar los textos del encabezado una sola vez
+            const headerTexts = Array.from(document.querySelectorAll('#table thead th')).map(th => th.innerHTML);
+
+            // Listener para la selección de filas de la tabla
+            const tableBody = document.querySelector('#table tbody');
+            if (tableBody) {
+                tableBody.addEventListener('click', function(e) {
+                    const targetRow = e.target.closest('tr');
+
+                    // Asegurarse de que el clic fue en una fila de datos válida
+                    if (!targetRow || !tableBody.contains(targetRow) || targetRow.classList.contains('injected-header')) return;
+
+                    const isAlreadySelected = targetRow.classList.contains('selected-row');
+
+                    // Siempre remover el encabezado inyectado y la selección anterior primero
+                    const existingInjectedHeader = tableBody.querySelector('.injected-header');
+                    if (existingInjectedHeader) {
+                        existingInjectedHeader.remove();
+                    }
+                    const allRows = tableBody.querySelectorAll('tr');
+                    allRows.forEach(row => {
+                        row.classList.remove('selected-row');
+                    });
+
+                    // Si la fila no estaba ya seleccionada, seleccionarla ahora e inyectar el header si es necesario
+                    if (!isAlreadySelected) {
+                        targetRow.classList.add('selected-row');
+
+                        // No inyectar el header para la primera fila de datos
+                        const isFirstRow = tableBody.querySelector('tr:not(.injected-header)') === targetRow;
+                        
+                        if (!isFirstRow) {
+                            const newHeaderRow = document.createElement('tr');
+                            newHeaderRow.classList.add('injected-header', 'table-header');
+                            newHeaderRow.style.position = 'static'; // Evitar comportamiento 'sticky' no deseado
+                            newHeaderRow.innerHTML = headerTexts.map(text => `<th>${text}</th>`).join('');
+                            targetRow.parentNode.insertBefore(newHeaderRow, targetRow);
+                        }
+                    }
+                });
+            }
+        });
+
+        async function initAuth() {
+            try {
+                // Usamos persistencia local para mantener al usuario logueado
+                await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+                auth.onAuthStateChanged(user => {
+                    updateUIAfterAuthStateChange(user);
+                });
+            } catch (error) {
+                 showStatus('Error de autenticación: ' + error.message, 'error');
+                 console.error('Auth Init Error:', error);
+            }
+        }
+        
+        function updateUIAfterAuthStateChange(user) {
+            const adminLoginContainer = document.getElementById('admin-login-container');
+            if (!adminLoginContainer) return;
+
+            if (user) {
+                // Usuario logueado
+                adminLoginContainer.innerHTML = `<a href="#" onclick="logout(); return false;" style="color: #6c757d; text-decoration: none;">Cerrar Sesión (Admin)</a>`;
+            } else {
+                // Usuario no logueado
+                adminLoginContainer.innerHTML = `<a href="#" onclick="showLogin(); return false;" style="color: #6c757d; text-decoration: none;">Login Admin</a>`;
+                hideAllSections();
+            }
+
+            updateEditModeButton();
+            updateAdminButtons();
+        }
+
+        function updateAdminButtons() {
+            const saveBtn = document.getElementById('saveBtn');
+            const backupButtons = document.getElementById('backupButtons');
+            const syncBtn = document.getElementById('syncBtn');
+
+            if (auth.currentUser) {
+                // Admin - Mostrar botones
+                if (saveBtn) saveBtn.style.display = 'flex';
+                if (backupButtons) backupButtons.style.display = 'block';
+                if (syncBtn) syncBtn.style.display = 'flex';
+            } else {
+                // No admin - Ocultar botones
+                if (saveBtn) saveBtn.style.display = 'none';
+                if (backupButtons) backupButtons.style.display = 'none';
+                if (syncBtn) syncBtn.style.display = 'none';
+            }
+        }
+
+        async function initDB() {
+            try {
+                await initIndexedDB();
+
+                const localData = await loadFromLocal();
+
+                if (localData) {
+                    players = localData.players || {};
+                    goalDaily = localData.goalDaily || CONFIG.DEFAULT_GOAL;
+                    lastUpdate = localData.lastUpdate || Date.now();
+                    weekStart = localData.weekStart || getWeekStart();
+                    lastDataTimestamp = localData.timestamp;
+
+                    console.log('Cargando datos desde IndexedDB');
+                } else {
+                    await loadData();
+                }
+
+                renderTable();
+                updateTimeDisplays();
+            } catch (error) {
+                showStatus('Error al inicializar la base de datos: ' + error.message, 'error');
+                console.error('DB Error:', error);
+            }
+        }
+
+        // --- FUNCIONES DE AUTENTICACIÓN ---
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPass').value;
+
+            if (!email || !password) {
+                showStatus('Por favor, ingresa email y contraseña.', 'error');
+                return;
+            }
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                hideLogin();
+                showStatus('¡Sesión iniciada correctamente!', 'success');
+            } catch (error) {
+                showStatus('Error al iniciar sesión: ' + error.message, 'error');
+                console.error('Login Error:', error);
+            }
+        }
+
+        async function logout() {
+            try {
+                await auth.signOut();
+                showStatus('Sesión cerrada.', 'success');
+            } catch (error) {
+                showStatus('Error al cerrar sesión: ' + error.message, 'error');
+                console.error('Logout Error:', error);
+            }
+        }
+
+        // --- LÓGICA DE DATOS (Firestore) ---
+
+        async function loadData() {
+            try {
+                const docRef = firestoreDB.collection('data').doc('main');
+                const doc = await docRef.get();
+
+                if (doc.exists) {
+                    const data = doc.data();
+                    players = data.players || {};
+                    goalDaily = data.goalDaily || CONFIG.DEFAULT_GOAL;
+                    lastUpdate = data.lastUpdate || Date.now();
+                    weekStart = data.weekStart || getWeekStart();
+                    lastSyncTime = lastUpdate;
+                    updateSyncTimeDisplay();
+                }
+                renderTable();
+                updateTimeDisplays();
+            } catch (error) {
+                showStatus('Error al cargar datos: ' + error.message, 'error');
+                console.error('Load Error:', error);
+            }
+        }
+
+        function getWeekStart() {
+            const d = new Date();
+            d.setHours(0, 0, 0, 0);
+            const day = d.getDay();
+            const monday = new Date(d);
+            monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+            return monday.getTime();
+        }
+
+        let lastSyncTime = null;
+
+        async function forceSync() {
+            try {
+                const unsavedIndicator = document.getElementById('unsavedIndicator');
+                const hasUnsavedChanges = unsavedIndicator && unsavedIndicator.classList.contains('show');
+
+                if (hasUnsavedChanges) {
+                    const confirmed = confirm(
+                        '⚠️ Tienes cambios sin guardar en Firebase.\n\n' +
+                        '¿Deseas sincronizar de todas formas?\n\n' +
+                        'Esto sobrescribirá tus cambios locales con los datos del servidor.'
+                    );
+
+                    if (!confirmed) {
+                        showStatus('ℹ️ Sincronización cancelada', 'success', 2000);
+                        return;
+                    }
+                }
+
+                showStatus('🔄 Sincronizando datos...', 'processing');
+
+                const docRef = firestoreDB.collection('data').doc('main');
+                const doc = await docRef.get();
+
+                if (doc.exists) {
+                    const data = doc.data();
+                    const newDataTimestamp = data.lastUpdate || Date.now();
+
+                    if (!lastSyncTime || newDataTimestamp > lastSyncTime) {
+                        players = data.players || {};
+                        goalDaily = data.goalDaily || CONFIG.DEFAULT_GOAL;
+                        lastUpdate = data.lastUpdate || Date.now();
+                        weekStart = data.weekStart || getWeekStart();
+                        lastSyncTime = newDataTimestamp;
+
+                        await saveToLocal({
+                            players,
+                            goalDaily,
+                            lastUpdate,
+                            weekStart,
+                            timestamp: newDataTimestamp
+                        });
+
+                        renderTable();
+                        updateTimeDisplays();
+                        updateSyncTimeDisplay();
+                        hideUnsavedIndicator();
+
+                        console.log('Datos sincronizados forzadamente:', newDataTimestamp);
+                        showStatus('✅ Datos sincronizados correctamente', 'success', 3000);
+                    } else {
+                        updateSyncTimeDisplay();
+                        showStatus('ℹ️ Los datos ya están actualizados', 'success', 2000);
+                    }
+                } else {
+                    showStatus('⚠️ No hay datos en Firebase', 'error', 3000);
+                }
+            } catch (error) {
+                showStatus('Error al sincronizar: ' + error.message, 'error', 3000);
+                console.error('Sync Error:', error);
+            }
+        }
+
+        function updateSyncTimeDisplay() {
+            const lastSyncElement = document.getElementById('lastSyncTime');
+            if (!lastSyncElement) return;
+
+            if (lastSyncTime) {
+                const date = new Date(lastSyncTime);
+                const options = {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                };
+                lastSyncElement.textContent = date.toLocaleDateString('es-ES', options);
+            } else {
+                lastSyncElement.textContent = 'Nunca';
+            }
+        }
+
+        async function saveData() {
+            try {
+                const dataToSave = {
+                    players,
+                    goalDaily,
+                    lastUpdate: Date.now(),
+                    weekStart
+                };
+
+                await firestoreDB.collection('data').doc('main').set(dataToSave);
+                await saveToLocal(dataToSave);
+
+                lastUpdate = dataToSave.lastUpdate;
+                lastDataTimestamp = lastUpdate;
+                lastSyncTime = Date.now();
+                updateTimeDisplays();
+                updateSyncTimeDisplay();
+                hideUnsavedIndicator();
+            } catch (error) {
+                showStatus('Error al guardar datos: ' + error.message, 'error');
+                console.error('Save Error:', error);
+            }
+        }
+
+        function showUnsavedIndicator() {
+            const indicator = document.getElementById('unsavedIndicator');
+            if (indicator) {
+                indicator.classList.add('show');
+            }
+        }
+
+        function hideUnsavedIndicator() {
+            const indicator = document.getElementById('unsavedIndicator');
+            if (indicator) {
+                indicator.classList.remove('show');
+            }
+        }
+
+        async function manualSave() {
+            if (!auth.currentUser) {
+                showStatus('❌ Debes iniciar sesión como admin.', 'error');
+                return;
+            }
+            if (!confirm('¿Estás seguro de que deseas guardar los cambios en Firebase? Esto actualizará los datos para todos los usuarios.')) {
+                return;
+            }
+            await saveData();
+            showStatus('✅ Datos guardados en Firebase correctamente!', 'success');
+        }
+        
+        // --- FUNCIONES DE RENDERIZADO Y FORMATO ---
+
+        function formatNumber(num) {
+            if (typeof num !== 'number' || isNaN(num)) return '0';
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+            return num.toLocaleString('es-ES');
+        }
+
+        function getColorClass(percentage, type) {
+            if (type === 'percentage') {
+                if (percentage >= 90) return 'green';
+                if (percentage >= 70) return 'yellow';
+                return 'red';
+            }
+            if (type === 'total') {
+                if (percentage >= 100) return 'grad-green';
+                return 'grad-red';
+            }
+            return '';
+        }
+
+        function calculatePercentages(player) {
+            const semanal = (player.current || 0) - (player.previous || 0);
+            const weeklyGoal = goalDaily * 7;
+            const avgDaily = semanal / 7;
+            const avgDailyPerc = (avgDaily / goalDaily) * 100;
+            
+            const availableExcess = Math.max(0, player.accumulatedExcess || 0);
+            const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
+            const coveredWithAccumulated = Math.min(weeklyDeficit, availableExcess);
+            const effectiveDonation = semanal + coveredWithAccumulated;
+            const metaPerc = coveredWithAccumulated > 0
+                ? Math.min(100, (effectiveDonation / weeklyGoal) * 100)
+                : (semanal / weeklyGoal) * 100;
+
+            const totalPerc = (player.total || 0) / weeklyGoal * 100;
+
+            return {
+                semanal: Math.max(0, semanal),
+                avgDaily: Math.max(0, avgDaily),
+                avgDailyPerc: Math.max(0, avgDailyPerc),
+                metaPerc: Math.max(0, metaPerc),
+                totalPerc: Math.max(0, totalPerc)
+            };
+        }
+
+        function formatExtraDonationTime(totalDays) {
+            if (totalDays < 1) return '';
+            const daysPerWeek = 7, weeksPerMonth = 4, monthsPerYear = 12;
+            const daysPerMonth = daysPerWeek * weeksPerMonth;
+            const daysPerYear = daysPerMonth * monthsPerYear;
+            let remainingDays = totalDays;
+            const years = Math.floor(remainingDays / daysPerYear);
+            remainingDays %= daysPerYear;
+            const months = Math.floor(remainingDays / daysPerMonth);
+            remainingDays %= daysPerMonth;
+            const weeks = Math.floor(remainingDays / daysPerWeek);
+            remainingDays %= daysPerWeek;
+            const days = Math.floor(remainingDays);
+            let parts = [];
+            if (years > 0) parts.push(`${years} año${years > 1 ? 's' : ''}`);
+            if (months > 0) parts.push(`${months} mes${months > 1 ? 'es' : ''}`);
+            if (weeks > 0) parts.push(`${weeks} semana${weeks > 1 ? 's' : ''}`);
+            if (days > 0) parts.push(`${days} día${days > 1 ? 's' : ''}`);
+            if (parts.length === 0) return '';
+            return `(${parts.join(' ')})`;
+        }
+
+        function renderTable() {
+            const tbody = document.querySelector('#table tbody');
+            const tfoot = document.querySelector('#table tfoot');
+            const tableHeader = document.querySelector('#tableHeader');
+            if (!tbody || !tfoot || !tableHeader) return;
+            tbody.innerHTML = '';
+
+            // Actualizar header dinámicamente según modo edición
+            if (isEditMode) {
+                tableHeader.innerHTML = `
+                    <tr>
+                        <th>NOMBRE</th>
+                        <th>TENÍA</th>
+                        <th>TIENE</th>
+                        <th>SEMANAL</th>
+                        <th>Ø DIARIO</th>
+                        <th>%META</th>
+                        <th>ACUMULADO</th>
+                        <th>TOTAL</th>
+                        <th>ACCIONES</th>
+                    </tr>
+                `;
+            } else {
+                tableHeader.innerHTML = `
+                    <tr>
+                        <th>NOMBRE</th>
+                        <th>TENÍA</th>
+                        <th>TIENE</th>
+                        <th>SEMANAL</th>
+                        <th>Ø DIARIO</th>
+                        <th>%META</th>
+                        <th>ACUMULADO</th>
+                        <th>TOTAL</th>
+                    </tr>
+                `;
+            }
+            
+            const playerNames = Object.keys(players);
+            if (playerNames.length === 0) {
+                const colspan = isEditMode ? 9 : 8;
+                tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center; padding: 40px; color: #6c757d;">No hay datos. Inicia sesión como admin para añadir jugadores.</td></tr>`;
+                tfoot.innerHTML = '';
+                return;
+            }
+
+            const sorted = playerNames.sort((a, b) => {
+                const playerA = players[a], playerB = players[b];
+                const aIsAbsent = playerA.absent || false, bIsAbsent = playerB.absent || false;
+                if (aIsAbsent !== bIsAbsent) return aIsAbsent ? 1 : -1;
+                if (aIsAbsent && bIsAbsent) return a.localeCompare(b);
+                const aTotal = playerA?.total || 0, bTotal = playerB?.total || 0;
+                return bTotal - aTotal;
+            });
+
+            let maxWeeklyDonation = 0;
+            sorted.forEach(name => {
+                const player = players[name];
+                const semanal = (player.current || 0) - (player.previous || 0);
+                if (!player.absent && semanal > maxWeeklyDonation) maxWeeklyDonation = semanal;
+            });
+
+            let totalSemanal = 0, totalAcumulado = 0, totalAcumuladoExceso = 0, playersActive = 0, activePlayerRank = 0;
+
+            sorted.forEach(name => {
+                const player = players[name];
+                if (!player) return;
+                player.weeklyTotal = (player.current || 0) - (player.previous || 0);
+                player.accumulatedExcess = player.accumulatedExcess || 0;
+                player.isNew = player.isNew || false;
+                const row = tbody.insertRow();
+
+                if (player.absent) {
+                    row.className = 'absent-player';
+                    const colspan = isEditMode ? 8 : 7;
+                    row.innerHTML = `<td>${name}</td><td colspan="${colspan}">❌ Baneado</td>`;
+                    return;
+                }
+
+                if (player.isNew) {
+                    if (isEditMode) {
+                        row.innerHTML = `<td style="font-weight: 500; text-align: center;">${name}<br><span style="color: #28a745; font-size: 0.9em; font-weight: bold;">NUEVO</span></td><td>-</td><td>${formatNumber(player.current || 0)}</td><td>0</td><td>0</td><td>0%</td><td>0</td><td>0</td><td></td>`;
+                    } else {
+                        row.innerHTML = `<td style="font-weight: 500; text-align: center;">${name}<br><span style="color: #28a745; font-size: 0.9em; font-weight: bold;">NUEVO</span></td><td>-</td><td>${formatNumber(player.current || 0)}</td><td>0</td><td>0</td><td>0%</td><td>0</td><td>0</td>`;
+                    }
+                    return;
+                }
+
+                // Si está en modo edición para este jugador
+                if (editingPlayer === name) {
+                    const semanal = (player.current || 0) - (player.previous || 0);
+                    const weeklyGoal = goalDaily * 7;
+                    const weeklyExcess = Math.max(0, semanal - weeklyGoal);
+                    const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
+                    const availableExcess = Math.max(0, player.accumulatedExcess || 0);
+                    const deficitDraw = Math.min(weeklyDeficit, availableExcess);
+                    const finalPotentialExcess = availableExcess - deficitDraw + weeklyExcess;
+
+                    const calc = calculatePercentages(player);
+
+                    let nameHtml = name;
+                    if (activePlayerRank <= 5) {
+                        const starColors = ['#FFD700', '#FFC107', '#FFFF00', '#FFFFE0', '#FFFACD'];
+                        const starIcons = ['🌟', '✶', '★', '✶', '⭑'];
+                        const rank = activePlayerRank - 1;
+                        const starShadow = '-1px -1px 0 #4A4A4A, 1px -1px 0 #4A4A4A, -1px 1px 0 #4A4A4A, 1px 1px 0 #4A4A4A';
+                        let currentStarFontSize = activePlayerRank === 2 ? '20px' : '18px';
+                        nameHtml += `<span style="position: absolute; top: 1px; right: 4px; font-size: ${currentStarFontSize}; color: ${starColors[rank]}; text-shadow: ${starShadow};" title="Top ${activePlayerRank} donador total">${starIcons[rank]}</span>`;
+                    }
+
+                    row.innerHTML = `
+                        <td style="font-weight: 600; padding: 16px 5px; position: relative;">
+                            <input type="text" id="edit-name-${name}" value="${name}"
+                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
+                        </td>
+                        <td>
+                            <input type="number" id="edit-previous-${name}" value="${player.previous || 0}"
+                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
+                        </td>
+                        <td>
+                            <input type="number" id="edit-current-${name}" value="${player.current || 0}"
+                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
+                        </td>
+                        <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
+                            ${formatNumber(calc.semanal)}
+                        </td>
+                        <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
+                            ${formatNumber(calc.avgDaily)}
+                        </td>
+                        <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
+                            ${calc.metaPerc.toFixed(1)}%
+                        </td>
+                        <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
+                            ${formatNumber(finalPotentialExcess)}
+                        </td>
+                        <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
+                            ${formatNumber(player.total || 0)}
+                        </td>
+                        <td style="text-align: center; padding: clamp(4px, 1vw, 8px);">
+                            <button class="btn-save" onclick="saveEditing()" title="Guardar" style="margin-right: clamp(2px, 0.5vw, 4px); font-size: clamp(12px, 3vw, 16px); padding: clamp(4px, 1vw, 8px);">✓</button>
+                            <button class="btn btn-cancel" onclick="cancelEditing()" title="Cancelar" style="font-size: clamp(12px, 3vw, 16px); padding: clamp(4px, 1vw, 8px);">✗</button>
+                        </td>
+                    `;
+                    return;
+                }
+
+                playersActive++;
+                activePlayerRank++;
+                let nameHtml = name;
+                if (activePlayerRank <= 5) {
+                    const starColors = ['#FFD700', '#FFC107', '#FFFF00', '#FFFFE0', '#FFFACD'];
+                    const starIcons = ['🌟', '✶', '★', '✶', '⭑'];
+                    const rank = activePlayerRank - 1;
+                    const starShadow = '-1px -1px 0 #4A4A4A, 1px -1px 0 #4A4A4A, -1px 1px 0 #4A4A4A, 1px 1px 0 #4A4A4A';
+                    let currentStarFontSize = activePlayerRank === 2 ? '20px' : '18px';
+                    nameHtml += `<span style="position: absolute; top: 1px; right: 4px; font-size: ${currentStarFontSize}; color: ${starColors[rank]}; text-shadow: ${starShadow};" title="Top ${activePlayerRank} donador total">${starIcons[rank]}</span>`;
+                }
+                
+                const semanal = (player.current || 0) - (player.previous || 0);
+                const weeklyGoal = goalDaily * 7;
+                const weeklyExcess = Math.max(0, semanal - weeklyGoal);
+                const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
+                const availableExcess = Math.max(0, player.accumulatedExcess || 0);
+                const deficitDraw = Math.min(weeklyDeficit, availableExcess);
+                const finalPotentialExcess = availableExcess - deficitDraw + weeklyExcess;
+
+                const calc = calculatePercentages(player);
+                let metaContent = `${calc.metaPerc.toFixed(1)}%`;
+                if (maxWeeklyDonation > 0 && (player.current - player.previous) === maxWeeklyDonation) {
+                    metaContent += ' <span title="Mayor donación de la semana">⭐</span>';
+                }
+
+                let deficitHtml = '';
+                if (deficitDraw > 0) {
+                    deficitHtml = `<br/><span style="color: red;">(-${formatNumber(deficitDraw)})</span>`;
+                }
+
+                totalSemanal += calc.semanal;
+                totalAcumulado += (player.total || 0);
+                totalAcumuladoExceso += finalPotentialExcess;
+
+                if (isEditMode && auth.currentUser) {
+                    const actionsHtml = `<td style="text-align: center; padding: 8px;">
+                        <button class="btn btn-edit" onclick="enableEditing('${name}')" title="Editar jugador">✏️</button>
+                    </td>`;
+                    row.innerHTML = `<td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}</td><td>${formatNumber(player.previous || 0)}</td><td>${formatNumber(player.current || 0)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(calc.semanal)}</td><td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td><td>${formatNumber(finalPotentialExcess)}${deficitHtml}${formatExtraDonationTime(finalPotentialExcess / (goalDaily || 1))}</td><td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>${actionsHtml}`;
+                } else {
+                    row.innerHTML = `<td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}</td><td>${formatNumber(player.previous || 0)}</td><td>${formatNumber(player.current || 0)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(calc.semanal)}</td><td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td><td>${formatNumber(finalPotentialExcess)}${deficitHtml}${formatExtraDonationTime(finalPotentialExcess / (goalDaily || 1))}</td><td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>`;
+                }
+            });
+
+            const avgSemanal = playersActive > 0 ? totalSemanal / playersActive : 0;
+            if (isEditMode) {
+                tfoot.innerHTML = `<tr class="total-row"><td colspan="9">📊 TOTALES (${playersActive} jugadores): ${formatNumber(totalSemanal)} donaciones semanales | Promedio: ${formatNumber(avgSemanal)} | Acumulado: ${formatNumber(totalAcumulado)}</td></tr>`;
+            } else {
+                tfoot.innerHTML = `<tr class="total-row"><td colspan="8">📊 TOTALES (${playersActive} jugadores): ${formatNumber(totalSemanal)} donaciones semanales | Promedio: ${formatNumber(avgSemanal)} | Acumulado: ${formatNumber(totalAcumulado)}</td></tr>`;
+            }
+        }
+
+        function updateTimeDisplays() {
+            const lastUpdateEl = document.getElementById('lastUpdateTime');
+            const weekStartEl = document.getElementById('weekStartTime');
+            if (lastUpdateEl) lastUpdateEl.textContent = new Date(lastUpdate).toLocaleString('es-ES');
+            if (weekStartEl) weekStartEl.textContent = new Date(weekStart).toLocaleDateString('es-ES');
+        }
+
+        // --- FUNCIONES DE EDICIÓN INLINE (ADMIN) ---
+
+        let editingPlayer = null;
+        let isEditMode = false;
+
+        function toggleEditMode() {
+            if (!auth.currentUser) return showLogin();
+
+            isEditMode = !isEditMode;
+            const btn = document.getElementById('editModeBtn');
+
+            if (isEditMode) {
+                btn.classList.add('active');
+                btn.textContent = '✏️';
+                showStatus('✏️ Modo edición activado. Usa los botones ✏️ para editar jugadores.', 'success');
+            } else {
+                btn.classList.remove('active');
+                btn.textContent = '📝';
+                editingPlayer = null;
+                showStatus('❌ Modo edición desactivado', 'success');
+            }
+
+            renderTable();
+        }
+
+        function updateEditModeButton() {
+            const btn = document.getElementById('editModeBtn');
+            if (!btn) return;
+
+            if (auth.currentUser) {
+                btn.style.display = 'flex';
+            } else {
+                btn.style.display = 'none';
+                isEditMode = false;
+                btn.classList.remove('active');
+                btn.textContent = '📝';
+            }
+        }
+
+        function enableEditing(playerName) {
+            if (!auth.currentUser) return showLogin();
+
+            isEditMode = false;
+            const btn = document.getElementById('editModeBtn');
+            if (btn) {
+                btn.classList.remove('active');
+                btn.textContent = '📝';
+            }
+
+            editingPlayer = playerName;
+            renderTable();
+            showStatus('✏️ Editando jugador: ' + playerName, 'processing');
+        }
+
+        function cancelEditing() {
+            editingPlayer = null;
+            renderTable();
+            showStatus('❌ Edición cancelada', 'success');
+        }
+
+        function saveEditing() {
+            if (!editingPlayer || !auth.currentUser) return;
+
+            const newNameInput = document.getElementById(`edit-name-${editingPlayer}`);
+            const newPrevInput = document.getElementById(`edit-previous-${editingPlayer}`);
+            const newCurrInput = document.getElementById(`edit-current-${editingPlayer}`);
+
+            if (!newNameInput || !newPrevInput || !newCurrInput) {
+                showStatus('❌ Error: No se encontraron campos de edición', 'error');
+                return;
+            }
+
+            const newName = newNameInput.value.trim();
+            const newPrev = parseInt(newPrevInput.value);
+            const newCurr = parseInt(newCurrInput.value);
+
+            if (!newName) {
+                showStatus('❌ El nombre no puede estar vacío', 'error');
+                return;
+            }
+
+            if (isNaN(newPrev) || newPrev < 0) {
+                showStatus('❌ "Tenía" debe ser un número válido (>= 0)', 'error');
+                return;
+            }
+
+            if (isNaN(newCurr) || newCurr < 0) {
+                showStatus('❌ "Tiene" debe ser un número válido (>= 0)', 'error');
+                return;
+            }
+
+            if (newName !== editingPlayer && players[newName]) {
+                showStatus('❌ Ya existe un jugador con ese nombre', 'error');
+                return;
+            }
+
+            if (newName !== editingPlayer) {
+                players[newName] = { ...players[editingPlayer] };
+                delete players[editingPlayer];
+                editingPlayer = newName;
+            }
+
+            players[editingPlayer].previous = newPrev;
+            players[editingPlayer].current = newCurr;
+
+            editingPlayer = null;
+            showUnsavedIndicator();
+            renderTable();
+            showStatus('✅ Cambios guardados. Recuerda pulsar "✓" para guardar en Firebase', 'success');
+        }
+
+        // --- FUNCIONES DE ACTUALIZACIÓN DE DATOS (ADMIN) ---
+
+        function updatePlayers(currentData) {
+            if (!auth.currentUser) return;
+            if (!currentData || Object.keys(currentData).length === 0) {
+                showStatus('❌ No hay datos para procesar', 'error');
+                return;
+            }
+
+            const namesToDelete = Object.keys(players).filter(name => players[name].absent);
+            namesToDelete.forEach(name => { delete players[name]; });
+
+            Object.keys(players).forEach(name => {
+                if (!currentData[name]) players[name].absent = true;
+            });
+
+            Object.keys(currentData).forEach(name => {
+                const current = currentData[name];
+                if (!players[name]) {
+                    players[name] = { previous: 0, current: current, initialDonation: current, total: 0, weeklyTotal: 0, accumulatedExcess: 0, lastSeen: Date.now(), absent: false, isNew: true };
+                } else {
+                    players[name].absent = false;
+                    const previousCurrent = players[name].current || 0;
+                    const current = current;
+
+                    if (current < previousCurrent) {
+                        showStatus(`⚠️ Error: ${name} tiene un valor menor al anterior (${current} < ${previousCurrent})`, 'error');
+                        return;
+                    }
+
+                    const difference = current - previousCurrent;
+                    players[name].previous = previousCurrent;
+                    players[name].current = current;
+                    players[name].lastSeen = Date.now();
+                    players[name].total += difference;
+                    players[name].isNew = false;
+                }
+            });
+
+            showUnsavedIndicator();
+            renderTable();
+        }
+
+        async function startNewWeek() {
+            if (!auth.currentUser) return;
+
+            let maxWeekly = 0;
+            let starHolders = [];
+            Object.values(players).forEach(player => {
+                if (!player.absent && (player.weeklyTotal || 0) > maxWeekly) maxWeekly = player.weeklyTotal;
+            });
+
+            if (maxWeekly > 0) {
+                Object.keys(players).forEach(name => {
+                    if (!players[name].absent && players[name].weeklyTotal === maxWeekly) starHolders.push(name);
+                });
+            }
+
+            const weeklyGoal = goalDaily * 7;
+            Object.keys(players).forEach(name => {
+                const player = players[name];
+                player.hasWeeklyStar = starHolders.includes(name);
+                if (player.absent) return;
+                const weeklyDonation = player.weeklyTotal || 0;
+                if (weeklyDonation >= weeklyGoal) {
+                    player.accumulatedExcess = (player.accumulatedExcess || 0) + (weeklyDonation - weeklyGoal);
+                } else {
+                    const deficit = weeklyGoal - weeklyDonation;
+                    const availableExcess = Math.max(0, player.accumulatedExcess || 0);
+                    const amountToDeduct = Math.min(deficit, availableExcess);
+                    player.accumulatedExcess = availableExcess - amountToDeduct;
+                }
+                player.weeklyTotal = 0;
+            });
+
+            weekStart = getWeekStart();
+            showUnsavedIndicator();
+            renderTable();
+            showStatus('🔄 Nueva semana iniciada correctamente (recuerda guardar en Firebase)', 'success');
+        }
+
+        function levenshteinDistance(str1, str2) {
+            if (!editingPlayer || !auth.currentUser) return;
+
+            const newNameInput = document.getElementById(`edit-name-${editingPlayer}`);
+            const newPrevInput = document.getElementById(`edit-previous-${editingPlayer}`);
+            const newCurrInput = document.getElementById(`edit-current-${editingPlayer}`);
+
+            if (!newNameInput || !newPrevInput || !newCurrInput) {
+                showStatus('❌ Error: No se encontraron campos de edición', 'error');
+                return;
+            }
+
+            const newName = newNameInput.value.trim();
+            const newPrev = parseInt(newPrevInput.value);
+            const newCurr = parseInt(newCurrInput.value);
+
+            if (!newName) {
+                showStatus('❌ El nombre no puede estar vacío', 'error');
+                return;
+            }
+
+            if (isNaN(newPrev) || newPrev < 0) {
+                showStatus('❌ "Tenía" debe ser un número válido (>= 0)', 'error');
+                return;
+            }
+
+            if (isNaN(newCurr) || newCurr < 0) {
+                showStatus('❌ "Tiene" debe ser un número válido (>= 0)', 'error');
+                return;
+            }
+
+            if (newName !== editingPlayer && players[newName]) {
+                showStatus('❌ Ya existe un jugador con ese nombre', 'error');
+                return;
+            }
+
+            if (newName !== editingPlayer) {
+                players[newName] = { ...players[editingPlayer] };
+                delete players[editingPlayer];
+                editingPlayer = newName;
+            }
+
+            players[editingPlayer].previous = newPrev;
+            players[editingPlayer].current = newCurr;
+
+            editingPlayer = null;
+            showUnsavedIndicator();
+            renderTable();
+            showStatus('✅ Cambios guardados. Recuerda pulsar "✓" para guardar en Firebase', 'success');
+        }
+
+        // --- FUNCIONES DE ACTUALIZACIÓN DE DATOS (ADMIN) ---
+
+        function updatePlayers(currentData) {
+            if (!auth.currentUser) return;
+            if (!currentData || Object.keys(currentData).length === 0) {
+                showStatus('❌ No hay datos para procesar', 'error');
+                return;
+            }
+
+            const namesToDelete = Object.keys(players).filter(name => players[name].absent);
+            namesToDelete.forEach(name => { delete players[name]; });
+
+            Object.keys(players).forEach(name => {
+                if (!currentData[name]) players[name].absent = true;
+            });
+
+            Object.keys(currentData).forEach(name => {
+                const current = currentData[name];
+                if (!players[name]) {
+                    players[name] = { previous: 0, current: current, initialDonation: current, total: 0, weeklyTotal: 0, accumulatedExcess: 0, lastSeen: Date.now(), absent: false, isNew: true };
+                } else {
+                    players[name].absent = false;
+                    const previousCurrent = players[name].current || 0;
+                    const current = current;
+
+                    if (current < previousCurrent) {
+                        showStatus(`⚠️ Error: ${name} tiene un valor menor al anterior (${current} < ${previousCurrent})`, 'error');
+                        return;
+                    }
+
+                    const difference = current - previousCurrent;
+                    players[name].previous = previousCurrent;
+                    players[name].current = current;
+                    players[name].lastSeen = Date.now();
+                    players[name].total += difference;
+                    players[name].isNew = false;
+                }
+            });
+
+            showUnsavedIndicator();
+            renderTable();
+        }
+
+        async function startNewWeek() {
+            if (!auth.currentUser) return;
+
+            let maxWeekly = 0;
+            let starHolders = [];
+            Object.values(players).forEach(player => {
+                if (!player.absent && (player.weeklyTotal || 0) > maxWeekly) maxWeekly = player.weeklyTotal;
+            });
+
+            if (maxWeekly > 0) {
+                Object.keys(players).forEach(name => {
+                    if (!players[name].absent && players[name].weeklyTotal === maxWeekly) starHolders.push(name);
+                });
+            }
+
+            const weeklyGoal = goalDaily * 7;
+            Object.keys(players).forEach(name => {
+                const player = players[name];
+                player.hasWeeklyStar = starHolders.includes(name);
+                if (player.absent) return;
+                const weeklyDonation = player.weeklyTotal || 0;
+                if (weeklyDonation >= weeklyGoal) {
+                    player.accumulatedExcess = (player.accumulatedExcess || 0) + (weeklyDonation - weeklyGoal);
+                } else {
+                    const deficit = weeklyGoal - weeklyDonation;
+                    const availableExcess = Math.max(0, player.accumulatedExcess || 0);
+                    const amountToDeduct = Math.min(deficit, availableExcess);
+                    player.accumulatedExcess = availableExcess - amountToDeduct;
+                }
+                player.weeklyTotal = 0;
+            });
+
+            weekStart = getWeekStart();
+            showUnsavedIndicator();
+            renderTable();
+            showStatus('🔄 Nueva semana iniciada correctamente (recuerda guardar en Firebase)', 'success');
+        }
+
+        function levenshteinDistance(str1, str2) {
+            const m = str1.length;
+            const n = str2.length;
+            const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+
+            for (let i = 0; i <= m; i++) dp[i][0] = i;
+            for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+            for (let i = 1; i <= m; i++) {
+                for (let j = 1; j <= n; j++) {
+                    if (str1[i - 1] === str2[j - 1]) {
+                        dp[i][j] = dp[i - 1][j - 1];
+                    } else {
+                        dp[i][j] = Math.min(
+                            dp[i - 1][j] + 1,
+                            dp[i][j - 1] + 1,
+                            dp[i - 1][j - 1] + 1
+                        );
+                    }
+                }
+            }
+
+            return dp[m][n];
+        }
+
+        function calculateSimilarity(str1, str2) {
+            const distance = levenshteinDistance(
+                str1.toLowerCase(),
+                str2.toLowerCase()
+            );
+            const maxLength = Math.max(str1.length, str2.length);
+            if (maxLength === 0) return 100;
+            return Math.round(((maxLength - distance) / maxLength) * 100);
+        }
+
+        function findSimilarNames(newName, existingNames, threshold = 70) {
+            const similar = [];
+            const newNameLower = newName.toLowerCase().trim();
+
+            existingNames.forEach(existingName => {
+                const similarity = calculateSimilarity(newName, existingName);
+                if (similarity >= threshold) {
+                    similar.push({
+                        name: existingName,
+                        similarity: similarity
+                    });
+                }
+            });
+
+            return similar.sort((a, b) => b.similarity - a.similarity);
+        }
+
+        let nameMapping = {};
+        let currentDataForReview = {};
+
+        function checkSimilarity() {
+            const text = document.getElementById('manualInput').value.trim();
+            if (!text) {
+                showStatus('❌ Por favor ingresa algunos datos primero', 'error');
+                return;
+            }
+
+            const currentData = {};
+            const lines = text.split('\n');
+            let processedCount = 0;
+            let hasError = false;
+
+            lines.forEach((line, index) => {
+                line = line.trim();
+                if (!line) return;
+                const parts = line.split(',');
+                if (parts.length !== 2) {
+                    showStatus(`❌ Error en línea ${index + 1}: formato incorrecto.`, 'error');
+                    hasError = true;
+                    return;
+                }
+                const name = parts[0].trim();
+                const num = parseInt(parts[1].trim());
+                if (!name || isNaN(num) || num < 0) {
+                    showStatus(`❌ Error en línea ${index + 1}: datos inválidos.`, 'error');
+                    hasError = true;
+                    return;
+                }
+                currentData[name] = num;
+                processedCount++;
+            });
+
+            if (hasError) return;
+
+            if (processedCount === 0) {
+                showStatus('❌ No hay datos válidos para procesar', 'error');
+                return;
+            }
+
+            const existingNames = Object.keys(players);
+            const newNames = Object.keys(currentData).filter(name => !existingNames.includes(name));
+
+            if (newNames.length === 0) {
+                showStatus('✅ Todos los nombres coinciden con usuarios existentes. Puedes proceder con "Iniciar Semana".', 'success');
+                return;
+            }
+
+            reviewNames(currentData);
+        }
+
+        function reviewNames(currentData) {
+            const existingNames = Object.keys(players);
+            const newNames = Object.keys(currentData);
+
+            nameMapping = {};
+            currentDataForReview = { ...currentData };
+
+            const reviewItemsList = document.getElementById('reviewItemsList');
+            reviewItemsList.innerHTML = '';
+
+            const reviewItems = [];
+
+            newNames.forEach(newName => {
+                const similarNames = findSimilarNames(newName, existingNames);
+
+                const item = {
+                    newName: newName,
+                    donation: currentData[newName],
+                    similarNames: similarNames,
+                    selected: false,
+                    actionType: null
+                };
+
+                if (similarNames.length > 0) {
+                    const bestMatch = similarNames[0];
+                    nameMapping[newName] = bestMatch.name;
+                    item.selected = true;
+                    item.actionType = 'assigned';
+                    item.assignedTo = bestMatch.name;
+                } else {
+                    nameMapping[newName] = null;
+                    item.selected = true;
+                    item.actionType = 'new';
+                }
+
+                reviewItems.push(item);
+            });
+
+            reviewItems.sort((a, b) => {
+                const aHasSim = a.similarNames.length > 0;
+                const bHasSim = b.similarNames.length > 0;
+
+                if (aHasSim && bHasSim) {
+                    const aHasPerfect = a.similarNames.some(s => s.similarity === 100);
+                    const bHasPerfect = b.similarNames.some(s => s.similarity === 100);
+
+                    if (!aHasPerfect && bHasPerfect) return -1;
+                    if (aHasPerfect && !bHasPerfect) return 1;
+                    return b.similarNames[0].similarity - a.similarNames[0].similarity;
+                }
+                if (aHasSim && !bHasSim) return -1;
+                if (!aHasSim && bHasSim) return 1;
+
+                return a.newName.localeCompare(b.newName);
+            });
+
+            reviewItems.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'review-item';
+                itemDiv.dataset.newName = item.newName;
+                itemDiv.dataset.index = index;
+
+                if (item.selected) {
+                    itemDiv.classList.add('selected');
+                }
+
+                if (item.similarNames.length > 0) {
+                    const hasPerfect = item.similarNames.some(s => s.similarity === 100);
+                    itemDiv.classList.add(hasPerfect ? 'identical' : 'matched');
+                } else {
+                    itemDiv.classList.add('new');
+                }
+
+                let existingHtml = '<div class="review-name-section"><input type="text" class="review-name-input" style="background: #e7f3ff; border-color: #007bff;" value="-" onchange="updateExistingName(${index}, this.value)" placeholder="Existente" /></div>';
+
+                if (item.similarNames.length > 0) {
+                    const bestMatch = item.similarNames[0];
+                    const isPerfect = bestMatch.similarity === 100;
+                    existingHtml = `
+                        <div class="review-name-section">
+                            <input type="text" class="review-name-input" style="background: #e7f3ff; border-color: #007bff;" value="${bestMatch.name}" onchange="updateExistingName(${index}, this.value)" />
+                            <span class="review-similarity ${isPerfect ? 'similarity-perfect' : 'similarity-medium'}">${bestMatch.similarity}%</span>
+                        </div>
+                    `;
+                }
+
+                let actionsHtml = '';
+                if (item.selected && item.actionType === 'new') {
+                    actionsHtml = `
+                        <button class="btn-create-new" disabled>✓ Nuevo</button>
+                    `;
+                } else if (item.selected && item.actionType === 'assigned') {
+                    actionsHtml = `
+                        <button class="btn-assign" disabled>✓ Existente</button>
+                        <button class="btn-create-new" onclick="markAsNew(${index})" data-index="${index}">
+                            Nuevo
+                        </button>
+                    `;
+                    item.similarNames.slice(1).forEach((similar, simIndex) => {
+                        const adjustedIndex = simIndex + 1;
+                        const isPerfect = similar.similarity === 100;
+                        actionsHtml += `
+                            <button class="btn-assign" onclick="assignUser(${index}, ${adjustedIndex})" data-index="${index}" data-sim-index="${adjustedIndex}">
+                                Existente
+                            </button>
+                        `;
+                    });
+                } else if (item.similarNames.length > 0) {
+                    item.similarNames.forEach((similar, simIndex) => {
+                        const isPerfect = similar.similarity === 100;
+                        actionsHtml += `
+                            <button class="btn-assign" onclick="assignUser(${index}, ${simIndex})" data-index="${index}" data-sim-index="${simIndex}">
+                                Existente
+                            </button>
+                        `;
+                    });
+                } else {
+                    actionsHtml = `
+                        <button class="btn-create-new" onclick="markAsNew(${index})" data-index="${index}">
+                            Nuevo
+                        </button>
+                    `;
+                }
+
+                itemDiv.innerHTML = `
+                    <div class="review-row">
+                        ${existingHtml}
+                        <div class="review-name-section">
+                            <input type="text" class="review-name-input" style="background: #fffdf5; border-color: #ffc107;" value="${item.newName}" onchange="updateNewName(${index}, this.value)" />
+                            <div class="review-donation">${formatNumber(item.donation)}</div>
+                        </div>
+                        <div class="review-actions">
+                            ${actionsHtml}
+                        </div>
+                    </div>
+                `;
+
+                reviewItemsList.appendChild(itemDiv);
+            });
+
+            updateReviewSummary();
+
+            hideAllSections();
+            document.getElementById('reviewSection').classList.add('active');
+        }
+
+        function updateReviewSummary() {
+            const newNames = Object.keys(currentDataForReview);
+            const totalNames = newNames.length;
+            const mappedNames = Object.keys(nameMapping).filter(name => nameMapping[name] !== null).length;
+            const newUsersCount = Object.keys(nameMapping).filter(name => nameMapping[name] === null).length;
+            const pendingCount = totalNames - mappedNames - newUsersCount;
+
+            const summaryEl = document.getElementById('reviewSummary');
+            summaryEl.innerHTML = `
+                <strong>Resumen:</strong>
+                ${totalNames} nombres totales |
+                ${mappedNames} asignados a usuarios existentes |
+                ${newUsersCount} nuevos usuarios |
+                ${pendingCount} pendientes de revisión
+            `;
+        }
+
+        function assignUser(itemIndex, simIndex) {
+            const itemDiv = document.querySelector(`[data-index="${itemIndex}"]`);
+            if (!itemDiv) return;
+
+            const newName = itemDiv.dataset.newName;
+            const existingInput = itemDiv.querySelector('.review-name-input');
+            const existingName = existingInput ? existingInput.value : newName;
+
+            nameMapping[newName] = existingName;
+            itemDiv.dataset.assignedTo = existingName;
+
+            itemDiv.classList.add('selected');
+            itemDiv.classList.remove('matched', 'identical', 'new');
+
+            const actionsSection = itemDiv.querySelector('.review-actions');
+            let actionsHtml = '';
+            actionsHtml += `
+                <button class="btn-assign" disabled>✓ Existente</button>
+                <button class="btn-create-new" onclick="markAsNew(${itemIndex})" data-index="${itemIndex}">
+                    Nuevo
+                </button>
+            `;
+            actionsSection.innerHTML = actionsHtml;
+
+            updateReviewSummary();
+        }
+
+        function markAsNew(itemIndex) {
+            const itemDiv = document.querySelector(`[data-index="${itemIndex}"]`);
+            if (!itemDiv) return;
+
+            const newName = itemDiv.dataset.newName;
+            nameMapping[newName] = null;
+
+            itemDiv.classList.add('selected');
+            itemDiv.classList.remove('matched', 'identical');
+            itemDiv.classList.add('new');
+
+            const actionsSection = itemDiv.querySelector('.review-actions');
+            const actionsHtml = `
+                <button class="btn-create-new" disabled>✓ Nuevo</button>
+            `;
+            actionsSection.innerHTML = actionsHtml;
+
+            updateReviewSummary();
+        }
+
+        function updateExistingName(itemIndex, newName) {
+            const itemDiv = document.querySelector(`[data-index="${itemIndex}"]`);
+            if (!itemDiv) return;
+
+            const oldNewName = itemDiv.dataset.newName;
+            nameMapping[oldNewName] = newName;
+            itemDiv.dataset.assignedTo = newName;
+            updateReviewSummary();
+        }
+
+        function updateNewName(itemIndex, newName) {
+            const itemDiv = document.querySelector(`[data-index="${itemIndex}"]`);
+            if (!itemDiv) return;
+
+            const oldName = itemDiv.dataset.newName;
+            itemDiv.dataset.newName = newName;
+
+            const donation = currentDataForReview[oldName];
+            delete currentDataForReview[oldName];
+            currentDataForReview[newName] = donation;
+
+            if (nameMapping.hasOwnProperty(oldName)) {
+                nameMapping[newName] = nameMapping[oldName];
+                delete nameMapping[oldName];
+            }
+            updateReviewSummary();
+        }
+
+        function hideReview() {
+            document.getElementById('reviewSection').classList.remove('active');
+            nameMapping = {};
+            currentDataForReview = {};
+        }
+
+        async function confirmNameMapping() {
+            const newNames = Object.keys(currentDataForReview);
+            const pendingCount = newNames.filter(name => !nameMapping.hasOwnProperty(name)).length;
+
+            if (pendingCount > 0) {
+                if (!confirm(`Aún hay ${pendingCount} nombres pendientes de revisión. ¿Deseas procesarlos como nuevos usuarios?`)) {
+                    return;
+                }
+
+                newNames.forEach(name => {
+                    if (!nameMapping.hasOwnProperty(name)) {
+                        nameMapping[name] = null;
+                    }
+                });
+            }
+
+            const mappedData = {};
+            Object.keys(currentDataForReview).forEach(newName => {
+                const targetName = nameMapping[newName];
+                const finalName = targetName || newName;
+                mappedData[finalName] = currentDataForReview[newName];
+            });
+
+            hideReview();
+
+            if (!confirm('⚠️ ¿Estás seguro? Esto finalizará la semana actual y comenzará una nueva con los datos ingresados.')) {
+                return;
+            }
+
+            await startNewWeek();
+
+            updatePlayers(mappedData);
+            hideManual();
+            showStatus(`✅ ¡Nueva semana iniciada! ${newNames.length} jugadores actualizados.`, 'success');
+        }
+
+        async function processManual() {
+            if (!auth.currentUser) {
+                showStatus('❌ Debes iniciar sesión como admin.', 'error');
+                return;
+            }
+            const text = document.getElementById('manualInput').value.trim();
+            if (!text) {
+                showStatus('❌ Por favor ingresa algunos datos', 'error');
+                return;
+            }
+            if (!confirm('⚠️ ¿Estás seguro? Esto finalizará la semana actual y comenzará una nueva con los datos ingresados.')) {
+                return;
+            }
+            
+            await startNewWeek();
+            const currentData = {};
+            const lines = text.split('\n');
+            let processedCount = 0;
+
+            lines.forEach((line, index) => {
+                line = line.trim();
+                if (!line) return;
+                const parts = line.split(',');
+                if (parts.length !== 2) return showStatus(`❌ Error en línea ${index + 1}: formato incorrecto.`, 'error');
+                const name = parts[0].trim();
+                const num = parseInt(parts[1].trim());
+                if (!name || isNaN(num) || num < 0) return showStatus(`❌ Error en línea ${index + 1}: datos inválidos.`, 'error');
+                currentData[name] = num;
+                processedCount++;
+            });
+
+            if (processedCount > 0) {
+                updatePlayers(currentData);
+                hideManual();
+                showStatus(`✅ ¡Nueva semana iniciada! ${processedCount} jugadores actualizados.`, 'success');
+            }
+        }
+
+        function saveGoal() {
+            if (!auth.currentUser) {
+                showStatus('❌ Debes iniciar sesión como admin.', 'error');
+                return;
+            }
+            const newGoal = parseInt(document.getElementById('newGoal').value);
+            if (isNaN(newGoal) || newGoal < 1000 || newGoal > 100000) {
+                showStatus('❌ Meta debe estar entre 1,000 y 100,000', 'error');
+                return;
+            }
+
+            goalDaily = newGoal;
+            showUnsavedIndicator();
+            renderTable();
+            hideConfig();
+            showStatus('✅ Meta actualizada correctamente (recuerda guardar en Firebase)', 'success');
+        }
+
+        function backupData() {
+            if (!auth.currentUser) {
+                showStatus('❌ Debes iniciar sesión como admin.', 'error');
+                return;
+            }
+
+            const dateObj = new Date();
+            const dateStr = dateObj.toLocaleString('es-ES');
+            const totalPlayers = Object.keys(players).length;
+
+            let backupText = `COPIA DE SEGURIDAD - ${dateStr}\n`;
+            backupText += `Total de jugadores: ${totalPlayers}\n`;
+            backupText += `Última actualización: ${new Date(lastUpdate).toLocaleString('es-ES')}\n`;
+            backupText += `Inicio de semana: ${new Date(weekStart).toLocaleDateString('es-ES')}\n`;
+            backupText += '\n';
+
+            Object.keys(players).forEach(name => {
+                const player = players[name];
+                const calc = calculatePercentages(player);
+                const semanal = calc.semanal;
+                const weeklyGoal = goalDaily * 7;
+                const weeklyExcess = Math.max(0, semanal - weeklyGoal);
+                const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
+                const availableExcess = Math.max(0, player.accumulatedExcess || 0);
+                const deficitDraw = Math.min(weeklyDeficit, availableExcess);
+                const finalPotentialExcess = availableExcess - deficitDraw + weeklyExcess;
+
+                backupText += `NOMBRE: ${name}\n`;
+                backupText += `TENÍA: ${player.previous || 0}\n`;
+                backupText += `TIENE: ${player.current || 0}\n`;
+                backupText += `SEMANAL: ${semanal}\n`;
+                backupText += `Ø DIARIO: ${calc.avgDaily.toFixed(2)}\n`;
+                backupText += `%META: ${calc.metaPerc.toFixed(2)}\n`;
+                backupText += `ACUMULADO: ${finalPotentialExcess}\n`;
+                backupText += `TOTAL: ${player.total || 0}\n`;
+                backupText += '\n\n\n';
+            });
+
+            const blob = new Blob([backupText], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const fileName = `backup_donaciones_${dateObj.toISOString().split('T')[0]}.txt`;
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showStatus('✅ Copia de seguridad descargada correctamente!', 'success');
+        }
+
+        function restoreBackup(event) {
+            if (!auth.currentUser) {
+                showStatus('❌ Debes iniciar sesión como admin.', 'error');
+                return;
+            }
+
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const lines = content.split('\n');
+
+                const newPlayers = {};
+                let newGoalDaily = CONFIG.DEFAULT_GOAL;
+                let newLastUpdate = Date.now();
+                let newWeekStart = getWeekStart();
+                let currentName = null;
+                let currentIndex = -1;
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+
+                    if (line.startsWith('Meta diaria:')) {
+                        continue;
+                    } else if (line.startsWith('Total de jugadores:')) {
+                        continue;
+                    } else if (line.startsWith('Última actualización:')) {
+                        continue;
+                    } else if (line.startsWith('Inicio de semana:')) {
+                        continue;
+                    } else if (line.startsWith('NOMBRE:')) {
+                        if (currentName && currentIndex >= 0) {
+                            newPlayers[currentName] = newPlayers[currentName] || {};
+                        }
+                        currentName = line.split(':')[1].trim();
+                        newPlayers[currentName] = {};
+                        currentIndex = 0;
+                    } else if (currentName) {
+                        const parts = line.split(':');
+                        if (parts.length === 2) {
+                            const key = parts[0].trim();
+                            const value = parts[1].trim();
+
+                            if (key === 'TENÍA') {
+                                newPlayers[currentName].previous = parseInt(value) || 0;
+                            } else if (key === 'TIENE') {
+                                newPlayers[currentName].current = parseInt(value) || 0;
+                            } else if (key === 'SEMANAL') {
+                            } else if (key === 'ACUMULADO') {
+                                newPlayers[currentName].accumulatedExcess = parseInt(value) || 0;
+                            } else if (key === 'TOTAL') {
+                                newPlayers[currentName].total = parseInt(value) || 0;
+                                newPlayers[currentName].absent = false;
+                                newPlayers[currentName].isNew = false;
+                            }
+                        }
+                }
+            };
+
+            players = newPlayers;
+            showUnsavedIndicator();
+            renderTable();
+            showStatus('✅ Copia de seguridad restaurada correctamente (recuerda guardar en Firebase)', 'success');
+
+            event.target.value = '';
+        };
+        reader.readAsText(file);
+    }
+
+        // --- MANEJO DE LA INTERFAZ (MODALES, ETC.) ---
+
+        function hideAllSections() {
+            document.querySelectorAll('.section, .modal-overlay').forEach(section => {
+                section.classList.remove('active');
+            });
+        }
+
+        function showLogin() {
+            hideAllSections();
+            document.getElementById('loginSection').classList.add('active');
+        }
+
+        function hideLogin() {
+            document.getElementById('loginSection').classList.remove('active');
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPass').value = '';
+        }
+
+        function showManual() {
+            if (!auth.currentUser) return showLogin();
+            hideAllSections();
+            document.getElementById('manualSection').classList.add('active');
+        }
+
+        function hideManual() {
+            document.getElementById('manualSection').classList.remove('active');
+            document.getElementById('manualInput').value = '';
+        }
+
+        function showReview() {
+            hideAllSections();
+            document.getElementById('reviewSection').classList.add('active');
+        }
+
+        function configGoal() {
+            if (!auth.currentUser) return showLogin();
+            hideAllSections();
+            document.getElementById('configSection').classList.add('active');
+            document.getElementById('newGoal').value = goalDaily;
+        }
+
+        function hideConfig() {
+            document.getElementById('configSection').classList.remove('active');
+        }
+
+        function showInfo() {
+            hideAllSections();
+            document.getElementById('infoModal').classList.add('active');
+        }
+
+        function hideInfo() {
+            document.getElementById('infoModal').classList.remove('active');
+        }
+
+        function showStatus(message, type = 'success') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            if (type === 'success') {
+                setTimeout(() => {
+                    if (statusDiv.textContent === message) {
+                        statusDiv.textContent = '';
+                        statusDiv.className = 'status';
+                    }
+                }, 5000);
+            }
+        }
+        
+        // --- OTROS ---
+
+        // Service Worker con Workbox
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registrado con Workbox:', registration);
+
+                        // Detectar nuevas versiones del Service Worker
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            console.log('Nueva versión de Service Worker detectada');
+
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    console.log('Nueva versión del Service Worker disponible. Recargando página...');
+                                    
+                                    // Mostrar notificación al usuario
+                                    if ('Notification' in window && Notification.permission === 'granted') {
+                                        new Notification('🔄 Actualización disponible', {
+                                            body: 'La aplicación se actualizará automáticamente',
+                                            icon: 'icon-192x192.png'
+                                        });
+                                    }
+
+                                    // Recargar la página después de un breve retraso
+                                    setTimeout(() => {
+                                        window.location.reload();
+                                    }, 2000);
+                                }
+                            });
+                        });
+
+                        // Asegurar que el Service Worker tome control inmediatamente
+                        if (registration.waiting) {
+                            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error registrando Service Worker:', err);
+                    });
+            });
+
+            // Escuchar mensajes del Service Worker
+            navigator.serviceWorker.addEventListener('message', event => {
+                if (event.data && event.data.type === 'SKIP_WAITING') {
+                    console.log('Mensaje SKIP_WAITING recibido del Service Worker');
+                }
+            });
+        }
+
+        // Cargar preferencias guardadas
+        loadNotificationPreference();
+
+        // Listener para instalación de PWA
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('installBtn');
+            if (installBtn) {
+                installBtn.style.display = 'block';
+                installBtn.textContent = '📱 Instalar App';
+            }
+        });
+
+        window.addEventListener('appinstalled', () => {
+            console.log('App instalada correctamente');
+            deferredPrompt = null;
+            const installBtn = document.getElementById('installBtn');
+            if (installBtn) {
+                installBtn.style.display = 'none';
+            }
+            showStatus('✅ App instalada en tu dispositivo', 'success');
+        });
+
+        // Prevenir zoom en doble tap en móviles
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+    <!-- Firebase App (el núcleo) -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <!-- Firebase Authentication -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <!-- Firebase Firestore (la base de datos) -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+</body>
+</html>

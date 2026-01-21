@@ -1,0 +1,19 @@
+{
+  "name": "arreglo321-21-enero",
+  "version": "2.0.0",
+  "description": "Tracker de donaciones para Pocket Ants con soporte offline y sincronización en tiempo real con Firebase.",
+  "main": "service-worker.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build-sw": "workbox generateSW workbox-config.js",
+    "prebuild": "workbox generateSW workbox-config.js",
+    "serve": "npx serve . -p 8080"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "workbox-cli": "^7.4.0"
+  }
+}
