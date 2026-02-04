@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -28,12 +29,14 @@
             width: 100%;
             max-width: 100vw;
             overflow-x: hidden;
-            font-weight: 700; /* Make all text bold */
+            font-weight: 700;
+            /* Make all text bold */
         }
 
         .container {
             width: 100%;
-            max-width: 100%; /* Allow it to fill the available space */
+            max-width: 100%;
+            /* Allow it to fill the available space */
             margin: 0 auto;
             display: flex;
             flex-direction: column;
@@ -58,7 +61,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
             transform: rotate(30deg);
         }
 
@@ -70,7 +73,7 @@
             font-size: clamp(16px, 4.5vw, 19px);
             font-weight: 700;
             position: relative;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
         /* Botones de acción */
@@ -96,7 +99,7 @@
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
             min-height: clamp(32px, 8vw, 40px);
-            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
             border: none;
             white-space: nowrap;
             overflow: hidden;
@@ -151,7 +154,7 @@
             color: white;
             font-weight: bold;
             min-height: unset;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
         }
 
         .btn-edit:active {
@@ -173,7 +176,7 @@
             color: white;
             font-weight: bold;
             min-height: unset;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
         }
 
         .btn-edit-mode.active {
@@ -190,7 +193,7 @@
             font-size: clamp(11px, 2.8vw, 13px);
             cursor: pointer;
             border: none;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
             transition: all 0.2s;
         }
 
@@ -218,7 +221,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0, 0, 0, 0.7);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -237,7 +240,7 @@
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
         .section-content h2 {
@@ -339,6 +342,7 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -385,8 +389,8 @@
             background-color: white;
             border-radius: clamp(10px, 2.5vw, 14px);
             /* overflow-x: auto; - Removed to allow sticky header */
-            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(0, 0, 0, 0.05);
             width: calc(100% - 2mm);
             margin: 0 1mm;
             -webkit-overflow-scrolling: touch;
@@ -407,12 +411,14 @@
         }
 
         .table-header {
-            background: linear-gradient(135deg, #8A2BE2 0%, #9932CC 100%); /* Purple gradient */
+            background: linear-gradient(135deg, #8A2BE2 0%, #9932CC 100%);
+            /* Purple gradient */
             color: white;
             position: sticky;
             top: 0;
             z-index: 10;
-            box-shadow: 0 2px 6px rgba(138, 43, 226, 0.25); /* Adjusted shadow for purple */
+            box-shadow: 0 2px 6px rgba(138, 43, 226, 0.25);
+            /* Adjusted shadow for purple */
         }
 
         thead th {
@@ -421,7 +427,7 @@
             font-weight: 700;
             text-transform: uppercase;
             font-size: clamp(7px, 1.8vw, 9px);
-            border-right: 1px solid rgba(255,255,255,0.5);
+            border-right: 1px solid rgba(255, 255, 255, 0.5);
             white-space: nowrap;
             line-height: 1.2;
         }
@@ -491,6 +497,127 @@
             color: #721c24;
         }
 
+        /* VISTA PREVIA DE CAMBIOS - Solo para admin */
+        .preview-row {
+            background-color: #e3f2fd !important;
+            /* Azul muy claro */
+            font-size: clamp(7px, 1.8vw, 9px) !important;
+            opacity: 0.9;
+        }
+
+        .preview-row td {
+            padding: clamp(3px, 1vw, 5px) clamp(2px, 0.8vw, 4px) !important;
+            border-right: 1px dashed #90caf9 !important;
+            border-top: 1px dashed #90caf9 !important;
+            border-bottom: 2px dashed #2196f3 !important;
+            color: #1565c0 !important;
+            font-style: italic;
+        }
+
+        .preview-row td:first-child {
+            border-left: 3px solid #2196f3 !important;
+            font-weight: 600;
+        }
+
+        .preview-row td:last-child {
+            border-right: 3px solid #2196f3 !important;
+        }
+
+        .preview-label {
+            display: inline-block;
+            background: #2196f3;
+            color: white;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: clamp(6px, 1.5vw, 8px);
+            margin-right: 3px;
+            font-weight: 600;
+        }
+
+        .preview-section-title {
+            text-align: center;
+            color: #1565c0;
+            font-size: clamp(10px, 2.5vw, 12px);
+            margin: 8px 0;
+            font-weight: 600;
+            background: #e3f2fd;
+            padding: 4px;
+            border-radius: 4px;
+            border-left: 3px solid #2196f3;
+        }
+
+        /* Estilos para indicadores de vista previa */
+        .preview-row-new {
+            background-color: #d4edda !important;
+            font-size: clamp(7px, 1.8vw, 9px) !important;
+            opacity: 0.9;
+        }
+
+        .preview-row-new td {
+            padding: clamp(3px, 1vw, 5px) clamp(2px, 0.8vw, 4px) !important;
+            border-right: 1px dashed #28a745 !important;
+            border-top: 1px dashed #28a745 !important;
+            border-bottom: 2px dashed #28a745 !important;
+            color: #155724 !important;
+            font-style: italic;
+        }
+
+        .preview-row-new td:first-child {
+            border-left: 3px solid #28a745 !important;
+            font-weight: 600;
+        }
+
+        .preview-row-new td:last-child {
+            border-right: 3px solid #28a745 !important;
+        }
+
+        .preview-row-banned {
+            background-color: #f8d7da !important;
+            font-size: clamp(7px, 1.8vw, 9px) !important;
+            opacity: 0.7;
+        }
+
+        .preview-row-banned td {
+            padding: clamp(3px, 1vw, 5px) clamp(2px, 0.8vw, 4px) !important;
+            border-right: 1px dashed #dc3545 !important;
+            border-top: 1px dashed #dc3545 !important;
+            border-bottom: 2px dashed #dc3545 !important;
+            color: #721c24 !important;
+            font-style: italic;
+            text-decoration: line-through;
+        }
+
+        .preview-row-banned td:first-child {
+            border-left: 3px solid #dc3545 !important;
+            font-weight: 600;
+        }
+
+        .preview-row-banned td:last-child {
+            border-right: 3px solid #dc3545 !important;
+        }
+
+        .preview-label-new {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: clamp(6px, 1.5vw, 8px);
+            margin-right: 3px;
+            font-weight: 600;
+        }
+
+        .preview-label-banned {
+            display: inline-block;
+            background: #dc3545;
+            color: white;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: clamp(6px, 1.5vw, 8px);
+            margin-right: 3px;
+            font-weight: 600;
+        }
+
         .absent-player td {
             background: #f1f3f5 !important;
             color: #adb5bd !important;
@@ -499,24 +626,33 @@
 
         /* Estilo para la fila seleccionada */
         .selected-row td {
-            border: 4px solid #8A2BE2 !important; /* Borde morado para resaltar */
+            border: 4px solid #8A2BE2 !important;
+            /* Borde morado para resaltar */
             /* No cambiar color de fondo ni de texto */
         }
+
         .selected-row td:first-child {
             border-left: 4px solid #8A2BE2 !important;
         }
+
         .selected-row td:last-child {
             border-right: 4px solid #8A2BE2 !important;
         }
-        .selected-row + tr td {
-            border-top: 0 !important; /* Evitar doble borde entre filas seleccionadas */
+
+        .selected-row+tr td {
+            border-top: 0 !important;
+            /* Evitar doble borde entre filas seleccionadas */
         }
+
         .selected-row td:not(:first-child) {
-            border-left: 0 !important; /* Para que parezca un borde continuo */
+            border-left: 0 !important;
+            /* Para que parezca un borde continuo */
         }
+
         .selected-row td:not(:last-child) {
             border-right: 0 !important;
         }
+
         .selected-row td span {
             /* Revertir cambios de color de texto */
             color: inherit !important;
@@ -582,7 +718,7 @@
             color: white;
             font-weight: bold;
             min-height: unset;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
         }
 
         .btn-sync {
@@ -600,7 +736,7 @@
             color: white;
             font-weight: bold;
             min-height: unset;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
         }
 
         .btn-sync:hover {
@@ -634,8 +770,15 @@
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
         }
 
         /* Panel de revisión de similitud */
@@ -647,7 +790,7 @@
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
         .review-content h2 {
@@ -681,7 +824,7 @@
 
         .review-item:hover {
             border-color: #007bff;
-            box-shadow: 0 4px 12px rgba(0,123,255,0.1);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
         }
 
         .review-item.matched {
@@ -829,7 +972,7 @@
 
         .btn-assign:hover {
             transform: scale(1.02);
-            box-shadow: 0 1px 4px rgba(0,123,255,0.2);
+            box-shadow: 0 1px 4px rgba(0, 123, 255, 0.2);
         }
 
         .btn-assign:disabled {
@@ -854,7 +997,7 @@
 
         .btn-create-new:hover {
             transform: scale(1.02);
-            box-shadow: 0 1px 4px rgba(40,167,69,0.2);
+            box-shadow: 0 1px 4px rgba(40, 167, 69, 0.2);
         }
 
         .btn-create-new:disabled {
@@ -916,7 +1059,7 @@
             max-height: 90vh;
             overflow-y: auto;
             position: relative;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
         .modal-close {
@@ -953,16 +1096,17 @@
 
         /* Responsividad para pantallas muy pequeñas */
         @media screen and (max-width: 360px) {
+
             .btn-manual span,
             .btn-config span {
                 display: none;
             }
-            
+
             .btn-manual::after {
                 content: '⌨️';
                 font-size: 18px;
             }
-            
+
             .btn-config::after {
                 content: '⚙️';
                 font-size: 18px;
@@ -1033,6 +1177,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- Header principal -->
@@ -1042,15 +1187,18 @@
 
         <!-- Botones de acción -->
         <div class="action-buttons">
-            <button class="btn btn-manual" onclick="showManual()">
+            <button class="btn btn-manual" onclick="showManual()" title="Ingresar donaciones manualmente">
                 <span>⌨️ Entrada Manual</span>
             </button>
-            <button class="btn btn-help" onclick="showInfo()">?</button>
-            <button class="btn-save" id="saveBtn" onclick="manualSave()">✓</button>
-            <button class="btn-sync" id="syncBtn" onclick="forceSync()" style="display:none;" title="Sincronizar datos">🔄</button>
-            <button class="btn btn-edit-mode" id="editModeBtn" onclick="toggleEditMode()" style="display:none;" title="Modo Edición">📝</button>
-            <button class="btn btn-settings" onclick="showSettings()">⚙️</button>
-            <button class="btn btn-config" onclick="configGoal()">
+            <button class="btn btn-help" onclick="showInfo()" title="Ver guía de usuario">?</button>
+            <button class="btn-save" id="saveBtn" onclick="manualSave()"
+                title="Opciones de guardado y cierre de semana">✓</button>
+            <button class="btn-sync" id="syncBtn" onclick="forceSync()" style="display:none;"
+                title="Sincronizar datos">🔄</button>
+            <button class="btn btn-edit-mode" id="editModeBtn" onclick="toggleEditMode()" style="display:none;"
+                title="Modo Edición">📝</button>
+            <button class="btn btn-settings" onclick="showSettings()" title="Ajustes de la aplicación">⚙️</button>
+            <button class="btn btn-config" onclick="configGoal()" title="Cambiar la meta diaria">
                 <span>⚙️ Configurar Meta</span>
             </button>
         </div>
@@ -1089,8 +1237,10 @@
             <p id="admin-login-container" style="margin-top: 10px;"></p>
             <div id="backupButtons" style="display: none; margin-top: 10px;">
                 <button class="btn-backup" id="backupBtn" onclick="backupData()">💾 Copia de Seguridad</button>
-                <button class="btn-backup" id="restoreBtn" onclick="document.getElementById('restoreFile').click()">📂 Restaurar Copia</button>
-                <input type="file" id="restoreFile" accept=".txt" style="display: none;" onchange="restoreBackup(event)">
+                <button class="btn-backup" id="restoreBtn" onclick="document.getElementById('restoreFile').click()">📂
+                    Restaurar Copia</button>
+                <input type="file" id="restoreFile" accept=".txt" style="display: none;"
+                    onchange="restoreBackup(event)">
             </div>
         </div>
     </div>
@@ -1101,9 +1251,10 @@
             <h2>📝 Entrada Manual de Datos</h2>
             <p><strong>Formato:</strong> nombre,donación (una por línea)</p>
             <p><strong>Ejemplo:</strong><br>Juan,25000<br>María,18500</p>
-            <textarea id="manualInput" placeholder="Ingresa los datos aquí..."></textarea>
+            <textarea id="manualInput" placeholder="Ingresa los datos aquí..."
+                oninput="updateManualPreview()"></textarea>
             <div class="section-buttons">
-                <button class="btn btn-success" onclick="processManual()">✅ Iniciar Semana</button>
+                <button class="btn btn-success" onclick="processManual()">✅ Revisar Datos</button>
                 <button class="btn btn-check-similarity" onclick="checkSimilarity()">🔍 Verificar Similitud</button>
                 <button class="btn btn-cancel" onclick="hideManual()">❌ Cancelar</button>
             </div>
@@ -1133,8 +1284,10 @@
 
             <div id="reviewSummary" class="review-summary"></div>
 
-            <div class="review-buttons">
-                <button class="btn btn-success" onclick="confirmNameMapping()">✅ Confirmar y Procesar</button>
+            <div class="review-buttons" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                <button class="btn btn-success" onclick="confirmNameMapping()">
+                    ✅ Importar a Tabla (Local)
+                </button>
                 <button class="btn btn-cancel" onclick="hideReview()">❌ Cancelar</button>
             </div>
         </div>
@@ -1144,31 +1297,48 @@
     <div id="infoModal" class="modal-overlay">
         <div class="modal-content">
             <span class="modal-close" onclick="hideInfo()">&times;</span>
-            <h2>📖 Guía de Columnas</h2>
-            <ul>
-                <li><strong>NOMBRE:</strong> Nombre del jugador. Top 5 muestran medallas: 🥇🥈🥉🏅🏅</li>
-                <li><strong>TENÍA:</strong> Donación total antes de la última actualización.</li>
-                <li><strong>TIENE:</strong> Donación total actual del jugador.</li>
-                <li><strong>SEMANAL:</strong> Total donado durante la semana actual.</li>
-                <li><strong>Ø DIARIO:</strong> Promedio de donación diaria.</li>
-                <li><strong>%META:</strong> Porcentaje de la meta semanal completado.</li>
-                <li><strong>ACUMULADO:</strong> Excedente de donaciones que cubre déficits.</li>
-                <li><strong>TOTAL:</strong> Suma de todas las donaciones registradas.</li>
-                <li><strong>ACCIONES:</strong> Botón para editar los datos del jugador (solo visible para admin).</li>
+            <h2>📖 Guía de Usuario</h2>
+
+            <h3 style="color: #1a8c42; margin-top: 10px; border-bottom: 2px solid #e0e0e0; padding-bottom: 5px;">📊
+                Columnas de la Tabla</h3>
+            <ul style="font-size: 13px; line-height: 1.6;">
+                <li><strong>NOMBRE:</strong> Nombre del jugador. Los Top 5 reciben medallas (🥇🥈🥉...).</li>
+                <li><strong>TENÍA:</strong> Donación total registrada antes de la semana actual.</li>
+                <li><strong>TIENE:</strong> Donación total actual (según el juego).</li>
+                <li><strong>SEMANAL:</strong> Lo donado esta semana (Tiene - Tenía).</li>
+                <li><strong>Ø DIARIO:</strong> Promedio de donación por día (Semanal / 7).</li>
+                <li><strong>%META:</strong> Porcentaje de cumplimiento de la meta semanal.</li>
+                <li><strong>ACUMULADO:</strong> Exceso de donaciones guardado ("Mochila"). Se usa automáticamente para
+                    cubrir faltas.</li>
+                <li><strong>TOTAL:</strong> Suma histórica total de donaciones.</li>
             </ul>
-            <h2 style="margin-top: 20px;">📊 Leyenda de Colores</h2>
-            <div class="legend" style="margin-top: 5px;">
+
+            <h3 style="color: #1a8c42; margin-top: 15px; border-bottom: 2px solid #e0e0e0; padding-bottom: 5px;">⚙️
+                Funciones Principales</h3>
+            <ul style="font-size: 13px; line-height: 1.6;">
+                <li><strong>⌨️ Entrada Manual:</strong> Pega la lista de donaciones (Nombre, Cantidad) para actualizar
+                    la tabla.</li>
+                <li><strong>⚙️ Configurar Meta:</strong> Define cuánto deben donar los jugadores por día.</li>
+                <li><strong>✓ Botón Verde:</strong> Abre opciones para:
+                    <ul>
+                        <li>✅ <em>Guardar Cambios:</em> Actualiza los datos sin cerrar la semana.</li>
+                        <li>🔄 <em>Cerrar Semana:</em> Finaliza la semana, guarda acumulados y reinicia contadores.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3 style="color: #1a8c42; margin-top: 15px; border-bottom: 2px solid #e0e0e0; padding-bottom: 5px;">🎨
+                Leyenda de Colores</h3>
+            <div class="legend" style="justify-content: flex-start; gap: 10px;">
                 <div class="legend-item">
-                    <div class="legend-color green"></div>
-                    <span>≥90% Meta</span>
+                    <div class="legend-color green"></div> >90% Meta
                 </div>
                 <div class="legend-item">
-                    <div class="legend-color yellow"></div>
-                    <span>70-89% Meta</span>
+                    <div class="legend-color yellow"></div> 70-89% Meta
                 </div>
                 <div class="legend-item">
                     <div class="legend-color red"></div>
-                    <span>&lt;70% Meta</span>
+                    <70% Meta</div>
                 </div>
             </div>
         </div>
@@ -1213,6 +1383,34 @@
         </div>
     </div>
 
+    <!-- Modal de opciones de guardado -->
+    <div id="saveOptionsModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideSaveOptions()">&times;</span>
+            <h2>💾 Opciones de Guardado</h2>
+            <p>Elige qué acción deseas realizar:</p>
+
+            <button class="btn btn-success" onclick="executeSave('UPDATE')"
+                style="width: 100%; margin-bottom: 15px; padding: 15px; height: auto; white-space: normal; display: flex; flex-direction: column; align-items: flex-start; text-align: left;">
+                <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">✅ Guardar Cambios</div>
+                <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Actualiza los datos locales y en
+                    Firebase. La semana continúa normalmente.</div>
+            </button>
+
+            <button class="btn btn-manual" onclick="executeSave('NEW_WEEK')"
+                style="width: 100%; padding: 15px; background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); height: auto; white-space: normal; display: flex; flex-direction: column; align-items: flex-start; text-align: left;">
+                <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">🔄 Cerrar Semana e Iniciar Nueva
+                </div>
+                <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Calcula acumulados finales, reinicia
+                    contadores a cero y guarda todo en Firebase.</div>
+            </button>
+
+            <div class="section-buttons" style="margin-top: 20px;">
+                <button class="btn btn-cancel" onclick="hideSaveOptions()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- INICIO DE LA INTEGRACIÓN CON FIREBASE ---
         const firebaseConfig = {
@@ -1244,6 +1442,9 @@
         let deferredPrompt = null;
         let lastDataTimestamp = null;
         let indexedDBInitialized = false;
+
+        // Variable para vista previa de cambios
+        let previewData = null; // Almacena los datos calculados para preview
 
         const DB_NAME = 'DonacionesDB';
         const DB_VERSION = 1;
@@ -1422,7 +1623,7 @@
 
         // --- INICIALIZACIÓN Y AUTENTICACIÓN ---
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             try {
                 // Inicializar Firebase y los servicios
                 const app = firebase.initializeApp(firebaseConfig);
@@ -1444,7 +1645,7 @@
             // Listener para la selección de filas de la tabla
             const tableBody = document.querySelector('#table tbody');
             if (tableBody) {
-                tableBody.addEventListener('click', function(e) {
+                tableBody.addEventListener('click', function (e) {
                     const targetRow = e.target.closest('tr');
 
                     // Asegurarse de que el clic fue en una fila de datos válida
@@ -1468,7 +1669,7 @@
 
                         // No inyectar el header para la primera fila de datos
                         const isFirstRow = tableBody.querySelector('tr:not(.injected-header)') === targetRow;
-                        
+
                         if (!isFirstRow) {
                             const newHeaderRow = document.createElement('tr');
                             newHeaderRow.classList.add('injected-header', 'table-header');
@@ -1490,11 +1691,11 @@
                     updateUIAfterAuthStateChange(user);
                 });
             } catch (error) {
-                 showStatus('Error de autenticación: ' + error.message, 'error');
-                 console.error('Auth Init Error:', error);
+                showStatus('Error de autenticación: ' + error.message, 'error');
+                console.error('Auth Init Error:', error);
             }
         }
-        
+
         function updateUIAfterAuthStateChange(user) {
             const adminLoginContainer = document.getElementById('admin-login-container');
             if (!adminLoginContainer) return;
@@ -1752,7 +1953,7 @@
             await saveData();
             showStatus('✅ Datos guardados en Firebase correctamente!', 'success');
         }
-        
+
         // --- FUNCIONES DE RENDERIZADO Y FORMATO ---
 
         function formatNumber(num) {
@@ -1780,7 +1981,7 @@
             const weeklyGoal = goalDaily * 7;
             const avgDaily = semanal / 7;
             const avgDailyPerc = (avgDaily / goalDaily) * 100;
-            
+
             const availableExcess = Math.max(0, player.accumulatedExcess || 0);
             const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
             const coveredWithAccumulated = Math.min(weeklyDeficit, availableExcess);
@@ -1858,7 +2059,7 @@
                     </tr>
                 `;
             }
-            
+
             const playerNames = Object.keys(players);
             if (playerNames.length === 0) {
                 const colspan = isEditMode ? 9 : 8;
@@ -1934,15 +2135,18 @@
                     row.innerHTML = `
                         <td style="font-weight: 600; padding: 16px 5px; position: relative;">
                             <input type="text" id="edit-name-${name}" value="${name}"
-                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
+                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;"
+                                   oninput="updatePreviewForEditing()">
                         </td>
                         <td>
                             <input type="number" id="edit-previous-${name}" value="${player.previous || 0}"
-                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
+                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;"
+                                   oninput="updatePreviewForEditing()">
                         </td>
                         <td>
                             <input type="number" id="edit-current-${name}" value="${player.current || 0}"
-                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
+                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;"
+                                   oninput="updatePreviewForEditing()">
                         </td>
                         <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
                             ${formatNumber(calc.semanal)}
@@ -1978,7 +2182,7 @@
                     let currentStarFontSize = activePlayerRank === 2 ? '20px' : '18px';
                     nameHtml += `<span style="position: absolute; top: 1px; right: 4px; font-size: ${currentStarFontSize}; color: ${starColors[rank]}; text-shadow: ${starShadow};" title="Top ${activePlayerRank} donador total">${starIcons[rank]}</span>`;
                 }
-                
+
                 const semanal = (player.current || 0) - (player.previous || 0);
                 const weeklyGoal = goalDaily * 7;
                 const weeklyExcess = Math.max(0, semanal - weeklyGoal);
@@ -2010,14 +2214,145 @@
                 } else {
                     row.innerHTML = `<td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}</td><td>${formatNumber(player.previous || 0)}</td><td>${formatNumber(player.current || 0)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(calc.semanal)}</td><td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td><td>${formatNumber(finalPotentialExcess)}${deficitHtml}${formatExtraDonationTime(finalPotentialExcess / (goalDaily || 1))}</td><td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>`;
                 }
+
+                // Mostrar vista previa si hay cambios pendientes para este jugador (solo admin)
+                if (previewData && previewData[name] && auth.currentUser) {
+                    const previewPlayer = previewData[name];
+                    const previewRow = tbody.insertRow();
+
+                    // Determinar el tipo de fila de preview según el estado del jugador
+                    let previewClass = 'preview-row';
+                    let previewLabelText = 'VISTA PREVIA';
+                    let previewLabelClass = 'preview-label';
+
+                    if (previewPlayer.willBeBanned) {
+                        previewClass = 'preview-row-banned';
+                        previewLabelText = 'SERÁ BANEADO';
+                        previewLabelClass = 'preview-label-banned';
+                    } else if (previewPlayer.isNew) {
+                        previewClass = 'preview-row-new';
+                        previewLabelText = 'NUEVO';
+                        previewLabelClass = 'preview-label-new';
+                    }
+
+                    previewRow.className = previewClass;
+
+                    // Para jugadores baneados, mostrar datos simplificados
+                    if (previewPlayer.willBeBanned) {
+                        const colspan = isEditMode ? 9 : 8;
+                        previewRow.innerHTML = `
+                            <td><span class="${previewLabelClass}">${previewLabelText}</span> ${name}</td>
+                            <td colspan="${colspan - 1}" style="text-align: center; font-style: italic;">
+                                Este jugador no aparece en los datos nuevos y será marcado como ausente
+                            </td>
+                        `;
+                    } else {
+                        const previewCalc = calculatePercentages(previewPlayer);
+                        // Los valores ya vienen calculados correctamente desde updateManualPreview
+                        // No necesitamos recalcular el futuro, solo mostrarlo.
+                        const finalAccumulated = previewPlayer.accumulatedExcess || 0;
+                        const deficitDraw = previewPlayer.simulatedDeficitDraw || 0;
+
+                        // CORRECCIÓN: El porcentaje debe reflejar la donación efectiva (Lo donado + Lo cubierto con acumulado)
+                        const weeklyGoal = (goalDaily || 0) * 7;
+                        const effectiveDonation = (previewPlayer.weeklyTotal || 0) + deficitDraw;
+                        // NO limitar al 100%. Si donó de más, debe verse. El deficitDraw ya asegura que no se pase de 100% A MENOS que sea por donación real.
+                        const effectiveMetaPerc = (effectiveDonation / weeklyGoal) * 100;
+
+                        previewRow.innerHTML = `
+                            <td><span class="${previewLabelClass}">${previewLabelText}</span> ${name}</td>
+                            <td>${formatNumber(previewPlayer.previous || 0)}</td>
+                            <td>${formatNumber(previewPlayer.current || 0)}</td>
+                            <td class="${getColorClass(previewCalc.metaPerc, 'percentage')}">${formatNumber(previewCalc.semanal)}</td>
+                            <td class="${getColorClass(previewCalc.avgDailyPerc, 'percentage')}">${formatNumber(previewCalc.avgDaily)}</td>
+                            <td class="${getColorClass(effectiveMetaPerc, 'percentage')}">${effectiveMetaPerc.toFixed(1)}%</td>
+                            <td>${formatNumber(finalAccumulated)}${deficitDraw > 0 ? `<br/><span style="color: red;">(-${formatNumber(deficitDraw)})</span>` : ''}</td>
+                            <td class="${getColorClass(previewCalc.totalPerc, 'total')}">${formatNumber(previewPlayer.total || 0)}</td>
+                            ${isEditMode ? '<td></td>' : ''}
+                        `;
+                    }
+                }
             });
 
-            const avgSemanal = playersActive > 0 ? totalSemanal / playersActive : 0;
-            if (isEditMode) {
-                tfoot.innerHTML = `<tr class="total-row"><td colspan="9">📊 TOTALES (${playersActive} jugadores): ${formatNumber(totalSemanal)} donaciones semanales | Promedio: ${formatNumber(avgSemanal)} | Acumulado: ${formatNumber(totalAcumulado)}</td></tr>`;
-            } else {
-                tfoot.innerHTML = `<tr class="total-row"><td colspan="8">📊 TOTALES (${playersActive} jugadores): ${formatNumber(totalSemanal)} donaciones semanales | Promedio: ${formatNumber(avgSemanal)} | Acumulado: ${formatNumber(totalAcumulado)}</td></tr>`;
+            // Mostrar jugadores en preview que no están en la tabla actual (nuevos y baneados adicionales)
+            if (previewData && auth.currentUser) {
+                Object.keys(previewData).forEach(name => {
+                    // Solo mostrar si no está en players actual o si está marcado para ser baneado
+                    const previewPlayer = previewData[name];
+                    const isNewPlayer = previewPlayer.isNew;
+                    const willBeBanned = previewPlayer.willBeBanned;
+
+                    // Si es nuevo o será baneado y no se mostró antes
+                    if ((isNewPlayer || willBeBanned) && !players[name]) {
+                        const previewRow = tbody.insertRow();
+
+                        let previewClass = 'preview-row-new';
+                        let previewLabelText = 'NUEVO';
+                        let previewLabelClass = 'preview-label-new';
+
+                        if (willBeBanned) {
+                            previewClass = 'preview-row-banned';
+                            previewLabelText = 'SERÁ BANEADO';
+                            previewLabelClass = 'preview-label-banned';
+                        }
+
+                        previewRow.className = previewClass;
+
+                        // Para jugadores baneados, mostrar mensaje simplificado
+                        if (willBeBanned) {
+                            const colspan = isEditMode ? 9 : 8;
+                            previewRow.innerHTML = `
+                                <td><span class="${previewLabelClass}">${previewLabelText}</span> ${name}</td>
+                                <td colspan="${colspan - 1}" style="text-align: center; font-style: italic;">
+                                    Este jugador no aparece en los datos nuevos y será marcado como ausente
+                                </td>
+                            `;
+                        } else {
+                            // Para jugadores nuevos, NO mostrar cálculos (son base 0)
+                            // Alinear con el comportamiento de la tabla principal para isNew
+                            const finalAccumulated = previewPlayer.accumulatedExcess || 0;
+                            // Mostrar el valor ingresado en "Tiene" y "-" en "Tenía", o 0 en ambos stats
+
+                            const colspan = isEditMode ? 9 : 8;
+
+                            // Opción: Mostrar igual que en la tabla principal
+                            // <td>NUEVO {name}</td> <td>-</td> <td>{current}</td> <td>0</td> ...
+
+                            previewRow.innerHTML = `
+                                <td><span class="${previewLabelClass}">${previewLabelText}</span> ${name}</td>
+                                <td>-</td>
+                                <td>${formatNumber(previewPlayer.current || 0)}</td>
+                                <td class="percentage">0</td>
+                                <td class="percentage">0</td>
+                                <td class="percentage">0.0%</td>
+                                <td>0</td>
+                                <td class="total">0</td>
+                                ${isEditMode ? '<td></td>' : ''}
+                            `;
+                        }
+                    }
+                });
             }
+
+            const avgSemanal = playersActive > 0 ? totalSemanal / playersActive : 0;
+            const colspan = isEditMode ? 9 : 8;
+
+            let footerContent = `📊 TOTALES (${playersActive} jugadores): ${formatNumber(totalSemanal)} donaciones semanales | Promedio: ${formatNumber(avgSemanal)} | Acumulado: ${formatNumber(totalAcumulado)}`;
+
+            // Agregar resumen de cambios en preview
+            if (previewData && auth.currentUser) {
+                const newPlayersCount = Object.keys(previewData).filter(name => previewData[name].isNew).length;
+                const bannedPlayersCount = Object.keys(previewData).filter(name => previewData[name].willBeBanned).length;
+
+                if (newPlayersCount > 0 || bannedPlayersCount > 0) {
+                    const previewSummary = [];
+                    if (newPlayersCount > 0) previewSummary.push(`<span style="color: #155724;">+${newPlayersCount} nuevos</span>`);
+                    if (bannedPlayersCount > 0) previewSummary.push(`<span style="color: #721c24;">-${bannedPlayersCount} baneados</span>`);
+                    footerContent += ` | <span style="font-weight: bold;">📋 VISTA PREVIA: ${previewSummary.join(' | ')}</span>`;
+                }
+            }
+
+            tfoot.innerHTML = `<tr class="total-row"><td colspan="${colspan}">${footerContent}</td></tr>`;
         }
 
         function updateTimeDisplays() {
@@ -2083,6 +2418,7 @@
 
         function cancelEditing() {
             editingPlayer = null;
+            previewData = null; // Limpiar vista previa al cancelar
             renderTable();
             showStatus('❌ Edición cancelada', 'success');
         }
@@ -2133,6 +2469,7 @@
             players[editingPlayer].current = newCurr;
 
             editingPlayer = null;
+            previewData = null; // Limpiar vista previa después de guardar
             showUnsavedIndicator();
             renderTable();
             showStatus('✅ Cambios guardados. Recuerda pulsar "✓" para guardar en Firebase', 'success');
@@ -2725,15 +3062,10 @@
 
             hideReview();
 
-            if (!confirm('⚠️ ¿Estás seguro? Esto finalizará la semana actual y comenzará una nueva con los datos ingresados.')) {
-                return;
-            }
-
-            await startNewWeek();
-
+            // Solo actualizar localmente
             updatePlayers(mappedData);
             hideManual();
-            showStatus(`✅ ¡Nueva semana iniciada! ${newNames.length} jugadores actualizados.`, 'success');
+            showStatus(`✅ Datos importados localmente. Recuerda usar el botón ✓ para guardar en la nube o iniciar semana.`, 'success');
         }
 
         async function processManual() {
@@ -2746,11 +3078,10 @@
                 showStatus('❌ Por favor ingresa algunos datos', 'error');
                 return;
             }
-            if (!confirm('⚠️ ¿Estás seguro? Esto finalizará la semana actual y comenzará una nueva con los datos ingresados.')) {
-                return;
-            }
-            
-            await startNewWeek();
+
+            // ELIMINADO: Confirmación de nueva semana y llamada a startNewWeek
+            // Ahora solo procesamos el texto y lo mandamos a revisar.
+
             const currentData = {};
             const lines = text.split('\n');
             let processedCount = 0;
@@ -2759,18 +3090,21 @@
                 line = line.trim();
                 if (!line) return;
                 const parts = line.split(',');
-                if (parts.length !== 2) return showStatus(`❌ Error en línea ${index + 1}: formato incorrecto.`, 'error');
+                if (parts.length !== 2) return; // Ignorar líneas malformadas silenciosamente o loggear (?)
+                // Mantengamos validación simple
                 const name = parts[0].trim();
                 const num = parseInt(parts[1].trim());
-                if (!name || isNaN(num) || num < 0) return showStatus(`❌ Error en línea ${index + 1}: datos inválidos.`, 'error');
+                if (!name || isNaN(num) || num < 0) return;
                 currentData[name] = num;
                 processedCount++;
             });
 
             if (processedCount > 0) {
-                updatePlayers(currentData);
-                hideManual();
-                showStatus(`✅ ¡Nueva semana iniciada! ${processedCount} jugadores actualizados.`, 'success');
+                reviewNames(currentData);
+                showReview();
+                showStatus(`🔍 Revisando ${processedCount} registros...`, 'info');
+            } else {
+                showStatus('❌ No se encontraron datos válidos en el texto.', 'error');
             }
         }
 
@@ -2799,48 +3133,36 @@
             }
 
             const dateObj = new Date();
-            const dateStr = dateObj.toLocaleString('es-ES');
-            const totalPlayers = Object.keys(players).length;
+            const dateStr = dateObj.toISOString().split('T')[0];
 
-            let backupText = `COPIA DE SEGURIDAD - ${dateStr}\n`;
-            backupText += `Total de jugadores: ${totalPlayers}\n`;
-            backupText += `Última actualización: ${new Date(lastUpdate).toLocaleString('es-ES')}\n`;
-            backupText += `Inicio de semana: ${new Date(weekStart).toLocaleDateString('es-ES')}\n`;
-            backupText += '\n';
+            // Objeto completo de backup
+            const backupState = {
+                version: 2, // Versión del formato de backup
+                timestamp: Date.now(),
+                dateString: dateStr,
+                globalConfig: {
+                    goalDaily: goalDaily,
+                    lastUpdate: lastUpdate,
+                    weekStart: weekStart,
+                    totalPlayers: Object.keys(players).length
+                },
+                players: players // Copia exacta de todo el objeto players
+            };
 
-            Object.keys(players).forEach(name => {
-                const player = players[name];
-                const calc = calculatePercentages(player);
-                const semanal = calc.semanal;
-                const weeklyGoal = goalDaily * 7;
-                const weeklyExcess = Math.max(0, semanal - weeklyGoal);
-                const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
-                const availableExcess = Math.max(0, player.accumulatedExcess || 0);
-                const deficitDraw = Math.min(weeklyDeficit, availableExcess);
-                const finalPotentialExcess = availableExcess - deficitDraw + weeklyExcess;
-
-                backupText += `NOMBRE: ${name}\n`;
-                backupText += `TENÍA: ${player.previous || 0}\n`;
-                backupText += `TIENE: ${player.current || 0}\n`;
-                backupText += `SEMANAL: ${semanal}\n`;
-                backupText += `Ø DIARIO: ${calc.avgDaily.toFixed(2)}\n`;
-                backupText += `%META: ${calc.metaPerc.toFixed(2)}\n`;
-                backupText += `ACUMULADO: ${finalPotentialExcess}\n`;
-                backupText += `TOTAL: ${player.total || 0}\n`;
-                backupText += '\n\n\n';
-            });
-
-            const blob = new Blob([backupText], { type: 'text/plain;charset=utf-8' });
+            const jsonString = JSON.stringify(backupState, null, 2); // Pretty print para legibilidad opcional
+            const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
             const url = URL.createObjectURL(blob);
+
             const a = document.createElement('a');
-            const fileName = `backup_donaciones_${dateObj.toISOString().split('T')[0]}.txt`;
+            const fileName = `backup_donaciones_FULL_${dateStr}.json`;
             a.href = url;
             a.download = fileName;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            showStatus('✅ Copia de seguridad descargada correctamente!', 'success');
+
+            showStatus('✅ Copia de seguridad COMPLETA (.json) descargada.', 'success');
         }
 
         function restoreBackup(event) {
@@ -2853,66 +3175,126 @@
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 const content = e.target.result;
+
+                try {
+                    // INTENTO 1: Restauración moderna (JSON)
+                    const backupState = JSON.parse(content);
+
+                    if (backupState.players && backupState.globalConfig) {
+                        // Es un backup válido JSON V2
+                        if (!confirm(`⚠️ Vas a restaurar una copia COMPLETA del ${backupState.dateString || 'desconocida'}.\nEsto sobrescribirá TODOS los datos actuales.\n¿Continuar?`)) {
+                            event.target.value = '';
+                            return;
+                        }
+
+                        // Restaurar globales
+                        if (backupState.globalConfig.goalDaily) goalDaily = backupState.globalConfig.goalDaily;
+                        if (backupState.globalConfig.lastUpdate) lastUpdate = backupState.globalConfig.lastUpdate;
+                        if (backupState.globalConfig.weekStart) weekStart = backupState.globalConfig.weekStart;
+
+                        // Restaurar jugadores
+                        players = backupState.players;
+
+                        showUnsavedIndicator();
+                        renderTable();
+                        showStatus('✅ Restauración COMPLETA exitosa (Formato JSON).', 'success');
+                        event.target.value = '';
+                        return;
+                    }
+                } catch (err) {
+                    // No es JSON, intentar legacy
+                    console.log('No es JSON válido, intentando formato Legacy TXT...');
+                }
+
+                // INTENTO 2: Restauración Legacy (TXT)
+                // (Código original para soporte de archivos viejos)
                 const lines = content.split('\n');
+                if (lines.length < 5) {
+                    showStatus('❌ Archivo no reconocido o dañado.', 'error');
+                    return;
+                }
+
+                if (!confirm(`⚠️ Detectado formato ANTIGUO (.txt).\nSe intentará restaurar, pero algunos detalles (como baneos exactos) podrían perderse.\n¿Continuar?`)) {
+                    event.target.value = '';
+                    return;
+                }
 
                 const newPlayers = {};
-                let newGoalDaily = CONFIG.DEFAULT_GOAL;
-                let newLastUpdate = Date.now();
-                let newWeekStart = getWeekStart();
                 let currentName = null;
                 let currentIndex = -1;
 
+                // Lógica legacy simplificada y protegida
                 for (let i = 0; i < lines.length; i++) {
                     const line = lines[i].trim();
-
-                    if (line.startsWith('Meta diaria:')) {
-                        continue;
-                    } else if (line.startsWith('Total de jugadores:')) {
-                        continue;
-                    } else if (line.startsWith('Última actualización:')) {
-                        continue;
-                    } else if (line.startsWith('Inicio de semana:')) {
-                        continue;
-                    } else if (line.startsWith('NOMBRE:')) {
-                        if (currentName && currentIndex >= 0) {
-                            newPlayers[currentName] = newPlayers[currentName] || {};
-                        }
+                    if (line.startsWith('NOMBRE:')) {
                         currentName = line.split(':')[1].trim();
-                        newPlayers[currentName] = {};
-                        currentIndex = 0;
-                    } else if (currentName) {
+                        if (currentName) newPlayers[currentName] = {};
+                    } else if (currentName && newPlayers[currentName]) {
                         const parts = line.split(':');
                         if (parts.length === 2) {
                             const key = parts[0].trim();
                             const value = parts[1].trim();
-
-                            if (key === 'TENÍA') {
-                                newPlayers[currentName].previous = parseInt(value) || 0;
-                            } else if (key === 'TIENE') {
-                                newPlayers[currentName].current = parseInt(value) || 0;
-                            } else if (key === 'SEMANAL') {
-                            } else if (key === 'ACUMULADO') {
-                                newPlayers[currentName].accumulatedExcess = parseInt(value) || 0;
-                            } else if (key === 'TOTAL') {
+                            if (key === 'TENÍA') newPlayers[currentName].previous = parseInt(value) || 0;
+                            else if (key === 'TIENE') newPlayers[currentName].current = parseInt(value) || 0;
+                            else if (key === 'ACUMULADO') newPlayers[currentName].accumulatedExcess = parseInt(value) || 0;
+                            else if (key === 'TOTAL') {
                                 newPlayers[currentName].total = parseInt(value) || 0;
+                                // Asumimos defaults para legacy
                                 newPlayers[currentName].absent = false;
                                 newPlayers[currentName].isNew = false;
                             }
                         }
+                    }
                 }
+
+                players = newPlayers;
+                showUnsavedIndicator();
+                renderTable();
+                showStatus('✅ Restauración PARCIAL exitosa (Formato Legacy TXT).', 'success');
+
+                event.target.value = '';
             };
+            reader.readAsText(file);
+        }
 
-            players = newPlayers;
-            showUnsavedIndicator();
-            renderTable();
-            showStatus('✅ Copia de seguridad restaurada correctamente (recuerda guardar en Firebase)', 'success');
+        // --- FUNCIONES DE GUARDADO CENTRALIZADO ---
 
-            event.target.value = '';
-        };
-        reader.readAsText(file);
-    }
+        function showSaveOptions() {
+            if (!auth.currentUser) {
+                showStatus('❌ Debes iniciar sesión como admin.', 'error');
+                return;
+            }
+            hideAllSections(); // Asegurar que no haya solapamientos
+            document.getElementById('saveOptionsModal').classList.add('active');
+        }
+
+        function hideSaveOptions() {
+            document.getElementById('saveOptionsModal').classList.remove('active');
+        }
+
+        async function executeSave(mode) {
+            hideSaveOptions();
+
+            if (mode === 'NEW_WEEK') {
+                if (!confirm('⚠️ ¿Estás seguro de CERRAR la semana actual? Esto calculará los acumulados finales, reiniciará los contadores a cero y guardará todo en Firebase. Esta acción no se puede deshacer fácilmente.')) {
+                    return;
+                }
+                await startNewWeek();
+                await saveData(); // Guardar los cambios post-cierre
+                showStatus('✅ ¡Semana cerrada y nueva semana iniciada correctamente!', 'success');
+            } else {
+                // UPDATE
+                await saveData();
+                showStatus('✅ Datos guardados en Firebase correctamente (Semana actual continúa).', 'success');
+            }
+        }
+
+        // Reemplaza a la antigua función manualSave directa
+        function manualSave() {
+            showSaveOptions();
+        }
 
         // --- MANEJO DE LA INTERFAZ (MODALES, ETC.) ---
 
@@ -2982,7 +3364,7 @@
                 }, 5000);
             }
         }
-        
+
         // --- OTROS ---
 
         // Service Worker con Workbox
@@ -3000,7 +3382,7 @@
                             newWorker.addEventListener('statechange', () => {
                                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                                     console.log('Nueva versión del Service Worker disponible. Recargando página...');
-                                    
+
                                     // Mostrar notificación al usuario
                                     if ('Notification' in window && Notification.permission === 'granted') {
                                         new Notification('🔄 Actualización disponible', {
@@ -3069,6 +3451,185 @@
             lastTouchEnd = now;
         }, false);
     </script>
+
+    <!-- === FUNCIONES DE VISTA PREVIA === -->
+    <script>
+        function updatePreviewForEditing() {
+            if (!editingPlayer || typeof auth === 'undefined' || !auth.currentUser) return;
+
+            const newPrevInput = document.getElementById(`edit-previous-${editingPlayer}`);
+            const newCurrInput = document.getElementById(`edit-current-${editingPlayer}`);
+
+            if (!newPrevInput || !newCurrInput) return;
+
+            const newPrev = parseInt(newPrevInput.value) || 0;
+            const newCurr = parseInt(newCurrInput.value) || 0;
+
+            // Crear el jugador con los nuevos valores para calcular el futuro estado
+            const previewPlayer = {
+                ...players[editingPlayer],
+                previous: newPrev,
+                current: newCurr
+            };
+
+            // Calcular el total: si hay aumento en current, se suma al total
+            const currentDiff = newCurr - (players[editingPlayer].current || 0);
+            if (currentDiff > 0) {
+                previewPlayer.total = (players[editingPlayer].total || 0) + currentDiff;
+            }
+
+            // Actualizar previewData
+            previewData = { [editingPlayer]: previewPlayer };
+
+            // Volver a renderizar para mostrar la preview
+            renderTable();
+        }
+
+        function clearPreview() {
+            previewData = null;
+            renderTable();
+        }
+
+        function updateManualPreview() {
+            if (typeof auth === 'undefined' || !auth.currentUser) return;
+
+            const text = document.getElementById('manualInput').value.trim();
+            if (!text) {
+                clearPreview();
+                return;
+            }
+
+            const lines = text.split('\n');
+            const currentData = {};
+            let hasError = false;
+
+            for (let index = 0; index < lines.length; index++) {
+                const line = lines[index].trim();
+                if (!line) continue;
+
+                const parts = line.split(',');
+                if (parts.length !== 2) {
+                    hasError = true;
+                    break;
+                }
+
+                const name = parts[0].trim();
+                const num = parseInt(parts[1].trim());
+
+                if (!name || isNaN(num) || num < 0) {
+                    hasError = true;
+                    break;
+                }
+
+                currentData[name] = num;
+            }
+
+            if (hasError) {
+                clearPreview();
+                return;
+            }
+
+            // Calcular preview para todos los jugadores mencionados
+            previewData = {};
+
+            Object.keys(currentData).forEach(name => {
+                const newCurrent = currentData[name];
+
+                if (!players[name]) {
+                    // Nuevo jugador: se inicia con previous=0, current=valor ingresado
+                    // Al ser nuevo, la donación semanal es todo el valor ingresado
+                    previewData[name] = {
+                        previous: 0,
+                        current: newCurrent,
+                        total: newCurrent, // Total = donación de esta semana
+                        weeklyTotal: newCurrent,
+                        accumulatedExcess: 0,
+                        isNew: true,
+                        absent: false,
+                        willBeBanned: false
+                    };
+                } else {
+                    // Jugador existente
+                    const player = players[name];
+                    const previousCurrent = player.current || 0;
+
+                    // Si el nuevo valor es menor que el actual, hay error (no debería pasar)
+                    if (newCurrent < previousCurrent) {
+                        console.warn(`⚠️ Error en preview: ${name} tiene valor menor (${newCurrent} < ${previousCurrent})`);
+                        return;
+                    }
+
+                    const difference = newCurrent - previousCurrent;
+
+                    // --- SIMULACIÓN MULTI-ETAPA ---
+
+                    const weeklyGoal = (goalDaily || 0) * 7;
+
+                    // PASO 1: Simular el cierre de la SEMANA ACTUAL (Week A)
+                    // Usamos los valores actuales explícitos para evitar inconsistencias
+                    const currentWeeklyDonation = (player.current || 0) - (player.previous || 0);
+
+                    // Importante: Usar Math.max(0, ...) para el acumulado histórico, igual que en renderTable
+                    let baseAccumulated = Math.max(0, player.accumulatedExcess || 0);
+
+                    if (currentWeeklyDonation >= weeklyGoal) {
+                        // Superávit en Week A
+                        baseAccumulated += (currentWeeklyDonation - weeklyGoal);
+                    } else {
+                        // Déficit en Week A
+                        const deficitA = Math.max(0, weeklyGoal - currentWeeklyDonation);
+                        const availableA = baseAccumulated;
+                        const drawA = Math.min(deficitA, availableA);
+                        baseAccumulated = availableA - drawA;
+                    }
+
+                    // PASO 2: Proyectar la SEMANA SIGUIENTE (Week B - Vista Previa)
+                    // Usamos 'baseAccumulated' como el punto de partida real (lo que el usuario ve como "Acumulado" hoy)
+                    const futureDonation = difference; // Lo donado en la nueva semana (Week B)
+                    let finalAccumulated = baseAccumulated;
+                    let futureDeficitDraw = 0;
+
+                    if (futureDonation >= weeklyGoal) {
+                        finalAccumulated += (futureDonation - weeklyGoal);
+                    } else {
+                        const deficitB = weeklyGoal - futureDonation;
+                        const availableB = Math.max(0, finalAccumulated);
+                        futureDeficitDraw = Math.min(deficitB, availableB);
+                        finalAccumulated = availableB - futureDeficitDraw;
+                    }
+
+                    previewData[name] = {
+                        ...player,
+                        previous: previousCurrent, // El valor "tenía" se mantiene como referencia visual
+                        current: newCurrent, // El nuevo valor ingresado
+                        total: (player.total || 0) + difference, // Total aumenta por la diferencia
+                        weeklyTotal: futureDonation, // Donación de la nueva semana
+                        accumulatedExcess: finalAccumulated, // Valor final tras las dos etapas
+                        isNew: false,
+                        absent: false,
+                        willBeBanned: false,
+                        simulatedDeficitDraw: futureDeficitDraw // Solo lo que se descontó en la Week B
+                    };
+                }
+            });
+
+            // Identificar jugadores que serán baneados (no aparecen en currentData pero sí existen)
+            Object.keys(players).forEach(name => {
+                if (!currentData[name] && !players[name].absent) {
+                    // Este jugador será marcado como ausente/baneado
+                    previewData[name] = {
+                        ...players[name],
+                        isNew: false,
+                        absent: true,
+                        willBeBanned: true
+                    };
+                }
+            });
+
+            renderTable();
+        }
+    </script>
+
     <!-- Firebase App (el núcleo) -->
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <!-- Firebase Authentication -->
@@ -3076,4 +3637,5 @@
     <!-- Firebase Firestore (la base de datos) -->
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
 </body>
+
 </html>
