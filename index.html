@@ -2578,66 +2578,89 @@
         let hasDataUpdate = false;
 
         function smartSyncAction() {
-            // 1. Si hay actualización de App (Service Worker waiting)
-            if (hasAppUpdate) {
-                if (confirm('🚀 Hay una nueva versión de la App lista.\n¿Quieres actualizar ahora?')) {
-                    // Skip waiting para activar el nuevo SW
-                    if (navigator.serviceWorker && navigator.serviceWorker.getRegistration()) {
-                        navigator.serviceWorker.getRegistration().then(reg => {
-                            if (reg && reg.waiting) {
-                                reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-                                window.location.reload();
-                            }
-                        });
-                    } else {
-                        window.location.reload();
-                    }
+            // Ahora simplemente abre el menú de opciones modernos
+            showSyncOptions();
+        }
+
+        // --- FUNCIONES DEL NUEVO MENÚ DE SINCRONIZACIÓN (MODAL) ---
+
+        function showSyncOptions() {
+            hideAllSections();
+            const modal = document.getElementById('syncOptionsModal');
+            const btnUpdate = document.getElementById('btnUpdateApp');
+
+            if (modal) {
+                // Mostrar botón de actualización solo si es necesario
+                if (hasAppUpdate && btnUpdate) {
+                    btnUpdate.style.display = 'flex';
+                } else if (btnUpdate) {
+                    btnUpdate.style.display = 'none';
                 }
-                return;
+                modal.classList.add('active');
             }
+        }
 
-            // 2. Si hay datos nuevos en Firebase que no tenemos
-            if (hasDataUpdate) {
-                showStatus('🔄 Descargando datos recientes...', 'success');
-                forceSync(); // Función existente que descarga de Firebase
-                return;
-            }
+        function hideSyncOptions() {
+            const modal = document.getElementById('syncOptionsModal');
+            if (modal) modal.classList.remove('active');
+        }
 
-            // 3. Estado normal: Ofrecer reparación/reset
-            if (confirm('❓ ¿Qué deseas hacer?\n\n[ACEPTAR] = 🔄 REPARAR APP (Borrar caché y recargar nueva versión)\n[CANCELAR] = Solo sincronizar datos')) {
-                forceClearCache();
-            } else {
-                forceSync();
+        function executeSync(action) {
+            hideSyncOptions();
+
+            switch (action) {
+                case 'UPDATE_APP':
+                    if (confirm('🚀 ¿Confirmas que quieres actualizar la App?')) {
+                        if (navigator.serviceWorker && navigator.serviceWorker.getRegistration()) {
+                            navigator.serviceWorker.getRegistration().then(reg => {
+                                if (reg && reg.waiting) {
+                                    reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                                    window.location.reload();
+                                } else {
+                                    window.location.reload();
+                                }
+                            });
+                        } else {
+                            window.location.reload();
+                        }
+                    }
+                    break;
+
+                case 'SYNC_DATA':
+                    showStatus('🔄 Buscando datos recientes...', 'success');
+                    forceSync();
+                    break;
+
+                case 'REPAIR':
+                    if (confirm('⚠️ ¿Seguro que quieres borrar la caché y recargar?')) {
+                        forceClearCache();
+                    }
+                    break;
             }
         }
 
         function forceClearCache() {
-            if (confirm('⚠️ Esto forzará una recarga completa de la aplicación.\n(Tus datos de jugadores NO se borrarán, solo la memoria de la aplicación).\n¿Continuar?')) {
-                showStatus('🧹 Limpiando caché y recargando...', 'success');
-
-                // Desregistrar Service Workers
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.getRegistrations().then(function (registrations) {
-                        for (let registration of registrations) {
-                            registration.unregister();
-                        }
-
-                        // Borrar cachés de archivos
-                        if ('caches' in window) {
-                            caches.keys().then(function (names) {
-                                for (let name of names) {
-                                    caches.delete(name);
-                                }
-                                // Recargar página forzando fetch al servidor
-                                window.location.reload(true);
-                            });
-                        } else {
+            showStatus('🧹 Limpiando caché y recargando...', 'success');
+            // Desregistrar Service Workers
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                    for (let registration of registrations) {
+                        registration.unregister();
+                    }
+                    // Borrar cachés
+                    if ('caches' in window) {
+                        caches.keys().then(function (names) {
+                            for (let name of names) {
+                                caches.delete(name);
+                            }
                             window.location.reload(true);
-                        }
-                    });
-                } else {
-                    window.location.reload(true);
-                }
+                        });
+                    } else {
+                        window.location.reload(true);
+                    }
+                });
+            } else {
+                window.location.reload(true);
             }
         }
 
