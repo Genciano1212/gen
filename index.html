@@ -147,14 +147,13 @@
             position: relative;
             box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
             border: none;
-            transition: all 0.3s ease;
             cursor: pointer;
             z-index: 5;
         }
 
         .btn-smart-sync:hover {
-            transform: rotate(180deg) scale(1.1);
-            box-shadow: 0 8px 25px rgba(0, 114, 255, 0.6);
+            transform: scale(1.05);
+            /* Solo un ligero zoom, sin rotación ni sombra extra */
         }
 
         .btn-smart-sync:active {
@@ -168,28 +167,11 @@
             right: 0;
             width: 12px;
             height: 12px;
-            background-color: #ff3d00;
+            background-color: #dc3545;
+            /* Rojo estándar sin brillo */
             border-radius: 50%;
             border: 2px solid white;
-            animation: pulse-red 1.5s infinite;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-
-        @keyframes pulse-red {
-            0% {
-                transform: scale(0.95);
-                box-shadow: 0 0 0 0 rgba(255, 61, 0, 0.7);
-            }
-
-            70% {
-                transform: scale(1.1);
-                box-shadow: 0 0 0 6px rgba(255, 61, 0, 0);
-            }
-
-            100% {
-                transform: scale(0.95);
-                box-shadow: 0 0 0 0 rgba(255, 61, 0, 0);
-            }
+            /* Animation pulse removed */
         }
 
         .btn-help {
