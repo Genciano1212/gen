@@ -1478,6 +1478,43 @@
         </div>
     </div>
 
+    <!-- Modal de opciones de Sincronización (Smart Sync) -->
+    <div id="syncOptionsModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideSyncOptions()">&times;</span>
+            <h2 style="color: #007bff;">☁️ Sincronización</h2>
+            <p>Estado y herramientas de reparación:</p>
+
+            <!-- Botón de Actualizar App (Solo visible si hay update) -->
+            <button id="btnUpdateApp" class="btn" onclick="executeSync('UPDATE_APP')"
+                style="display: none; width: 100%; margin-bottom: 15px; padding: 15px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: white; height: auto; white-space: normal; flex-direction: column; align-items: flex-start; text-align: left;">
+                <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">🚀 Actualizar Aplicación</div>
+                <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Nueva versión disponible. Clic para
+                    instalar.</div>
+            </button>
+
+            <!-- Botón de Sincronizar Datos -->
+            <button class="btn" onclick="executeSync('SYNC_DATA')"
+                style="width: 100%; margin-bottom: 15px; padding: 15px; background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white; height: auto; white-space: normal; display: flex; flex-direction: column; align-items: flex-start; text-align: left;">
+                <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">☁️ Sincronizar Datos</div>
+                <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Descargar los últimos datos desde la
+                    nube.</div>
+            </button>
+
+            <!-- Botón de Reparar -->
+            <button class="btn" onclick="executeSync('REPAIR')"
+                style="width: 100%; padding: 15px; background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; height: auto; white-space: normal; display: flex; flex-direction: column; align-items: flex-start; text-align: left;">
+                <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">🛠️ Reparar / Recargar</div>
+                <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">¿Problemas? Limpia la memoria y recarga
+                    la App.</div>
+            </button>
+
+            <div class="section-buttons" style="margin-top: 20px;">
+                <button class="btn btn-cancel" onclick="hideSyncOptions()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- INICIO DE LA INTEGRACIÓN CON FIREBASE ---
         const firebaseConfig = {
@@ -1660,6 +1697,8 @@
             if (toggle) toggle.checked = notificationsEnabled;
         }
 
+
+
         function showSettings() {
             hideAllSections();
             document.getElementById('settingsModal').classList.add('active');
@@ -1668,6 +1707,8 @@
         function hideSettings() {
             document.getElementById('settingsModal').classList.remove('active');
         }
+
+
 
         function installApp() {
             if (!deferredPrompt) {
