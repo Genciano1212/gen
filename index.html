@@ -2089,15 +2089,21 @@
         }
 
         function renderTable() {
-            const tbody = document.querySelector('#table tbody');
-            const tfoot = document.querySelector('#table tfoot');
-            const tableHeader = document.querySelector('#tableHeader');
-            if (!tbody || !tfoot || !tableHeader) return;
-            tbody.innerHTML = '';
+            try {
+                // Selección defensiva de elementos
+                const tbody = document.getElementById('tableBody') || document.querySelector('#table tbody');
+                const tfoot = document.querySelector('#table tfoot');
+                const tableHeader = document.getElementById('tableHeader') || document.querySelector('.table-header');
 
-            // Actualizar header dinámicamente según modo edición
-            if (isEditMode) {
-                tableHeader.innerHTML = `
+                if (!tbody) { console.error('Error crítico: No se encuentra tbody'); return; }
+                if (!tfoot) { console.error('Error crítico: No se encuentra tfoot'); return; }
+                if (!tableHeader) { console.error('Error crítico: No se encuentra tableHeader'); return; }
+
+                tbody.innerHTML = '';
+
+                // Actualizar header dinámicamente según modo edición
+                if (isEditMode) {
+                    tableHeader.innerHTML = `
                     <tr>
                         <th>NOMBRE</th>
                         <th>TENÍA</th>
@@ -2110,8 +2116,8 @@
                         <th>ACCIONES</th>
                     </tr>
                 `;
-            } else {
-                tableHeader.innerHTML = `
+                } else {
+                    tableHeader.innerHTML = `
                     <tr>
                         <th>NOMBRE</th>
                         <th>TENÍA</th>
@@ -2123,81 +2129,81 @@
                         <th>TOTAL</th>
                     </tr>
                 `;
-            }
+                }
 
-            const playerNames = Object.keys(players);
-            if (playerNames.length === 0) {
-                const colspan = isEditMode ? 9 : 8;
-                tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center; padding: 40px; color: #6c757d;">No hay datos. Inicia sesión como admin para añadir jugadores.</td></tr>`;
-                tfoot.innerHTML = '';
-                return;
-            }
-
-            const sorted = playerNames.sort((a, b) => {
-                const playerA = players[a], playerB = players[b];
-                const aIsAbsent = playerA.absent || false, bIsAbsent = playerB.absent || false;
-                if (aIsAbsent !== bIsAbsent) return aIsAbsent ? 1 : -1;
-                if (aIsAbsent && bIsAbsent) return a.localeCompare(b);
-                const aTotal = playerA?.total || 0, bTotal = playerB?.total || 0;
-                return bTotal - aTotal;
-            });
-
-            let maxWeeklyDonation = 0;
-            sorted.forEach(name => {
-                const player = players[name];
-                const semanal = (player.current || 0) - (player.previous || 0);
-                if (!player.absent && semanal > maxWeeklyDonation) maxWeeklyDonation = semanal;
-            });
-
-            let totalSemanal = 0, totalAcumulado = 0, totalAcumuladoExceso = 0, playersActive = 0, activePlayerRank = 0;
-
-            sorted.forEach(name => {
-                const player = players[name];
-                if (!player) return;
-                player.weeklyTotal = (player.current || 0) - (player.previous || 0);
-                player.accumulatedExcess = player.accumulatedExcess || 0;
-                player.isNew = player.isNew || false;
-                const row = tbody.insertRow();
-
-                if (player.absent) {
-                    row.className = 'absent-player';
-                    const colspan = isEditMode ? 8 : 7;
-                    row.innerHTML = `<td>${name}</td><td colspan="${colspan}">❌ Baneado</td>`;
+                const playerNames = Object.keys(players);
+                if (playerNames.length === 0) {
+                    const colspan = isEditMode ? 9 : 8;
+                    tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center; padding: 40px; color: #6c757d;">No hay datos. Inicia sesión como admin para añadir jugadores.</td></tr>`;
+                    tfoot.innerHTML = '';
                     return;
                 }
 
-                if (player.isNew) {
-                    if (isEditMode) {
-                        row.innerHTML = `<td style="font-weight: 500; text-align: center;">${name}<br><span style="color: #28a745; font-size: 0.9em; font-weight: bold;">NUEVO</span></td><td>-</td><td>${formatNumber(player.current || 0)}</td><td>0</td><td>0</td><td>0%</td><td>0</td><td>0</td><td></td>`;
-                    } else {
-                        row.innerHTML = `<td style="font-weight: 500; text-align: center;">${name}<br><span style="color: #28a745; font-size: 0.9em; font-weight: bold;">NUEVO</span></td><td>-</td><td>${formatNumber(player.current || 0)}</td><td>0</td><td>0</td><td>0%</td><td>0</td><td>0</td>`;
-                    }
-                    return;
-                }
+                const sorted = playerNames.sort((a, b) => {
+                    const playerA = players[a], playerB = players[b];
+                    const aIsAbsent = playerA.absent || false, bIsAbsent = playerB.absent || false;
+                    if (aIsAbsent !== bIsAbsent) return aIsAbsent ? 1 : -1;
+                    if (aIsAbsent && bIsAbsent) return a.localeCompare(b);
+                    const aTotal = playerA?.total || 0, bTotal = playerB?.total || 0;
+                    return bTotal - aTotal;
+                });
 
-                // Si está en modo edición para este jugador
-                if (editingPlayer === name) {
+                let maxWeeklyDonation = 0;
+                sorted.forEach(name => {
+                    const player = players[name];
                     const semanal = (player.current || 0) - (player.previous || 0);
-                    const weeklyGoal = goalDaily * 7;
-                    const weeklyExcess = Math.max(0, semanal - weeklyGoal);
-                    const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
-                    const availableExcess = Math.max(0, player.accumulatedExcess || 0);
-                    const deficitDraw = Math.min(weeklyDeficit, availableExcess);
-                    const finalPotentialExcess = availableExcess - deficitDraw + weeklyExcess;
+                    if (!player.absent && semanal > maxWeeklyDonation) maxWeeklyDonation = semanal;
+                });
 
-                    const calc = calculatePercentages(player);
+                let totalSemanal = 0, totalAcumulado = 0, totalAcumuladoExceso = 0, playersActive = 0, activePlayerRank = 0;
 
-                    let nameHtml = name;
-                    if (activePlayerRank <= 5) {
-                        const starColors = ['#FFD700', '#FFC107', '#FFFF00', '#FFFFE0', '#FFFACD'];
-                        const starIcons = ['🌟', '✶', '★', '✶', '⭑'];
-                        const rank = activePlayerRank - 1;
-                        const starShadow = '-1px -1px 0 #4A4A4A, 1px -1px 0 #4A4A4A, -1px 1px 0 #4A4A4A, 1px 1px 0 #4A4A4A';
-                        let currentStarFontSize = activePlayerRank === 2 ? '20px' : '18px';
-                        nameHtml += `<span style="position: absolute; top: 1px; right: 4px; font-size: ${currentStarFontSize}; color: ${starColors[rank]}; text-shadow: ${starShadow};" title="Top ${activePlayerRank} donador total">${starIcons[rank]}</span>`;
+                sorted.forEach(name => {
+                    const player = players[name];
+                    if (!player) return;
+                    player.weeklyTotal = (player.current || 0) - (player.previous || 0);
+                    player.accumulatedExcess = player.accumulatedExcess || 0;
+                    player.isNew = player.isNew || false;
+                    const row = tbody.insertRow();
+
+                    if (player.absent) {
+                        row.className = 'absent-player';
+                        const colspan = isEditMode ? 8 : 7;
+                        row.innerHTML = `<td>${name}</td><td colspan="${colspan}">❌ Baneado</td>`;
+                        return;
                     }
 
-                    row.innerHTML = `
+                    if (player.isNew) {
+                        if (isEditMode) {
+                            row.innerHTML = `<td style="font-weight: 500; text-align: center;">${name}<br><span style="color: #28a745; font-size: 0.9em; font-weight: bold;">NUEVO</span></td><td>-</td><td>${formatNumber(player.current || 0)}</td><td>0</td><td>0</td><td>0%</td><td>0</td><td>0</td><td></td>`;
+                        } else {
+                            row.innerHTML = `<td style="font-weight: 500; text-align: center;">${name}<br><span style="color: #28a745; font-size: 0.9em; font-weight: bold;">NUEVO</span></td><td>-</td><td>${formatNumber(player.current || 0)}</td><td>0</td><td>0</td><td>0%</td><td>0</td><td>0</td>`;
+                        }
+                        return;
+                    }
+
+                    // Si está en modo edición para este jugador
+                    if (editingPlayer === name) {
+                        const semanal = (player.current || 0) - (player.previous || 0);
+                        const weeklyGoal = goalDaily * 7;
+                        const weeklyExcess = Math.max(0, semanal - weeklyGoal);
+                        const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
+                        const availableExcess = Math.max(0, player.accumulatedExcess || 0);
+                        const deficitDraw = Math.min(weeklyDeficit, availableExcess);
+                        const finalPotentialExcess = availableExcess - deficitDraw + weeklyExcess;
+
+                        const calc = calculatePercentages(player);
+
+                        let nameHtml = name;
+                        if (activePlayerRank <= 5) {
+                            const starColors = ['#FFD700', '#FFC107', '#FFFF00', '#FFFFE0', '#FFFACD'];
+                            const starIcons = ['🌟', '✶', '★', '✶', '⭑'];
+                            const rank = activePlayerRank - 1;
+                            const starShadow = '-1px -1px 0 #4A4A4A, 1px -1px 0 #4A4A4A, -1px 1px 0 #4A4A4A, 1px 1px 0 #4A4A4A';
+                            let currentStarFontSize = activePlayerRank === 2 ? '20px' : '18px';
+                            nameHtml += `<span style="position: absolute; top: 1px; right: 4px; font-size: ${currentStarFontSize}; color: ${starColors[rank]}; text-shadow: ${starShadow};" title="Top ${activePlayerRank} donador total">${starIcons[rank]}</span>`;
+                        }
+
+                        row.innerHTML = `
                         <td style="font-weight: 600; padding: 16px 5px; position: relative;">
                             <input type="text" id="edit-name-${name}" value="${name}"
                                    style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;"
@@ -2235,98 +2241,98 @@
                             <button class="btn btn-cancel" onclick="cancelEditing()" title="Cancelar" style="font-size: clamp(12px, 3vw, 16px); padding: clamp(4px, 1vw, 8px);">✗</button>
                         </td>
                     `;
-                    return;
-                }
-
-                playersActive++;
-                activePlayerRank++;
-                let nameHtml = name;
-                if (activePlayerRank <= 5) {
-                    const starColors = ['#FFD700', '#FFC107', '#FFFF00', '#FFFFE0', '#FFFACD'];
-                    const starIcons = ['🌟', '✶', '★', '✶', '⭑'];
-                    const rank = activePlayerRank - 1;
-                    const starShadow = '-1px -1px 0 #4A4A4A, 1px -1px 0 #4A4A4A, -1px 1px 0 #4A4A4A, 1px 1px 0 #4A4A4A';
-                    let currentStarFontSize = activePlayerRank === 2 ? '20px' : '18px';
-                    nameHtml += `<span style="position: absolute; top: 1px; right: 4px; font-size: ${currentStarFontSize}; color: ${starColors[rank]}; text-shadow: ${starShadow};" title="Top ${activePlayerRank} donador total">${starIcons[rank]}</span>`;
-                }
-
-                const semanal = (player.current || 0) - (player.previous || 0);
-                const weeklyGoal = goalDaily * 7;
-                const weeklyExcess = Math.max(0, semanal - weeklyGoal);
-                const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
-                const availableExcess = Math.max(0, player.accumulatedExcess || 0);
-                const deficitDraw = Math.min(weeklyDeficit, availableExcess);
-                const finalPotentialExcess = availableExcess - deficitDraw + weeklyExcess;
-
-                const calc = calculatePercentages(player);
-                let metaContent = `${calc.metaPerc.toFixed(1)}%`;
-                if (maxWeeklyDonation > 0 && (player.current - player.previous) === maxWeeklyDonation) {
-                    metaContent += ' <span title="Mayor donación de la semana">⭐</span>';
-                }
-
-                let deficitHtml = '';
-                if (deficitDraw > 0) {
-                    deficitHtml = `<br/><span style="color: red;">(-${formatNumber(deficitDraw)})</span>`;
-                }
-
-                totalSemanal += calc.semanal;
-                totalAcumulado += (player.total || 0);
-                totalAcumuladoExceso += finalPotentialExcess;
-
-                if (isEditMode && auth.currentUser) {
-                    const actionsHtml = `<td style="text-align: center; padding: 8px;">
-                        <button class="btn btn-edit" onclick="enableEditing('${name}')" title="Editar jugador">✏️</button>
-                    </td>`;
-                    row.innerHTML = `<td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}</td><td>${formatNumber(player.previous || 0)}</td><td>${formatNumber(player.current || 0)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(calc.semanal)}</td><td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td><td>${formatNumber(finalPotentialExcess)}${deficitHtml}${formatExtraDonationTime(finalPotentialExcess / (goalDaily || 1))}</td><td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>${actionsHtml}`;
-                } else {
-                    row.innerHTML = `<td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}</td><td>${formatNumber(player.previous || 0)}</td><td>${formatNumber(player.current || 0)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(calc.semanal)}</td><td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td><td>${formatNumber(finalPotentialExcess)}${deficitHtml}${formatExtraDonationTime(finalPotentialExcess / (goalDaily || 1))}</td><td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>`;
-                }
-
-                // Mostrar vista previa si hay cambios pendientes para este jugador (solo admin)
-                if (previewData && previewData[name] && auth.currentUser) {
-                    const previewPlayer = previewData[name];
-                    const previewRow = tbody.insertRow();
-
-                    // Determinar el tipo de fila de preview según el estado del jugador
-                    let previewClass = 'preview-row';
-                    let previewLabelText = 'VISTA PREVIA';
-                    let previewLabelClass = 'preview-label';
-
-                    if (previewPlayer.willBeBanned) {
-                        previewClass = 'preview-row-banned';
-                        previewLabelText = 'SERÁ BANEADO';
-                        previewLabelClass = 'preview-label-banned';
-                    } else if (previewPlayer.isNew) {
-                        previewClass = 'preview-row-new';
-                        previewLabelText = 'NUEVO';
-                        previewLabelClass = 'preview-label-new';
+                        return;
                     }
 
-                    previewRow.className = previewClass;
+                    playersActive++;
+                    activePlayerRank++;
+                    let nameHtml = name;
+                    if (activePlayerRank <= 5) {
+                        const starColors = ['#FFD700', '#FFC107', '#FFFF00', '#FFFFE0', '#FFFACD'];
+                        const starIcons = ['🌟', '✶', '★', '✶', '⭑'];
+                        const rank = activePlayerRank - 1;
+                        const starShadow = '-1px -1px 0 #4A4A4A, 1px -1px 0 #4A4A4A, -1px 1px 0 #4A4A4A, 1px 1px 0 #4A4A4A';
+                        let currentStarFontSize = activePlayerRank === 2 ? '20px' : '18px';
+                        nameHtml += `<span style="position: absolute; top: 1px; right: 4px; font-size: ${currentStarFontSize}; color: ${starColors[rank]}; text-shadow: ${starShadow};" title="Top ${activePlayerRank} donador total">${starIcons[rank]}</span>`;
+                    }
 
-                    // Para jugadores baneados, mostrar datos simplificados
-                    if (previewPlayer.willBeBanned) {
-                        const colspan = isEditMode ? 9 : 8;
-                        previewRow.innerHTML = `
+                    const semanal = (player.current || 0) - (player.previous || 0);
+                    const weeklyGoal = goalDaily * 7;
+                    const weeklyExcess = Math.max(0, semanal - weeklyGoal);
+                    const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
+                    const availableExcess = Math.max(0, player.accumulatedExcess || 0);
+                    const deficitDraw = Math.min(weeklyDeficit, availableExcess);
+                    const finalPotentialExcess = availableExcess - deficitDraw + weeklyExcess;
+
+                    const calc = calculatePercentages(player);
+                    let metaContent = `${calc.metaPerc.toFixed(1)}%`;
+                    if (maxWeeklyDonation > 0 && (player.current - player.previous) === maxWeeklyDonation) {
+                        metaContent += ' <span title="Mayor donación de la semana">⭐</span>';
+                    }
+
+                    let deficitHtml = '';
+                    if (deficitDraw > 0) {
+                        deficitHtml = `<br/><span style="color: red;">(-${formatNumber(deficitDraw)})</span>`;
+                    }
+
+                    totalSemanal += calc.semanal;
+                    totalAcumulado += (player.total || 0);
+                    totalAcumuladoExceso += finalPotentialExcess;
+
+                    if (isEditMode && auth.currentUser) {
+                        const actionsHtml = `<td style="text-align: center; padding: 8px;">
+                        <button class="btn btn-edit" onclick="enableEditing('${name}')" title="Editar jugador">✏️</button>
+                    </td>`;
+                        row.innerHTML = `<td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}</td><td>${formatNumber(player.previous || 0)}</td><td>${formatNumber(player.current || 0)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(calc.semanal)}</td><td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td><td>${formatNumber(finalPotentialExcess)}${deficitHtml}${formatExtraDonationTime(finalPotentialExcess / (goalDaily || 1))}</td><td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>${actionsHtml}`;
+                    } else {
+                        row.innerHTML = `<td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}</td><td>${formatNumber(player.previous || 0)}</td><td>${formatNumber(player.current || 0)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(calc.semanal)}</td><td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td><td>${formatNumber(finalPotentialExcess)}${deficitHtml}${formatExtraDonationTime(finalPotentialExcess / (goalDaily || 1))}</td><td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>`;
+                    }
+
+                    // Mostrar vista previa si hay cambios pendientes para este jugador (solo admin)
+                    if (previewData && previewData[name] && auth.currentUser) {
+                        const previewPlayer = previewData[name];
+                        const previewRow = tbody.insertRow();
+
+                        // Determinar el tipo de fila de preview según el estado del jugador
+                        let previewClass = 'preview-row';
+                        let previewLabelText = 'VISTA PREVIA';
+                        let previewLabelClass = 'preview-label';
+
+                        if (previewPlayer.willBeBanned) {
+                            previewClass = 'preview-row-banned';
+                            previewLabelText = 'SERÁ BANEADO';
+                            previewLabelClass = 'preview-label-banned';
+                        } else if (previewPlayer.isNew) {
+                            previewClass = 'preview-row-new';
+                            previewLabelText = 'NUEVO';
+                            previewLabelClass = 'preview-label-new';
+                        }
+
+                        previewRow.className = previewClass;
+
+                        // Para jugadores baneados, mostrar datos simplificados
+                        if (previewPlayer.willBeBanned) {
+                            const colspan = isEditMode ? 9 : 8;
+                            previewRow.innerHTML = `
                             <td><span class="${previewLabelClass}">${previewLabelText}</span> ${name}</td>
                             <td colspan="${colspan - 1}" style="text-align: center; font-style: italic;">
                                 Este jugador no aparece en los datos nuevos y será marcado como ausente
                             </td>
                         `;
-                    } else {
-                        const previewCalc = calculatePercentages(previewPlayer);
-                        // Los valores ya vienen calculados correctamente desde updateManualPreview
-                        // No necesitamos recalcular el futuro, solo mostrarlo.
-                        const finalAccumulated = previewPlayer.accumulatedExcess || 0;
-                        const deficitDraw = previewPlayer.simulatedDeficitDraw || 0;
+                        } else {
+                            const previewCalc = calculatePercentages(previewPlayer);
+                            // Los valores ya vienen calculados correctamente desde updateManualPreview
+                            // No necesitamos recalcular el futuro, solo mostrarlo.
+                            const finalAccumulated = previewPlayer.accumulatedExcess || 0;
+                            const deficitDraw = previewPlayer.simulatedDeficitDraw || 0;
 
-                        // CORRECCIÓN: El porcentaje debe reflejar la donación efectiva (Lo donado + Lo cubierto con acumulado)
-                        const weeklyGoal = (goalDaily || 0) * 7;
-                        const effectiveDonation = (previewPlayer.weeklyTotal || 0) + deficitDraw;
-                        // NO limitar al 100%. Si donó de más, debe verse. El deficitDraw ya asegura que no se pase de 100% A MENOS que sea por donación real.
-                        const effectiveMetaPerc = (effectiveDonation / weeklyGoal) * 100;
+                            // CORRECCIÓN: El porcentaje debe reflejar la donación efectiva (Lo donado + Lo cubierto con acumulado)
+                            const weeklyGoal = (goalDaily || 0) * 7;
+                            const effectiveDonation = (previewPlayer.weeklyTotal || 0) + deficitDraw;
+                            // NO limitar al 100%. Si donó de más, debe verse. El deficitDraw ya asegura que no se pase de 100% A MENOS que sea por donación real.
+                            const effectiveMetaPerc = (effectiveDonation / weeklyGoal) * 100;
 
-                        previewRow.innerHTML = `
+                            previewRow.innerHTML = `
                             <td><span class="${previewLabelClass}">${previewLabelText}</span> ${name}</td>
                             <td>${formatNumber(previewPlayer.previous || 0)}</td>
                             <td>${formatNumber(previewPlayer.current || 0)}</td>
@@ -2337,55 +2343,55 @@
                             <td class="${getColorClass(previewCalc.totalPerc, 'total')}">${formatNumber(previewPlayer.total || 0)}</td>
                             ${isEditMode ? '<td></td>' : ''}
                         `;
-                    }
-                }
-            });
-
-            // Mostrar jugadores en preview que no están en la tabla actual (nuevos y baneados adicionales)
-            if (previewData && auth.currentUser) {
-                Object.keys(previewData).forEach(name => {
-                    // Solo mostrar si no está en players actual o si está marcado para ser baneado
-                    const previewPlayer = previewData[name];
-                    const isNewPlayer = previewPlayer.isNew;
-                    const willBeBanned = previewPlayer.willBeBanned;
-
-                    // Si es nuevo o será baneado y no se mostró antes
-                    if ((isNewPlayer || willBeBanned) && !players[name]) {
-                        const previewRow = tbody.insertRow();
-
-                        let previewClass = 'preview-row-new';
-                        let previewLabelText = 'NUEVO';
-                        let previewLabelClass = 'preview-label-new';
-
-                        if (willBeBanned) {
-                            previewClass = 'preview-row-banned';
-                            previewLabelText = 'SERÁ BANEADO';
-                            previewLabelClass = 'preview-label-banned';
                         }
+                    }
+                });
 
-                        previewRow.className = previewClass;
+                // Mostrar jugadores en preview que no están en la tabla actual (nuevos y baneados adicionales)
+                if (previewData && auth.currentUser) {
+                    Object.keys(previewData).forEach(name => {
+                        // Solo mostrar si no está en players actual o si está marcado para ser baneado
+                        const previewPlayer = previewData[name];
+                        const isNewPlayer = previewPlayer.isNew;
+                        const willBeBanned = previewPlayer.willBeBanned;
 
-                        // Para jugadores baneados, mostrar mensaje simplificado
-                        if (willBeBanned) {
-                            const colspan = isEditMode ? 9 : 8;
-                            previewRow.innerHTML = `
+                        // Si es nuevo o será baneado y no se mostró antes
+                        if ((isNewPlayer || willBeBanned) && !players[name]) {
+                            const previewRow = tbody.insertRow();
+
+                            let previewClass = 'preview-row-new';
+                            let previewLabelText = 'NUEVO';
+                            let previewLabelClass = 'preview-label-new';
+
+                            if (willBeBanned) {
+                                previewClass = 'preview-row-banned';
+                                previewLabelText = 'SERÁ BANEADO';
+                                previewLabelClass = 'preview-label-banned';
+                            }
+
+                            previewRow.className = previewClass;
+
+                            // Para jugadores baneados, mostrar mensaje simplificado
+                            if (willBeBanned) {
+                                const colspan = isEditMode ? 9 : 8;
+                                previewRow.innerHTML = `
                                 <td><span class="${previewLabelClass}">${previewLabelText}</span> ${name}</td>
                                 <td colspan="${colspan - 1}" style="text-align: center; font-style: italic;">
                                     Este jugador no aparece en los datos nuevos y será marcado como ausente
                                 </td>
                             `;
-                        } else {
-                            // Para jugadores nuevos, NO mostrar cálculos (son base 0)
-                            // Alinear con el comportamiento de la tabla principal para isNew
-                            const finalAccumulated = previewPlayer.accumulatedExcess || 0;
-                            // Mostrar el valor ingresado en "Tiene" y "-" en "Tenía", o 0 en ambos stats
+                            } else {
+                                // Para jugadores nuevos, NO mostrar cálculos (son base 0)
+                                // Alinear con el comportamiento de la tabla principal para isNew
+                                const finalAccumulated = previewPlayer.accumulatedExcess || 0;
+                                // Mostrar el valor ingresado en "Tiene" y "-" en "Tenía", o 0 en ambos stats
 
-                            const colspan = isEditMode ? 9 : 8;
+                                const colspan = isEditMode ? 9 : 8;
 
-                            // Opción: Mostrar igual que en la tabla principal
-                            // <td>NUEVO {name}</td> <td>-</td> <td>{current}</td> <td>0</td> ...
+                                // Opción: Mostrar igual que en la tabla principal
+                                // <td>NUEVO {name}</td> <td>-</td> <td>{current}</td> <td>0</td> ...
 
-                            previewRow.innerHTML = `
+                                previewRow.innerHTML = `
                                 <td><span class="${previewLabelClass}">${previewLabelText}</span> ${name}</td>
                                 <td>-</td>
                                 <td>${formatNumber(previewPlayer.current || 0)}</td>
@@ -2396,38 +2402,38 @@
                                 <td class="total">0</td>
                                 ${isEditMode ? '<td></td>' : ''}
                             `;
+                            }
                         }
-                    }
-                });
-            }
-
-            const avgSemanal = playersActive > 0 ? totalSemanal / playersActive : 0;
-            const colspan = isEditMode ? 9 : 8;
-
-            let footerContent = `📊 TOTALES (${playersActive} jugadores): ${formatNumber(totalSemanal)} donaciones semanales | Promedio: ${formatNumber(avgSemanal)} | Acumulado: ${formatNumber(totalAcumulado)}`;
-
-            // Agregar resumen de cambios en preview
-            if (previewData && auth.currentUser) {
-                const newPlayersCount = Object.keys(previewData).filter(name => previewData[name].isNew).length;
-                const bannedPlayersCount = Object.keys(previewData).filter(name => previewData[name].willBeBanned).length;
-
-                if (newPlayersCount > 0 || bannedPlayersCount > 0) {
-                    const previewSummary = [];
-                    if (newPlayersCount > 0) previewSummary.push(`<span style="color: #155724;">+${newPlayersCount} nuevos</span>`);
-                    if (bannedPlayersCount > 0) previewSummary.push(`<span style="color: #721c24;">-${bannedPlayersCount} baneados</span>`);
-                    footerContent += ` | <span style="font-weight: bold;">📋 VISTA PREVIA: ${previewSummary.join(' | ')}</span>`;
+                    });
                 }
+
+                const avgSemanal = playersActive > 0 ? totalSemanal / playersActive : 0;
+                const colspan = isEditMode ? 9 : 8;
+
+                let footerContent = `📊 TOTALES (${playersActive} jugadores): ${formatNumber(totalSemanal)} donaciones semanales | Promedio: ${formatNumber(avgSemanal)} | Acumulado: ${formatNumber(totalAcumulado)}`;
+
+                // Agregar resumen de cambios en preview
+                if (previewData && auth.currentUser) {
+                    const newPlayersCount = Object.keys(previewData).filter(name => previewData[name].isNew).length;
+                    const bannedPlayersCount = Object.keys(previewData).filter(name => previewData[name].willBeBanned).length;
+
+                    if (newPlayersCount > 0 || bannedPlayersCount > 0) {
+                        const previewSummary = [];
+                        if (newPlayersCount > 0) previewSummary.push(`<span style="color: #155724;">+${newPlayersCount} nuevos</span>`);
+                        if (bannedPlayersCount > 0) previewSummary.push(`<span style="color: #721c24;">-${bannedPlayersCount} baneados</span>`);
+                        footerContent += ` | <span style="font-weight: bold;">📋 VISTA PREVIA: ${previewSummary.join(' | ')}</span>`;
+                    }
+                }
+
+                tfoot.innerHTML = `<tr class="total-row"><td colspan="${colspan}">${footerContent}</td></tr>`;
+            } catch (error) {
+                console.error("Error crítico en renderTable:", error);
             }
 
-            tfoot.innerHTML = `<tr class="total-row"><td colspan="${colspan}">${footerContent}</td></tr>`;
+
         }
 
-        function updateTimeDisplays() {
-            const lastUpdateEl = document.getElementById('lastUpdateTime');
-            const weekStartEl = document.getElementById('weekStartTime');
-            if (lastUpdateEl) lastUpdateEl.textContent = new Date(lastUpdate).toLocaleString('es-ES');
-            if (weekStartEl) weekStartEl.textContent = new Date(weekStart).toLocaleDateString('es-ES');
-        }
+
 
         // --- FUNCIONES DE EDICIÓN INLINE (ADMIN) ---
 
@@ -2482,6 +2488,12 @@
                     headerEl.style.color = 'rgba(255, 255, 255, 0.9)';
                 }
             }
+
+            // Actualizar footer
+            const lastUpdateEl = document.getElementById('lastUpdateTime');
+            const weekStartEl = document.getElementById('weekStartTime');
+            if (lastUpdateEl) lastUpdateEl.textContent = new Date(lastUpdate).toLocaleString('es-ES');
+            if (weekStartEl) weekStartEl.textContent = new Date(weekStart).toLocaleDateString('es-ES');
         }
 
         // --- SISTEMA SMART SYNC ---
