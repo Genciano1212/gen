@@ -3529,23 +3529,24 @@
             const newCurr = parseInt(newCurrInput.value) || 0;
 
             // Crear el jugador con los nuevos valores para calcular el futuro estado
+            const previewPlayer = {
                 ...players[editingPlayer],
                 previous: newPrev,
-                    current: newCurr,
-                        accumulatedExcess: (document.getElementById(`edit-accumulated-${editingPlayer}`) ? parseInt(document.getElementById(`edit-accumulated-${editingPlayer}`).value) : players[editingPlayer].accumulatedExcess)
-        };
+                current: newCurr,
+                accumulatedExcess: (document.getElementById(`edit-accumulated-${editingPlayer}`) ? parseInt(document.getElementById(`edit-accumulated-${editingPlayer}`).value) : players[editingPlayer].accumulatedExcess)
+            };
 
-        // Calcular el total: si hay aumento en current, se suma al total
-        const currentDiff = newCurr - (players[editingPlayer].current || 0);
-        if (currentDiff > 0) {
-            previewPlayer.total = (players[editingPlayer].total || 0) + currentDiff;
-        }
+            // Calcular el total: si hay aumento en current, se suma al total
+            const currentDiff = newCurr - (players[editingPlayer].current || 0);
+            if (currentDiff > 0) {
+                previewPlayer.total = (players[editingPlayer].total || 0) + currentDiff;
+            }
 
-        // Actualizar previewData
-        previewData = { [editingPlayer]: previewPlayer };
+            // Actualizar previewData
+            previewData = { [editingPlayer]: previewPlayer };
 
-        // Volver a renderizar para mostrar la preview
-        renderTable();
+            // Volver a renderizar para mostrar la preview
+            renderTable();
         }
 
         function clearPreview() {
