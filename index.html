@@ -76,6 +76,14 @@
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
+        .header-subtitle {
+            font-size: clamp(10px, 2.5vw, 12px);
+            font-weight: 500;
+            opacity: 0.9;
+            margin-top: 4px;
+            text-align: center;
+        }
+
         /* Botones de acción */
         .action-buttons {
             display: flex;
@@ -120,6 +128,56 @@
             background: linear-gradient(135deg, #f57c00 0%, #ff9800 100%);
             flex: 1;
             min-width: 0;
+        }
+
+        /* Botón Smart Sync (Nuevo) */
+        .btn-smart-sync {
+            background: white;
+            color: #1a8c42;
+            width: clamp(36px, 9vw, 40px);
+            height: clamp(36px, 9vw, 40px);
+            border-radius: 50%;
+            font-size: clamp(18px, 5vw, 20px);
+            padding: 0;
+            gap: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: none;
+            font-weight: bold;
+            min-height: unset;
+            position: relative;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-smart-sync.has-update::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 10px;
+            height: 10px;
+            background-color: #dc3545;
+            border-radius: 50%;
+            border: 2px solid white;
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 6px rgba(220, 53, 69, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+            }
         }
 
         .btn-help {
@@ -1182,7 +1240,10 @@
     <div class="container">
         <!-- Header principal -->
         <div class="header">
-            <h1>🐜 Donaciones Invencibles v1.1</h1>
+            <h1>🐜 Donaciones Invencibles v2.0</h1>
+            <div class="header-subtitle" id="headerLastUpdate">
+                Última actualización: Cargando...
+            </div>
         </div>
 
         <!-- Botones de acción -->
@@ -1190,11 +1251,15 @@
             <button class="btn btn-manual" onclick="showManual()" title="Ingresar donaciones manualmente">
                 <span>⌨️ Entrada Manual</span>
             </button>
+            <button class="btn-smart-sync" id="smartSyncBtn" onclick="smartSyncAction()"
+                title="Sincronización Inteligente / Reparar">
+                🔄
+            </button>
             <button class="btn btn-help" onclick="showInfo()" title="Ver guía de usuario">?</button>
             <button class="btn-save" id="saveBtn" onclick="manualSave()"
                 title="Opciones de guardado y cierre de semana">✓</button>
             <button class="btn-sync" id="syncBtn" onclick="forceSync()" style="display:none;"
-                title="Sincronizar datos">🔄</button>
+                title="Sincronizar datos de Firebase">☁️</button>
             <button class="btn btn-edit-mode" id="editModeBtn" onclick="toggleEditMode()" style="display:none;"
                 title="Modo Edición">📝</button>
             <button class="btn btn-settings" onclick="showSettings()" title="Ajustes de la aplicación">⚙️</button>
@@ -2389,6 +2454,162 @@
             renderTable();
         }
 
+        // Referencia a Firestore (db es la variable global)
+
+        // --- LÓGICA DE TIEMPO Y SINCRONIZACIÓN ---
+
+        function updateTimeDisplays() {
+            if (!lastUpdate) return;
+            const date = new Date(lastUpdate);
+
+            // Formato para el Header: "Miércoles 13"
+            const optionsHeader = { weekday: 'long', day: 'numeric' };
+            let headerText = date.toLocaleDateString('es-ES', optionsHeader);
+            // Capitalizar la primera letra
+            headerText = headerText.charAt(0).toUpperCase() + headerText.slice(1);
+
+            // Elemento del header
+            const headerEl = document.getElementById('headerLastUpdate');
+            if (headerEl) {
+                headerEl.textContent = `Última actualización: ${headerText}`;
+
+                // Indicador visual sutil si está muy desactualizado (> 24h)
+                const now = new Date();
+                const diffHours = (now - date) / (1000 * 60 * 60);
+                if (diffHours > 24) {
+                    headerEl.style.color = '#ffeba7'; // Amarillo suave
+                } else {
+                    headerEl.style.color = 'rgba(255, 255, 255, 0.9)';
+                }
+            }
+        }
+
+        // --- SISTEMA SMART SYNC ---
+
+        // Variable para controlar si hay actualización de SW o Datos
+        let hasAppUpdate = false;
+        let hasDataUpdate = false;
+
+        function smartSyncAction() {
+            // 1. Si hay actualización de App (Service Worker waiting)
+            if (hasAppUpdate) {
+                if (confirm('🚀 Hay una nueva versión de la App lista.\n¿Quieres actualizar ahora?')) {
+                    // Skip waiting para activar el nuevo SW
+                    if (navigator.serviceWorker && navigator.serviceWorker.getRegistration()) {
+                        navigator.serviceWorker.getRegistration().then(reg => {
+                            if (reg && reg.waiting) {
+                                reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                                window.location.reload();
+                            }
+                        });
+                    } else {
+                        window.location.reload();
+                    }
+                }
+                return;
+            }
+
+            // 2. Si hay datos nuevos en Firebase que no tenemos
+            if (hasDataUpdate) {
+                showStatus('🔄 Descargando datos recientes...', 'success');
+                forceSync(); // Función existente que descarga de Firebase
+                return;
+            }
+
+            // 3. Estado normal: Ofrecer reparación/reset
+            if (confirm('❓ ¿Qué deseas hacer?\n\n[ACEPTAR] = 🔄 REPARAR APP (Borrar caché y recargar nueva versión)\n[CANCELAR] = Solo sincronizar datos')) {
+                forceClearCache();
+            } else {
+                forceSync();
+            }
+        }
+
+        function forceClearCache() {
+            if (confirm('⚠️ Esto forzará una recarga completa de la aplicación.\n(Tus datos de jugadores NO se borrarán, solo la memoria de la aplicación).\n¿Continuar?')) {
+                showStatus('🧹 Limpiando caché y recargando...', 'success');
+
+                // Desregistrar Service Workers
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                        for (let registration of registrations) {
+                            registration.unregister();
+                        }
+
+                        // Borrar cachés de archivos
+                        if ('caches' in window) {
+                            caches.keys().then(function (names) {
+                                for (let name of names) {
+                                    caches.delete(name);
+                                }
+                                // Recargar página forzando fetch al servidor
+                                window.location.reload(true);
+                            });
+                        } else {
+                            window.location.reload(true);
+                        }
+                    });
+                } else {
+                    window.location.reload(true);
+                }
+            }
+        }
+
+        function toggleSmartSyncIndicator(show) {
+            const btn = document.getElementById('smartSyncBtn');
+            if (btn) {
+                if (show) btn.classList.add('has-update');
+                else btn.classList.remove('has-update');
+            }
+        }
+
+        // Modificar forceSync original para que apague el indicador si tiene éxito
+        const originalForceSync = forceSync;
+        forceSync = function () { // Reemplazamos la referencia global si existe, o definimos wrapper
+            // Lógica de sincronización de datos existente
+            loadFromFirebase(true).then(() => {
+                hasDataUpdate = false; // Reset flag
+                toggleSmartSyncIndicator(hasAppUpdate); // Mantener solo si hay app update
+            });
+        };
+
+        // Escuchar cambios en Firestore para activar el punto rojo
+        if (db) {
+            db.collection("config").doc("global").onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    const cloudTime = data.lastUpdate; // Timestamp
+
+                    // Si la fecha de la nube es más nueva que la local
+                    if (cloudTime && lastUpdate && cloudTime > lastUpdate + 1000) { // 1s margen
+                        console.log('🔔 Dato nuevo detectado en nube');
+                        hasDataUpdate = true;
+                        toggleSmartSyncIndicator(true);
+                        showStatus('🔔 Nuevos datos disponibles', 'success');
+                    }
+                }
+            });
+        }
+
+        // --- FIN SISTEMA SMART SYNC ---
+
+        // Función original modificada para llamar a updateTimeDisplays
+        function renderTable() {
+            updateTimeDisplays(); // Actualizar header al renderizar
+
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            // ... (resto de la función renderTable original) ...
+
+            if (auth.currentUser) {
+                btn.style.display = 'flex';
+            } else {
+                btn.style.display = 'none';
+                isEditMode = false;
+                btn.classList.remove('active');
+                btn.textContent = '📝';
+            }
+        }
+
         function updateEditModeButton() {
             const btn = document.getElementById('editModeBtn');
             if (!btn) return;
@@ -3445,20 +3666,10 @@
 
                             newWorker.addEventListener('statechange', () => {
                                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    console.log('Nueva versión del Service Worker disponible. Recargando página...');
-
-                                    // Mostrar notificación al usuario
-                                    if ('Notification' in window && Notification.permission === 'granted') {
-                                        new Notification('🔄 Actualización disponible', {
-                                            body: 'La aplicación se actualizará automáticamente',
-                                            icon: 'icon-192x192.png'
-                                        });
-                                    }
-
-                                    // Recargar la página después de un breve retraso
-                                    setTimeout(() => {
-                                        window.location.reload();
-                                    }, 2000);
+                                    console.log('Nueva versión lista para activar.');
+                                    hasAppUpdate = true;
+                                    toggleSmartSyncIndicator(true);
+                                    showStatus('🚀 Nueva versión disponible. Toca 🔄 para actualizar.', 'success');
                                 }
                             });
                         });
