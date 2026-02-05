@@ -2605,22 +2605,7 @@
         // --- FIN SISTEMA SMART SYNC ---
 
         // Función original modificada para llamar a updateTimeDisplays
-        function renderTable() {
-            updateTimeDisplays(); // Actualizar header al renderizar
 
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-            // ... (resto de la función renderTable original) ...
-
-            if (auth.currentUser) {
-                btn.style.display = 'flex';
-            } else {
-                btn.style.display = 'none';
-                isEditMode = false;
-                btn.classList.remove('active');
-                btn.textContent = '📝';
-            }
-        }
 
         function updateEditModeButton() {
             const btn = document.getElementById('editModeBtn');
