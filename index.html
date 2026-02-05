@@ -2626,7 +2626,8 @@
             Object.keys(currentData).forEach(name => {
                 const current = currentData[name];
                 if (!players[name]) {
-                    players[name] = { previous: 0, current: current, initialDonation: current, total: 0, weeklyTotal: 0, accumulatedExcess: 0, lastSeen: Date.now(), absent: false, isNew: true };
+                    // FIX: Initialize total to current (since previous is 0) so the TOTAL column reflects this week's donation
+                    players[name] = { previous: 0, current: current, initialDonation: current, total: current, weeklyTotal: 0, accumulatedExcess: 0, lastSeen: Date.now(), absent: false, isNew: true };
                 } else {
                     players[name].absent = false;
                     const previousCurrent = players[name].current || 0;
@@ -2682,6 +2683,9 @@
                 // Set 'previous' to 'current' so that next week's calculation (Current - Previous) starts at 0
                 player.previous = player.current || 0;
                 player.weeklyTotal = 0;
+
+                // FIX: Graduate new players to regular players so they show up correctly
+                player.isNew = false;
             });
 
             weekStart = getWeekStart();
