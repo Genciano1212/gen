@@ -2157,8 +2157,10 @@
                         <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
                             ${calc.metaPerc.toFixed(1)}%
                         </td>
-                        <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
-                            ${formatNumber(finalPotentialExcess)}
+                        <td>
+                            <input type="number" id="edit-accumulated-${name}" value="${player.accumulatedExcess || 0}"
+                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;"
+                                   oninput="updatePreviewForEditing()">
                         </td>
                         <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
                             ${formatNumber(player.total || 0)}
@@ -2429,6 +2431,7 @@
             const newNameInput = document.getElementById(`edit-name-${editingPlayer}`);
             const newPrevInput = document.getElementById(`edit-previous-${editingPlayer}`);
             const newCurrInput = document.getElementById(`edit-current-${editingPlayer}`);
+            const newAccInput = document.getElementById(`edit-accumulated-${editingPlayer}`);
 
             if (!newNameInput || !newPrevInput || !newCurrInput) {
                 showStatus('❌ Error: No se encontraron campos de edición', 'error');
@@ -2438,6 +2441,7 @@
             const newName = newNameInput.value.trim();
             const newPrev = parseInt(newPrevInput.value);
             const newCurr = parseInt(newCurrInput.value);
+            const newAcc = newAccInput ? parseInt(newAccInput.value) : (players[editingPlayer].accumulatedExcess || 0);
 
             if (!newName) {
                 showStatus('❌ El nombre no puede estar vacío', 'error');
@@ -2467,6 +2471,7 @@
 
             players[editingPlayer].previous = newPrev;
             players[editingPlayer].current = newCurr;
+            players[editingPlayer].accumulatedExcess = newAcc;
 
             editingPlayer = null;
             previewData = null; // Limpiar vista previa después de guardar
@@ -3524,23 +3529,23 @@
             const newCurr = parseInt(newCurrInput.value) || 0;
 
             // Crear el jugador con los nuevos valores para calcular el futuro estado
-            const previewPlayer = {
                 ...players[editingPlayer],
                 previous: newPrev,
-                current: newCurr
-            };
+                    current: newCurr,
+                        accumulatedExcess: (document.getElementById(`edit-accumulated-${editingPlayer}`) ? parseInt(document.getElementById(`edit-accumulated-${editingPlayer}`).value) : players[editingPlayer].accumulatedExcess)
+        };
 
-            // Calcular el total: si hay aumento en current, se suma al total
-            const currentDiff = newCurr - (players[editingPlayer].current || 0);
-            if (currentDiff > 0) {
-                previewPlayer.total = (players[editingPlayer].total || 0) + currentDiff;
-            }
+        // Calcular el total: si hay aumento en current, se suma al total
+        const currentDiff = newCurr - (players[editingPlayer].current || 0);
+        if (currentDiff > 0) {
+            previewPlayer.total = (players[editingPlayer].total || 0) + currentDiff;
+        }
 
-            // Actualizar previewData
-            previewData = { [editingPlayer]: previewPlayer };
+        // Actualizar previewData
+        previewData = { [editingPlayer]: previewPlayer };
 
-            // Volver a renderizar para mostrar la preview
-            renderTable();
+        // Volver a renderizar para mostrar la preview
+        renderTable();
         }
 
         function clearPreview() {
