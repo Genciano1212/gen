@@ -1256,8 +1256,7 @@
             <button class="btn btn-help" onclick="showInfo()" title="Ver guía de usuario">?</button>
             <button class="btn-save" id="saveBtn" onclick="manualSave()"
                 title="Opciones de guardado y cierre de semana">✓</button>
-            <button class="btn-sync" id="syncBtn" onclick="forceSync()" style="display:none;"
-                title="Sincronizar datos de Firebase">☁️</button>
+
             <button class="btn btn-edit-mode" id="editModeBtn" onclick="toggleEditMode()" style="display:none;"
                 title="Modo Edición">📝</button>
             <button class="btn btn-settings" onclick="showSettings()" title="Ajustes de la aplicación">⚙️</button>
@@ -1806,18 +1805,15 @@
         function updateAdminButtons() {
             const saveBtn = document.getElementById('saveBtn');
             const backupButtons = document.getElementById('backupButtons');
-            const syncBtn = document.getElementById('syncBtn');
 
             if (auth.currentUser) {
                 // Admin - Mostrar botones
                 if (saveBtn) saveBtn.style.display = 'flex';
                 if (backupButtons) backupButtons.style.display = 'block';
-                if (syncBtn) syncBtn.style.display = 'flex';
             } else {
                 // No admin - Ocultar botones
                 if (saveBtn) saveBtn.style.display = 'none';
                 if (backupButtons) backupButtons.style.display = 'none';
-                if (syncBtn) syncBtn.style.display = 'none';
             }
         }
 
