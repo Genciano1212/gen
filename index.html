@@ -1440,6 +1440,11 @@
                 📱 Instalar App
             </button>
 
+            <button class="btn btn-manual" onclick="resetAccumulated()"
+                style="margin-top: 15px; width: 100%; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+                🗑️ Borrar Todos los Acumulados (0)
+            </button>
+
             <div class="section-buttons" style="margin-top: 20px;">
                 <button class="btn btn-cancel" onclick="hideSettings()">Cerrar</button>
             </div>
@@ -1682,6 +1687,28 @@
                 }
                 deferredPrompt = null;
             });
+        }
+
+        function resetAccumulated() {
+            if (!auth.currentUser) {
+                showStatus('❌ Solo el administrador puede realizar esta acción', 'error');
+                return;
+            }
+
+            if (confirm('⚠️ PELIGRO: ¿Estás seguro de que quieres reducir a CERO el acumulado de TODOS los jugadores?\n\nEsta acción no se puede deshacer.')) {
+                if (confirm('‼️ CONFIRMACIÓN FINAL: Escribe "BORRAR" para continuar.')) { // Simple check, pero efectivo 
+
+                    Object.keys(players).forEach(name => {
+                        players[name].accumulatedExcess = 0;
+                    });
+
+                    saveData().then(() => {
+                        renderTable();
+                        showStatus('✅ Todos los acumulados han sido reseteados a 0.', 'success');
+                        hideSettings(); // Cerrar modal para ver la actualización
+                    });
+                }
+            }
         }
 
         // --- INICIALIZACIÓN Y AUTENTICACIÓN ---
