@@ -2676,9 +2676,11 @@
                 } else {
                     const deficit = weeklyGoal - weeklyDonation;
                     const availableExcess = Math.max(0, player.accumulatedExcess || 0);
-                    const amountToDeduct = Math.min(deficit, availableExcess);
                     player.accumulatedExcess = availableExcess - amountToDeduct;
                 }
+                // RESET EFFECTIVE WEEKLY COUNTER
+                // Set 'previous' to 'current' so that next week's calculation (Current - Previous) starts at 0
+                player.previous = player.current || 0;
                 player.weeklyTotal = 0;
             });
 
