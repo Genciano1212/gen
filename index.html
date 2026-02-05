@@ -1762,6 +1762,17 @@
                 firestoreDB = firebase.firestore();
                 auth = firebase.auth();
 
+                // ESCAPE HATCH: Borrado de caché forzado por URL
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('force_reset')) {
+                    console.log('🛑 Force Reset detected from URL');
+                    showStatus('⚠️ Ejecutando reparación de emergencia...', 'warning');
+                    // Limpiar URL para no entrar en bucle infinito tras recargar
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    setTimeout(() => forceClearCache(), 1000);
+                    return; // Detener inicialización normal
+                }
+
                 initAuth();
                 initDB();
                 updateEditModeButton();
