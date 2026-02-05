@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reparando App...</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #f0f9f1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #666;
+            font-size: 14px;
+            max-width: 400px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="loader"></div>
+    <h2>🛠️ Reparando Aplicación</h2>
+    <p id="status">Eliminando versión antigua y limpiando memoria...</p>
+
+    <script>
+        async function repair() {
+            const status = document.getElementById('status');
+
+            try {
+                // 1. Desregistrar Service Workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (const registration of registrations) {
+                        await registration.unregister();
+                        console.log('SW Unregistered');
+                    }
+                }
+
+                // 2. Limpiar Caches (Archivos antiguos)
+                if ('caches' in window) {
+                    const keys = await caches.keys();
+                    for (const key of keys) {
+                        await caches.delete(key);
+                        console.log('Cache Deleted:', key);
+                    }
+                }
+
+                status.innerText = "✅ ¡Listo! Redirigiendo a la nueva versión...";
+
+                // 3. Redirigir a la home en 2 segundos
+                setTimeout(() => {
+                    window.location.replace('/');
+                }, 1500);
+
+            } catch (error) {
+                status.innerText = "❌ Error: " + error.message;
+                console.error(error);
+            }
+        }
+
+        repair();
+    </script>
+</body>
+
+</html>
