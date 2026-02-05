@@ -132,12 +132,12 @@
 
         /* Botón Smart Sync (Nuevo) */
         .btn-smart-sync {
-            background: white;
-            color: #1a8c42;
-            width: clamp(36px, 9vw, 40px);
-            height: clamp(36px, 9vw, 40px);
+            background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+            color: white;
+            width: clamp(40px, 10vw, 44px);
+            height: clamp(40px, 10vw, 44px);
             border-radius: 50%;
-            font-size: clamp(18px, 5vw, 20px);
+            font-size: clamp(20px, 5.5vw, 22px);
             padding: 0;
             gap: 0;
             display: flex;
@@ -147,36 +147,50 @@
             font-weight: bold;
             min-height: unset;
             position: relative;
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 114, 255, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            z-index: 5;
+        }
+
+        .btn-smart-sync:hover {
+            transform: rotate(180deg) scale(1.1);
+            box-shadow: 0 8px 25px rgba(0, 114, 255, 0.6);
+        }
+
+        .btn-smart-sync:active {
+            transform: scale(0.95);
         }
 
         .btn-smart-sync.has-update::after {
             content: '';
             position: absolute;
-            top: 2px;
-            right: 2px;
-            width: 10px;
-            height: 10px;
-            background-color: #dc3545;
+            top: 0;
+            right: 0;
+            width: 12px;
+            height: 12px;
+            background-color: #ff3d00;
             border-radius: 50%;
             border: 2px solid white;
-            animation: pulse-red 2s infinite;
+            animation: pulse-red 1.5s infinite;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
         @keyframes pulse-red {
             0% {
                 transform: scale(0.95);
-                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+                box-shadow: 0 0 0 0 rgba(255, 61, 0, 0.7);
             }
 
             70% {
-                transform: scale(1);
-                box-shadow: 0 0 0 6px rgba(220, 53, 69, 0);
+                transform: scale(1.1);
+                box-shadow: 0 0 0 6px rgba(255, 61, 0, 0);
             }
 
             100% {
                 transform: scale(0.95);
-                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+                box-shadow: 0 0 0 0 rgba(255, 61, 0, 0);
             }
         }
 
