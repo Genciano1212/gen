@@ -1,6 +1,6 @@
 {
   "name": "antigravity-donaciones-v2",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "description": "Tracker de donaciones para Pocket Ants con soporte offline y sincronización en tiempo real con Firebase.",
   "main": "service-worker.js",
   "scripts": {
