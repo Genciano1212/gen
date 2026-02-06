@@ -2311,28 +2311,7 @@
                     const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
                     const availableExcess = Math.max(0, player.accumulatedExcess || 0);
                     const deficitDraw = Math.min(weeklyDeficit, availableExcess);
-
-                    // LÓGICA DE EFICIENCIA (Sincronizada con startNewWeek y Preview)
-                    // Para que la tabla muestre el valor "Real" que se guardará, no el "Optimista".
-                    const oneWeek = (goalDaily || 0) * 7;
-                    const oneMonth = oneWeek * 4;
-                    const currentAccumulated = player.accumulatedExcess || 0;
-                    let efficiency = 1.0;
-
-                    if (currentAccumulated >= (oneMonth * 5)) {
-                        efficiency = 0.05;  // Tier 4
-                    } else if (currentAccumulated >= (oneMonth * 3)) {
-                        efficiency = 0.10;  // Tier 3
-                    } else if (currentAccumulated >= oneMonth) {
-                        efficiency = 0.50;  // Tier 2
-                    } else {
-                        efficiency = 1.0;   // Tier 1
-                    }
-
-                    const effectiveWeeklyExcess = weeklyExcess * efficiency;
-
-                    // El acumulado final suma lo efectivo, no lo bruto.
-                    const finalPotentialExcess = availableExcess - deficitDraw + effectiveWeeklyExcess;
+                    const finalPotentialExcess = availableExcess - deficitDraw + weeklyExcess;
 
                     const calc = calculatePercentages(player);
                     let metaContent = `${calc.metaPerc.toFixed(1)}%`;
@@ -3999,23 +3978,10 @@
                     if (weeklyDonation >= weeklyGoal) {
                         // Superávit
                         const excess = weeklyDonation - weeklyGoal;
-                        // Corrección: Aplicar misma lógica de eficiencia que startNewWeek (v3.6)
-                        const oneWeek = (goalDaily || 0) * 7;
-                        const oneMonth = oneWeek * 4;
-                        const currentAccumulated = player.accumulatedExcess || 0;
-                        let efficiency = 1.0;
-
-                        if (currentAccumulated >= (oneMonth * 5)) {
-                            efficiency = 0.05;  // Tier 4
-                        } else if (currentAccumulated >= (oneMonth * 3)) {
-                            efficiency = 0.10;  // Tier 3
-                        } else if (currentAccumulated >= oneMonth) {
-                            efficiency = 0.50;  // Tier 2
-                        } else {
-                            efficiency = 1.0;   // Tier 1
-                        }
-
-                        const effectiveExcess = excess * efficiency;
+                        // Corrección: SIN LÓGICA DE EFICIENCIA (VISTA PURA)
+                        // Para coincidir con la tabla "En Vivo" que es optimista.
+                        // La eficiencia se aplicará SOLO al guardar realmente (startNewWeek).
+                        const effectiveExcess = excess;
                         finalAccumulated += effectiveExcess;
                     } else {
                         // Déficit
