@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v3.0 (Final)</title>
+    <title>Tracker Donaciones Pocket Ants v3.5</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -82,6 +82,18 @@
             opacity: 0.9;
             margin-top: 4px;
             text-align: center;
+        }
+
+        .version-tag {
+            position: absolute;
+            bottom: 6px;
+            right: 12px;
+            font-size: clamp(9px, 2vw, 11px);
+            opacity: 0.9;
+            font-weight: 600;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
         }
 
         /* Botones de acción */
@@ -1234,10 +1246,11 @@
     <div class="container">
         <!-- Header principal -->
         <div class="header">
-            <h1>🐜 Donaciones Invencibles v3.0 (Final)</h1>
+            <h1>🐜 Donaciones Invencibles</h1>
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
+            <div class="version-tag">v3.5</div>
         </div>
 
         <!-- Botones de acción -->
@@ -1294,7 +1307,7 @@
         <!-- Footer info -->
         <!-- Footer info -->
         <div class="footer-info">
-            <p>📱 v3.0.0 | Última actualización: <span id="lastUpdateTime">-</span></p>
+            <p>📱 v3.5.0 | Última actualización: <span id="lastUpdateTime">-</span></p>
             <p>🗓️ Semana iniciada: <span id="weekStartTime">-</span></p>
             <p id="admin-login-container" style="margin-top: 10px;"></p>
             <div id="backupButtons" style="display: none; margin-top: 10px;">
@@ -1429,10 +1442,7 @@
                 📱 Instalar App
             </button>
 
-            <button class="btn btn-manual" onclick="resetAccumulated()"
-                style="margin-top: 15px; width: 100%; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
-                🗑️ Borrar Todos los Acumulados (0)
-            </button>
+
 
             <div class="section-buttons" style="margin-top: 20px;">
                 <button class="btn btn-cancel" onclick="hideSettings()">Cerrar</button>
@@ -1719,27 +1729,7 @@
             });
         }
 
-        function resetAccumulated() {
-            if (!auth.currentUser) {
-                showStatus('❌ Solo el administrador puede realizar esta acción', 'error');
-                return;
-            }
 
-            if (confirm('⚠️ PELIGRO: ¿Estás seguro de que quieres reducir a CERO el acumulado de TODOS los jugadores?\n\nEsta acción no se puede deshacer.')) {
-                if (confirm('‼️ CONFIRMACIÓN FINAL: Escribe "BORRAR" para continuar.')) { // Simple check, pero efectivo 
-
-                    Object.keys(players).forEach(name => {
-                        players[name].accumulatedExcess = 0;
-                    });
-
-                    saveData().then(() => {
-                        renderTable();
-                        showStatus('✅ Todos los acumulados han sido reseteados a 0.', 'success');
-                        hideSettings(); // Cerrar modal para ver la actualización
-                    });
-                }
-            }
-        }
 
         // --- INICIALIZACIÓN Y AUTENTICACIÓN ---
 
@@ -2269,18 +2259,15 @@
                         row.innerHTML = `
                         <td style="font-weight: 600; padding: 16px 5px; position: relative;">
                             <input type="text" id="edit-name-${name}" value="${name}"
-                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;"
-                                   oninput="updatePreviewForEditing()">
+                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
                         </td>
                         <td>
                             <input type="number" id="edit-previous-${name}" value="${player.previous || 0}"
-                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;"
-                                   oninput="updatePreviewForEditing()">
+                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
                         </td>
                         <td>
                             <input type="number" id="edit-current-${name}" value="${player.current || 0}"
-                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;"
-                                   oninput="updatePreviewForEditing()">
+                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
                         </td>
                         <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
                             ${formatNumber(calc.semanal)}
@@ -2293,8 +2280,7 @@
                         </td>
                         <td>
                             <input type="number" id="edit-accumulated-${name}" value="${player.accumulatedExcess || 0}"
-                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;"
-                                   oninput="updatePreviewForEditing()">
+                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
                         </td>
                         <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
                             ${formatNumber(player.total || 0)}
@@ -2722,6 +2708,15 @@
             showStatus('✏️ Editando jugador: ' + playerName, 'processing');
         }
 
+        function updatePreviewForEditing() {
+            // Esta función es necesaria para que los inputs no lancen error al escribir.
+            // Por ahora, no forzamos re-render para evitar perder el foco del cursor.
+            if (!editingPlayer) return;
+
+            // Opcional: Aquí podríamos actualizar manualmente las celdas calculadas (Semanal, %) 
+            // accediendo al DOM sin redibujar toda la tabla.
+        }
+
         function cancelEditing() {
             editingPlayer = null;
             previewData = null; // Limpiar vista previa al cancelar
@@ -2982,7 +2977,36 @@
                 if (player.absent) return;
                 const weeklyDonation = player.weeklyTotal || 0;
                 if (weeklyDonation >= weeklyGoal) {
-                    player.accumulatedExcess = (player.accumulatedExcess || 0) + (weeklyDonation - weeklyGoal);
+                    // Lógica de Rendimiento Decreciente (Escala de 8 Niveles Detallada)
+                    const excess = weeklyDonation - weeklyGoal;
+                    const oneWeek = goalDaily * 7;
+                    const oneMonth = oneWeek * 4; // 1 mes = 4 semanas (Estándar del juego)
+                    const currentAccumulated = player.accumulatedExcess || 0;
+
+                    let efficiency = 1.0; // Base 100%
+
+                    if (currentAccumulated >= (oneMonth * 12)) {
+                        efficiency = 0.025; // > 1 año (+12 meses): 2.5%
+                    } else if (currentAccumulated >= (oneMonth * 8)) {
+                        efficiency = 0.05;  // 8-12 meses: 5% (Tier 7)
+                    } else if (currentAccumulated >= (oneMonth * 6)) {
+                        efficiency = 0.10;  // 6-8 meses: 10% (Tier 6)
+                    } else if (currentAccumulated >= (oneMonth * 4)) {
+                        efficiency = 0.20;  // 4-6 meses: 20% (Tier 5)
+                    } else if (currentAccumulated >= (oneMonth * 3)) {
+                        efficiency = 0.40;  // 3-4 meses: 40% (Tier 4)
+                    } else if (currentAccumulated >= (oneMonth * 2)) {
+                        efficiency = 0.60;  // 2-3 meses: 60% (Tier 3)
+                    } else if (currentAccumulated >= oneMonth) {
+                        efficiency = 0.80;  // 1-2 meses: 80% (Tier 2)
+                    } else {
+                        efficiency = 1.0;   // 0-1 mes: 100% (Tier 1)
+                    }
+
+                    const effectiveExcess = excess * efficiency;
+                    player.accumulatedExcess = currentAccumulated + effectiveExcess;
+
+                    console.log(`[Acumulado] Jugador: ${name} | Exceso Real: ${excess} | Nivel: ${(currentAccumulated / oneMonth).toFixed(1)} meses | Eficiencia: ${(efficiency * 100)}% | Guardado: ${effectiveExcess}`);
                 } else {
                     const deficit = weeklyGoal - weeklyDonation;
                     const availableExcess = Math.max(0, player.accumulatedExcess || 0);
