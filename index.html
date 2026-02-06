@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.3.5</title>
+    <title>Tracker Donaciones Pocket Ants v1.3.6</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1250,7 +1250,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v1.3.5</div>
+            <div class="version-tag">v1.3.6</div>
         </div>
 
         <!-- Botones de acción -->
@@ -3799,7 +3799,7 @@
         // Service Worker con Workbox
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker-v135.js')
+                navigator.serviceWorker.register('./service-worker-v136.js')
                     .then(registration => {
                         console.log('Service Worker registrado con Workbox:', registration);
 
@@ -4027,8 +4027,8 @@
 
                     previewData[name] = {
                         ...player,
-                        previous: newCurrent, // "Tenía" en el futuro será el "Tiene" de hoy (Start of Next Week)
-                        current: newCurrent, // "Tiene" inicia igual al "Tenía" (0 avance en nueva semana)
+                        previous: previousCurrent, // "Tenía" (Preview) = "Tiene" (Tabla Vieja)
+                        current: newCurrent, // "Tiene" (Preview) = "Tiene" (Nuevo Input)
                         total: (player.total || 0) + difference, // Total aumenta por la diferencia
                         weeklyTotal: weeklyDonation, // Donación de la nueva semana
                         accumulatedExcess: finalAccumulated, // Valor final simulado
