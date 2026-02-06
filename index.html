@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v3.7</title>
+    <title>Tracker Donaciones Pocket Ants v3.8</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1250,7 +1250,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v3.7</div>
+            <div class="version-tag">v3.8</div>
         </div>
 
         <!-- Botones de acción -->
@@ -1307,7 +1307,7 @@
         <!-- Footer info -->
         <!-- Footer info -->
         <div class="footer-info">
-            <p>📱 v3.7.0 | Última actualización: <span id="lastUpdateTime">-</span></p>
+            <p>📱 v3.8.0 | Última actualización: <span id="lastUpdateTime">-</span></p>
             <p>🗓️ Semana iniciada: <span id="weekStartTime">-</span></p>
             <p id="admin-login-container" style="margin-top: 10px;"></p>
             <div id="backupButtons" style="display: none; margin-top: 10px;">
@@ -2346,16 +2346,16 @@
                         tierTitle = 'Nivel Amarillo: Eficiencia 50%';
                     }
 
-                    // Estilo para la celda con borde izquierdo
-                    const accStyle = `border-left: 5px solid ${tierColor} !important; padding-left: 8px;`;
+                    // Estilo para el triángulo discreto en la esquina superior izquierda
+                    const triangleMarker = `<div style="position: absolute; top: 0; left: 0; width: 0; height: 0; border-top: 8px solid ${tierColor}; border-right: 8px solid transparent;" title="${tierTitle}"></div>`;
 
                     if (isEditMode && auth.currentUser) {
                         const actionsHtml = `<td style="text-align: center; padding: 8px;">
                         <button class="btn btn-edit" onclick="enableEditing('${name}')" title="Editar jugador">✏️</button>
                     </td>`;
-                        row.innerHTML = `<td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}</td><td>${formatNumber(player.previous || 0)}</td><td>${formatNumber(player.current || 0)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(calc.semanal)}</td><td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td><td style="${accStyle}" title="${tierTitle}">${formatNumber(finalPotentialExcess)}${deficitHtml}${formatExtraDonationTime(finalPotentialExcess / (goalDaily || 1))}</td><td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>${actionsHtml}`;
+                        row.innerHTML = `<td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}</td><td>${formatNumber(player.previous || 0)}</td><td>${formatNumber(player.current || 0)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(calc.semanal)}</td><td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td><td style="position: relative;" title="${tierTitle}">${triangleMarker}${formatNumber(finalPotentialExcess)}${deficitHtml}${formatExtraDonationTime(finalPotentialExcess / (goalDaily || 1))}</td><td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>${actionsHtml}`;
                     } else {
-                        row.innerHTML = `<td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}</td><td>${formatNumber(player.previous || 0)}</td><td>${formatNumber(player.current || 0)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(calc.semanal)}</td><td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td><td style="${accStyle}" title="${tierTitle}">${formatNumber(finalPotentialExcess)}${deficitHtml}${formatExtraDonationTime(finalPotentialExcess / (goalDaily || 1))}</td><td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>`;
+                        row.innerHTML = `<td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}</td><td>${formatNumber(player.previous || 0)}</td><td>${formatNumber(player.current || 0)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(calc.semanal)}</td><td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td><td style="position: relative;" title="${tierTitle}">${triangleMarker}${formatNumber(finalPotentialExcess)}${deficitHtml}${formatExtraDonationTime(finalPotentialExcess / (goalDaily || 1))}</td><td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>`;
                     }
 
                     // Mostrar vista previa si hay cambios pendientes para este jugador (solo admin)
@@ -3775,7 +3775,7 @@
         // Service Worker con Workbox
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker-v223.js')
+                navigator.serviceWorker.register('./service-worker-v224.js')
                     .then(registration => {
                         console.log('Service Worker registrado con Workbox:', registration);
 
