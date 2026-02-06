@@ -16,5 +16,9 @@
   "type": "commonjs",
   "devDependencies": {
     "workbox-cli": "^7.4.0"
+  },
+  "overrides": {
+    "source-map": "0.7.4",
+    "sourcemap-codec": "1.4.8"
   }
 }
