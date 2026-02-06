@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.2</title>
+    <title>Tracker Donaciones Pocket Ants v1.3</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3775,7 +3775,7 @@
         // Service Worker con Workbox
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker-v227.js')
+                navigator.serviceWorker.register('./service-worker-v228.js')
                     .then(registration => {
                         console.log('Service Worker registrado con Workbox:', registration);
 
@@ -3957,60 +3957,36 @@
 
                     const difference = newCurrent - previousCurrent;
 
-                    // --- SIMULACIÓN MULTI-ETAPA ---
+
+                    // --- CÁLCULO DE VISTA PREVIA (SIMULACIÓN DE CIERRE) ---
 
                     const weeklyGoal = (goalDaily || 0) * 7;
+                    const weeklyDonation = difference; // donación de esta semana (simulada)
 
-                    // PASO 1: Simular el cierre de la SEMANA ACTUAL (Week A)
-                    // Usamos los valores actuales explícitos para evitar inconsistencias
-                    const currentWeeklyDonation = (player.current || 0) - (player.previous || 0);
-
-                    // Importante: Usar Math.max(0, ...) para el acumulado histórico, igual que en renderTable
-                    let baseAccumulated = Math.max(0, player.accumulatedExcess || 0);
-
-                    if (currentWeeklyDonation >= weeklyGoal) {
-                        // Superávit en Week A
-                        const excessA = currentWeeklyDonation - weeklyGoal;
-                        const oneWeek = goalDaily * 7;
-                        const oneMonth = oneWeek * 4;
-                        const currentAcc = baseAccumulated; // Start from 0 or existing
-
-                        let effA = 1.0;
-                        if (currentAcc >= (oneMonth * 5)) effA = 0.05;
-                        else if (currentAcc >= (oneMonth * 3)) effA = 0.10;
-                        else if (currentAcc >= oneMonth) effA = 0.50;
-
-                        baseAccumulated += (excessA * effA);
-                    } else {
-                        // Déficit en Week A
-                        const deficitA = Math.max(0, weeklyGoal - currentWeeklyDonation);
-                        const availableA = baseAccumulated;
-                        const drawA = Math.min(deficitA, availableA);
-                        baseAccumulated = availableA - drawA;
-                    }
-
-                    // PASO 2: Proyectar la SEMANA SIGUIENTE (Week B - Vista Previa)
                     // Usamos 'baseAccumulated' como el punto de partida real (lo que el usuario ve como "Acumulado" hoy)
-                    const futureDonation = difference; // Lo donado en la nueva semana (Week B)
-                    let finalAccumulated = baseAccumulated;
+                    let finalAccumulated = Math.max(0, player.accumulatedExcess || 0);
                     let futureDeficitDraw = 0;
 
-                    if (futureDonation >= weeklyGoal) {
-                        const excessB = futureDonation - weeklyGoal;
+                    if (weeklyDonation >= weeklyGoal) {
+                        // Superávit
+                        const excess = weeklyDonation - weeklyGoal;
                         const oneWeek = goalDaily * 7;
                         const oneMonth = oneWeek * 4;
 
-                        let effB = 1.0;
-                        if (finalAccumulated >= (oneMonth * 5)) effB = 0.05;
-                        else if (finalAccumulated >= (oneMonth * 3)) effB = 0.10;
-                        else if (finalAccumulated >= oneMonth) effB = 0.50;
+                        // Calcular eficiencia basada en el acumulado ACTUAL
+                        let efficiency = 1.0;
+                        if (finalAccumulated >= (oneMonth * 5)) efficiency = 0.05;
+                        else if (finalAccumulated >= (oneMonth * 3)) efficiency = 0.10;
+                        else if (finalAccumulated >= oneMonth) efficiency = 0.50;
 
-                        finalAccumulated += (excessB * effB);
+                        const effectiveExcess = excess * efficiency;
+                        finalAccumulated += effectiveExcess;
                     } else {
-                        const deficitB = weeklyGoal - futureDonation;
-                        const availableB = Math.max(0, finalAccumulated);
-                        futureDeficitDraw = Math.min(deficitB, availableB);
-                        finalAccumulated = availableB - futureDeficitDraw;
+                        // Déficit
+                        const deficit = weeklyGoal - weeklyDonation;
+                        const available = finalAccumulated;
+                        futureDeficitDraw = Math.min(deficit, available);
+                        finalAccumulated = available - futureDeficitDraw;
                     }
 
                     previewData[name] = {
@@ -4018,12 +3994,12 @@
                         previous: previousCurrent, // El valor "tenía" se mantiene como referencia visual
                         current: newCurrent, // El nuevo valor ingresado
                         total: (player.total || 0) + difference, // Total aumenta por la diferencia
-                        weeklyTotal: futureDonation, // Donación de la nueva semana
-                        accumulatedExcess: finalAccumulated, // Valor final tras las dos etapas
+                        weeklyTotal: weeklyDonation, // Donación de la nueva semana
+                        accumulatedExcess: finalAccumulated, // Valor final simulado
                         isNew: false,
                         absent: false,
                         willBeBanned: false,
-                        simulatedDeficitDraw: futureDeficitDraw // Solo lo que se descontó en la Week B
+                        simulatedDeficitDraw: futureDeficitDraw // Solo lo que se descontó
                     };
                 }
             });
