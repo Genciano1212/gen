@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.3.2</title>
+    <title>Tracker Donaciones Pocket Ants v1.3.3</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1250,7 +1250,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v1.3.2</div>
+            <div class="version-tag">v1.3.3</div>
         </div>
 
         <!-- Botones de acción -->
@@ -2311,7 +2311,26 @@
                     const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
                     const availableExcess = Math.max(0, player.accumulatedExcess || 0);
                     const deficitDraw = Math.min(weeklyDeficit, availableExcess);
-                    const finalPotentialExcess = availableExcess - deficitDraw + weeklyExcess;
+
+                    // LÓGICA DE EFICIENCIA EN VIVO
+                    // Para mostrar el valor "Neto" que realmente se guardará.
+                    const oneWeek = (goalDaily || 0) * 7;
+                    const oneMonth = oneWeek * 4;
+                    const currentAccumulated = player.accumulatedExcess || 0;
+                    let efficiency = 1.0;
+
+                    if (currentAccumulated >= (oneMonth * 5)) {
+                        efficiency = 0.05;  // Tier 4
+                    } else if (currentAccumulated >= (oneMonth * 3)) {
+                        efficiency = 0.10;  // Tier 3
+                    } else if (currentAccumulated >= oneMonth) {
+                        efficiency = 0.50;  // Tier 2
+                    } else {
+                        efficiency = 1.0;   // Tier 1
+                    }
+
+                    const effectiveWeeklyExcess = weeklyExcess * efficiency;
+                    const finalPotentialExcess = availableExcess - deficitDraw + effectiveWeeklyExcess;
 
                     const calc = calculatePercentages(player);
                     let metaContent = `${calc.metaPerc.toFixed(1)}%`;
@@ -3780,7 +3799,7 @@
         // Service Worker con Workbox
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker-v132.js')
+                navigator.serviceWorker.register('./service-worker-v133.js')
                     .then(registration => {
                         console.log('Service Worker registrado con Workbox:', registration);
 
@@ -3978,10 +3997,25 @@
                     if (weeklyDonation >= weeklyGoal) {
                         // Superávit
                         const excess = weeklyDonation - weeklyGoal;
-                        // Corrección: SIN LÓGICA DE EFICIENCIA (VISTA PURA)
-                        // Para coincidir con la tabla "En Vivo" que es optimista.
-                        // La eficiencia se aplicará SOLO al guardar realmente (startNewWeek).
-                        const effectiveExcess = excess;
+
+                        // LÓGICA DE EFICIENCIA REAL (v1.3.3)
+                        // Se aplica el impuesto visualmente para que coincida con lo que se guardará.
+                        const oneWeek = (goalDaily || 0) * 7;
+                        const oneMonth = oneWeek * 4;
+                        const currentAccumulated = player.accumulatedExcess || 0;
+                        let efficiency = 1.0;
+
+                        if (currentAccumulated >= (oneMonth * 5)) {
+                            efficiency = 0.05;  // Tier 4
+                        } else if (currentAccumulated >= (oneMonth * 3)) {
+                            efficiency = 0.10;  // Tier 3
+                        } else if (currentAccumulated >= oneMonth) {
+                            efficiency = 0.50;  // Tier 2
+                        } else {
+                            efficiency = 1.0;   // Tier 1
+                        }
+
+                        const effectiveExcess = excess * efficiency;
                         finalAccumulated += effectiveExcess;
                     } else {
                         // Déficit
