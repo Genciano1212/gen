@@ -3775,7 +3775,7 @@
         // Service Worker con Workbox
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker-v225.js')
+                navigator.serviceWorker.register('./service-worker-v226.js')
                     .then(registration => {
                         console.log('Service Worker registrado con Workbox:', registration);
 
@@ -3970,7 +3970,17 @@
 
                     if (currentWeeklyDonation >= weeklyGoal) {
                         // Superávit en Week A
-                        baseAccumulated += (currentWeeklyDonation - weeklyGoal);
+                        const excessA = currentWeeklyDonation - weeklyGoal;
+                        const oneWeek = goalDaily * 7;
+                        const oneMonth = oneWeek * 4;
+                        const currentAcc = baseAccumulated; // Start from 0 or existing
+
+                        let effA = 1.0;
+                        if (currentAcc >= (oneMonth * 5)) effA = 0.05;
+                        else if (currentAcc >= (oneMonth * 3)) effA = 0.10;
+                        else if (currentAcc >= oneMonth) effA = 0.50;
+
+                        baseAccumulated += (excessA * effA);
                     } else {
                         // Déficit en Week A
                         const deficitA = Math.max(0, weeklyGoal - currentWeeklyDonation);
@@ -3986,7 +3996,16 @@
                     let futureDeficitDraw = 0;
 
                     if (futureDonation >= weeklyGoal) {
-                        finalAccumulated += (futureDonation - weeklyGoal);
+                        const excessB = futureDonation - weeklyGoal;
+                        const oneWeek = goalDaily * 7;
+                        const oneMonth = oneWeek * 4;
+
+                        let effB = 1.0;
+                        if (finalAccumulated >= (oneMonth * 5)) effB = 0.05;
+                        else if (finalAccumulated >= (oneMonth * 3)) effB = 0.10;
+                        else if (finalAccumulated >= oneMonth) effB = 0.50;
+
+                        finalAccumulated += (excessB * effB);
                     } else {
                         const deficitB = weeklyGoal - futureDonation;
                         const availableB = Math.max(0, finalAccumulated);
