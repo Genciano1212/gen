@@ -2843,43 +2843,46 @@
             renderTable();
         }
 
-        async function startNewWeek() {
-            if (!auth.currentUser) return;
+        // [DEPRECATED/DEAD CODE] Esta función es sobrescrita por la definición posterior.
+        // async function startNewWeek() {
+        /*
+        if (!auth.currentUser) return;
 
-            let maxWeekly = 0;
-            let starHolders = [];
-            Object.values(players).forEach(player => {
-                if (!player.absent && (player.weeklyTotal || 0) > maxWeekly) maxWeekly = player.weeklyTotal;
-            });
+        let maxWeekly = 0;
+        let starHolders = [];
+        Object.values(players).forEach(player => {
+            if (!player.absent && (player.weeklyTotal || 0) > maxWeekly) maxWeekly = player.weeklyTotal;
+        });
 
-            if (maxWeekly > 0) {
-                Object.keys(players).forEach(name => {
-                    if (!players[name].absent && players[name].weeklyTotal === maxWeekly) starHolders.push(name);
-                });
-            }
-
-            const weeklyGoal = goalDaily * 7;
+        if (maxWeekly > 0) {
             Object.keys(players).forEach(name => {
-                const player = players[name];
-                player.hasWeeklyStar = starHolders.includes(name);
-                if (player.absent) return;
-                const weeklyDonation = player.weeklyTotal || 0;
-                if (weeklyDonation >= weeklyGoal) {
-                    player.accumulatedExcess = (player.accumulatedExcess || 0) + (weeklyDonation - weeklyGoal);
-                } else {
-                    const deficit = weeklyGoal - weeklyDonation;
-                    const availableExcess = Math.max(0, player.accumulatedExcess || 0);
-                    const amountToDeduct = Math.min(deficit, availableExcess);
-                    player.accumulatedExcess = availableExcess - amountToDeduct;
-                }
-                player.weeklyTotal = 0;
+                if (!players[name].absent && players[name].weeklyTotal === maxWeekly) starHolders.push(name);
             });
-
-            weekStart = getWeekStart();
-            showUnsavedIndicator();
-            renderTable();
-            showStatus('🔄 Nueva semana iniciada correctamente (recuerda guardar en Firebase)', 'success');
         }
+
+        const weeklyGoal = goalDaily * 7;
+        Object.keys(players).forEach(name => {
+            const player = players[name];
+            player.hasWeeklyStar = starHolders.includes(name);
+            if (player.absent) return;
+            const weeklyDonation = player.weeklyTotal || 0;
+            if (weeklyDonation >= weeklyGoal) {
+                player.accumulatedExcess = (player.accumulatedExcess || 0) + (weeklyDonation - weeklyGoal);
+            } else {
+                const deficit = weeklyGoal - weeklyDonation;
+                const availableExcess = Math.max(0, player.accumulatedExcess || 0);
+                const amountToDeduct = Math.min(deficit, availableExcess);
+                player.accumulatedExcess = availableExcess - amountToDeduct;
+            }
+            player.weeklyTotal = 0;
+        });
+
+        weekStart = getWeekStart();
+        showUnsavedIndicator();
+        renderTable();
+        showStatus('🔄 Nueva semana iniciada correctamente (recuerda guardar en Firebase)', 'success');
+        }
+        */
 
         function levenshteinDistance(str1, str2) {
             if (!editingPlayer || !auth.currentUser) return;
@@ -2976,6 +2979,8 @@
             renderTable();
         }
 
+        // === FUNCIÓN PRINCIPAL DE CIERRE DE SEMANA (ACTIVA) ===
+        // Reemplaza a cualquier definición anterior. Incluye lógica de eficiencia.
         async function startNewWeek() {
             if (!auth.currentUser) return;
 
@@ -3970,8 +3975,24 @@
                     if (weeklyDonation >= weeklyGoal) {
                         // Superávit
                         const excess = weeklyDonation - weeklyGoal;
-                        // Corrección: Suma directa, sin eficiencia (igual que startNewWeek)
-                        finalAccumulated += excess;
+                        // Corrección: Aplicar misma lógica de eficiencia que startNewWeek (v3.6)
+                        const oneWeek = (goalDaily || 0) * 7;
+                        const oneMonth = oneWeek * 4;
+                        const currentAccumulated = player.accumulatedExcess || 0;
+                        let efficiency = 1.0;
+
+                        if (currentAccumulated >= (oneMonth * 5)) {
+                            efficiency = 0.05;  // Tier 4
+                        } else if (currentAccumulated >= (oneMonth * 3)) {
+                            efficiency = 0.10;  // Tier 3
+                        } else if (currentAccumulated >= oneMonth) {
+                            efficiency = 0.50;  // Tier 2
+                        } else {
+                            efficiency = 1.0;   // Tier 1
+                        }
+
+                        const effectiveExcess = excess * efficiency;
+                        finalAccumulated += effectiveExcess;
                     } else {
                         // Déficit
                         const deficit = weeklyGoal - weeklyDonation;
