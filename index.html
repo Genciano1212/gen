@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.3.1</title>
+    <title>Tracker Donaciones Pocket Ants v1.3.2</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1250,7 +1250,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v1.3.1</div>
+            <div class="version-tag">v1.3.2</div>
         </div>
 
         <!-- Botones de acción -->
@@ -3780,7 +3780,7 @@
         // Service Worker con Workbox
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker-v131.js')
+                navigator.serviceWorker.register('./service-worker-v132.js')
                     .then(registration => {
                         console.log('Service Worker registrado con Workbox:', registration);
 
@@ -4006,7 +4006,7 @@
 
                     previewData[name] = {
                         ...player,
-                        previous: previousCurrent, // El valor "tenía" se mantiene como referencia visual
+                        previous: player.previous || 0, // Mantener el "Tenía" (Start of Week) para que el cálculo semanal (Current - Previous) sea correcto en renderTable
                         current: newCurrent, // El nuevo valor ingresado
                         total: (player.total || 0) + difference, // Total aumenta por la diferencia
                         weeklyTotal: weeklyDonation, // Donación de la nueva semana
