@@ -3954,9 +3954,10 @@
                     const player = players[name];
                     const previousCurrent = player.current || 0;
 
-                    // Si el nuevo valor es menor que el actual, hay error (no debería pasar)
-                    if (newCurrent < previousCurrent) {
-                        console.warn(`⚠️ Error en preview: ${name} tiene valor menor (${newCurrent} < ${previousCurrent})`);
+                    // Si el nuevo valor es menor que el INICIO de semana, hay error.
+                    // Pero puede ser menor que 'current' si estamos corrigiendo un error de tipeo previo.
+                    if (newCurrent < (player.previous || 0)) {
+                        console.warn(`⚠️ Error en preview: ${name} tiene valor menor al inicio de semana`);
                         return;
                     }
 
@@ -3966,7 +3967,9 @@
                     // --- CÁLCULO DE VISTA PREVIA (SIMULACIÓN DE CIERRE) ---
 
                     const weeklyGoal = (goalDaily || 0) * 7;
-                    const weeklyDonation = difference; // donación de esta semana (simulada)
+                    // FIX: La donación semanal es el Nuevo Total - El Total al Inicio de la Semana (Previous)
+                    // No usar 'previousCurrent' porque ese es el total hasta hace un momento, no el inicio de semana.
+                    const weeklyDonation = newCurrent - (player.previous || 0);
 
                     // Usamos 'baseAccumulated' como el punto de partida real (lo que el usuario ve como "Acumulado" hoy)
                     let finalAccumulated = Math.max(0, player.accumulatedExcess || 0);
