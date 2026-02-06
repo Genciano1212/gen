@@ -3,7 +3,7 @@ module.exports = {
   globPatterns: [
     '**/*.{html,js,css,png,svg,ico,json}'
   ],
-  swDest: 'service-worker-v221.js',
+  swDest: 'service-worker-v222.js',
   runtimeCaching: [
     {
       urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

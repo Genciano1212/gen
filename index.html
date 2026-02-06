@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v3.5</title>
+    <title>Tracker Donaciones Pocket Ants v3.6</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1250,7 +1250,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v3.5</div>
+            <div class="version-tag">v3.6</div>
         </div>
 
         <!-- Botones de acción -->
@@ -1307,7 +1307,7 @@
         <!-- Footer info -->
         <!-- Footer info -->
         <div class="footer-info">
-            <p>📱 v3.5.0 | Última actualización: <span id="lastUpdateTime">-</span></p>
+            <p>📱 v3.6.0 | Última actualización: <span id="lastUpdateTime">-</span></p>
             <p>🗓️ Semana iniciada: <span id="weekStartTime">-</span></p>
             <p id="admin-login-container" style="margin-top: 10px;"></p>
             <div id="backupButtons" style="display: none; margin-top: 10px;">
@@ -2977,36 +2977,28 @@
                 if (player.absent) return;
                 const weeklyDonation = player.weeklyTotal || 0;
                 if (weeklyDonation >= weeklyGoal) {
-                    // Lógica de Rendimiento Decreciente (Escala de 8 Niveles Detallada)
+                    // Lógica de Rendimiento Decreciente (Escala de 4 Niveles - Semáforo + Plus)
                     const excess = weeklyDonation - weeklyGoal;
                     const oneWeek = goalDaily * 7;
-                    const oneMonth = oneWeek * 4; // 1 mes = 4 semanas (Estándar del juego)
+                    const oneMonth = oneWeek * 4; // 1 mes = 4 semanas
                     const currentAccumulated = player.accumulatedExcess || 0;
 
-                    let efficiency = 1.0; // Base 100%
+                    let efficiency = 1.0;
 
-                    if (currentAccumulated >= (oneMonth * 12)) {
-                        efficiency = 0.025; // > 1 año (+12 meses): 2.5%
-                    } else if (currentAccumulated >= (oneMonth * 8)) {
-                        efficiency = 0.05;  // 8-12 meses: 5% (Tier 7)
-                    } else if (currentAccumulated >= (oneMonth * 6)) {
-                        efficiency = 0.10;  // 6-8 meses: 10% (Tier 6)
-                    } else if (currentAccumulated >= (oneMonth * 4)) {
-                        efficiency = 0.20;  // 4-6 meses: 20% (Tier 5)
+                    if (currentAccumulated >= (oneMonth * 5)) {
+                        efficiency = 0.05;  // > 5 Meses: 5% (Tier 4)
                     } else if (currentAccumulated >= (oneMonth * 3)) {
-                        efficiency = 0.40;  // 3-4 meses: 40% (Tier 4)
-                    } else if (currentAccumulated >= (oneMonth * 2)) {
-                        efficiency = 0.60;  // 2-3 meses: 60% (Tier 3)
+                        efficiency = 0.10;  // 3-5 Meses: 10% (Tier 3 - Rojo)
                     } else if (currentAccumulated >= oneMonth) {
-                        efficiency = 0.80;  // 1-2 meses: 80% (Tier 2)
+                        efficiency = 0.50;  // 1-3 Meses: 50% (Tier 2 - Amarillo)
                     } else {
-                        efficiency = 1.0;   // 0-1 mes: 100% (Tier 1)
+                        efficiency = 1.0;   // 0-1 Mes: 100% (Tier 1 - Verde)
                     }
 
                     const effectiveExcess = excess * efficiency;
                     player.accumulatedExcess = currentAccumulated + effectiveExcess;
 
-                    console.log(`[Acumulado] Jugador: ${name} | Exceso Real: ${excess} | Nivel: ${(currentAccumulated / oneMonth).toFixed(1)} meses | Eficiencia: ${(efficiency * 100)}% | Guardado: ${effectiveExcess}`);
+                    console.log(`[Acumulado v3.6] Jugador: ${name} | Exceso: ${excess} | Nivel: ${(currentAccumulated / oneMonth).toFixed(1)}m | Eficiencia: ${(efficiency * 100)}% | Guardado: ${effectiveExcess}`);
                 } else {
                     const deficit = weeklyGoal - weeklyDonation;
                     const availableExcess = Math.max(0, player.accumulatedExcess || 0);
@@ -3762,7 +3754,7 @@
         // Service Worker con Workbox
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker-v221.js')
+                navigator.serviceWorker.register('./service-worker-v222.js')
                     .then(registration => {
                         console.log('Service Worker registrado con Workbox:', registration);
 
