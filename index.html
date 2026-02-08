@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.4.0</title>
+    <title>Tracker Donaciones Pocket Ants v1.4.1</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3303,25 +3303,25 @@
                     const semanal = (player.current || 0) - (player.previous || 0);
                     const promedio = Math.round(semanal / 7);
                     const metaPct = weeklyGoal > 0 ? ((semanal / weeklyGoal) * 100).toFixed(1) : '0.0';
-                    const acumulado = player.accumulatedExcess || 0;
                     const total = player.total || 0;
 
-                    // Calcular déficit usado
+                    // Calcular déficit EN TIEMPO REAL (igual que renderTable)
                     const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
                     const availableExcess = Math.max(0, player.accumulatedExcess || 0);
-                    const deficitUsed = player.deficitUsed || 0;
+                    const deficitDraw = Math.min(weeklyDeficit, availableExcess);
+                    const acumuladoMostrado = availableExcess - deficitDraw;
 
                     totalSemanal += semanal;
-                    totalAcumulado += acumulado;
+                    totalAcumulado += acumuladoMostrado;
                     totalHistorico += total;
 
                     let deficitInfo = '';
-                    if (deficitUsed > 0) {
-                        deficitInfo = ` (Deficit: -${deficitUsed})`;
+                    if (deficitDraw > 0) {
+                        deficitInfo = ` (Deficit: -${deficitDraw})`;
                     }
 
                     txt += `${name}${deficitInfo}\n`;
-                    txt += `  Tenia: ${player.previous || 0} | Tiene: ${player.current || 0} | Semanal: ${semanal} | Promedio: ${promedio} | Meta%: ${metaPct}% | Acumulado: ${acumulado} | Total: ${total}\n\n`;
+                    txt += `  Tenia: ${player.previous || 0} | Tiene: ${player.current || 0} | Semanal: ${semanal} | Promedio: ${promedio} | Meta%: ${metaPct}% | Acumulado: ${acumuladoMostrado} | Total: ${total}\n\n`;
                 });
             }
 
