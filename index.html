@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v0.4</title>
+    <title>Tracker Donaciones Pocket Ants v0.2</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1130,7 +1130,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v0.4</div>
+            <div class="version-tag">v0.2</div>
         </div>
 
         <!-- Botones de acción -->
@@ -2566,46 +2566,7 @@
 
         // --- FUNCIONES DE ACTUALIZACIÓN DE DATOS (ADMIN) ---
 
-        function updatePlayers(currentData) {
-            if (!auth.currentUser) return;
-            if (!currentData || Object.keys(currentData).length === 0) {
-                showStatus('❌ No hay datos para procesar', 'error');
-                return;
-            }
-
-            const namesToDelete = Object.keys(players).filter(name => players[name].absent);
-            namesToDelete.forEach(name => { delete players[name]; });
-
-            Object.keys(players).forEach(name => {
-                if (!currentData[name]) players[name].absent = true;
-            });
-
-            Object.keys(currentData).forEach(name => {
-                const current = currentData[name];
-                if (!players[name]) {
-                    players[name] = { previous: 0, current: current, initialDonation: current, total: 0, weeklyTotal: 0, accumulatedExcess: 0, lastSeen: Date.now(), absent: false, isNew: true };
-                } else {
-                    players[name].absent = false;
-                    const previousCurrent = players[name].current || 0;
-                    const current = current;
-
-                    if (current < previousCurrent) {
-                        showStatus(`⚠️ Error: ${name} tiene un valor menor al anterior (${current} < ${previousCurrent})`, 'error');
-                        return;
-                    }
-
-                    const difference = current - previousCurrent;
-                    players[name].previous = previousCurrent;
-                    players[name].current = current;
-                    players[name].lastSeen = Date.now();
-                    players[name].total += difference;
-                    players[name].isNew = false;
-                }
-            });
-
-            showUnsavedIndicator();
-            renderTable();
-        }
+        // Función updatePlayers obsoleta eliminada (estaba duplicada)
 
         // [DEPRECATED/DEAD CODE] Esta función es sobrescrita por la definición posterior.
         // async function startNewWeek() {
@@ -2702,7 +2663,13 @@
         // --- FUNCIONES DE ACTUALIZACIÓN DE DATOS (ADMIN) ---
 
         function updatePlayers(currentData) {
-            if (!auth.currentUser) return;
+            // Validación explícita de login
+            if (!auth.currentUser) {
+                console.error('Intento de updatePlayers sin usuario logueado');
+                showStatus('❌ Error: Sesión cerrada o inválida. Recarga la página.', 'error');
+                return;
+            }
+
             if (!currentData || Object.keys(currentData).length === 0) {
                 showStatus('❌ No hay datos para procesar', 'error');
                 return;
@@ -2741,6 +2708,11 @@
 
             showUnsavedIndicator();
             renderTable();
+            console.log('updatePlayers completado con éxito');
+            // Feedback explícito si viene de una importación manual
+            if (document.getElementById('reviewSection').classList.contains('active') === false) {
+                showStatus('⚠️ Datos cargados localmente. Revisa y guarda en Firebase.', 'warning');
+            }
         }
 
         // === FUNCIÓN PRINCIPAL DE CIERRE DE SEMANA (ACTIVA) ===
@@ -3162,34 +3134,53 @@
         }
 
         async function confirmNameMapping() {
-            const newNames = Object.keys(currentDataForReview);
-            const pendingCount = newNames.filter(name => !nameMapping.hasOwnProperty(name)).length;
+            console.log('--- Iniciando confirmNameMapping ---');
+            try {
+                const newNames = Object.keys(currentDataForReview);
+                console.log('Nombres a procesar:', newNames.length);
 
-            if (pendingCount > 0) {
-                if (!confirm(`Aún hay ${pendingCount} nombres pendientes de revisión. ¿Deseas procesarlos como nuevos usuarios?`)) {
-                    return;
+                const pendingCount = newNames.filter(name => !nameMapping.hasOwnProperty(name)).length;
+
+                if (pendingCount > 0) {
+                    if (!confirm(`Aún hay ${pendingCount} nombres pendientes de revisión. ¿Deseas procesarlos como nuevos usuarios?`)) {
+                        console.log('Usuario canceló confirmación de pendientes');
+                        return;
+                    }
+
+                    newNames.forEach(name => {
+                        if (!nameMapping.hasOwnProperty(name)) {
+                            nameMapping[name] = null;
+                        }
+                    });
                 }
 
-                newNames.forEach(name => {
-                    if (!nameMapping.hasOwnProperty(name)) {
-                        nameMapping[name] = null;
-                    }
+                const mappedData = {};
+                Object.keys(currentDataForReview).forEach(newName => {
+                    const targetName = nameMapping[newName];
+                    const finalName = targetName || newName;
+                    mappedData[finalName] = currentDataForReview[newName];
                 });
+
+                console.log('Datos mapeados:', Object.keys(mappedData).length);
+
+                hideReview();
+
+                // Solo actualizar localmente
+                if (typeof updatePlayers !== 'function') {
+                    throw new Error('La función updatePlayers no existe');
+                }
+
+                console.log('Llamando a updatePlayers...');
+                updatePlayers(mappedData);
+                console.log('updatePlayers finalizado');
+
+                hideManual();
+                showStatus('✅ Datos importados localmente. Recuerda usar el botón ✓ para guardar en la nube o iniciar semana.', 'success');
+            } catch (error) {
+                console.error('CRITICAL ERROR in confirmNameMapping:', error);
+                alert('Error crítico al importar: ' + error.message);
+                showStatus('❌ Error crítico: ' + error.message, 'error');
             }
-
-            const mappedData = {};
-            Object.keys(currentDataForReview).forEach(newName => {
-                const targetName = nameMapping[newName];
-                const finalName = targetName || newName;
-                mappedData[finalName] = currentDataForReview[newName];
-            });
-
-            hideReview();
-
-            // Solo actualizar localmente
-            updatePlayers(mappedData);
-            hideManual();
-            showStatus(`✅ Datos importados localmente. Recuerda usar el botón ✓ para guardar en la nube o iniciar semana.`, 'success');
         }
 
         async function processManual() {
