@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v0.1</title>
+    <title>Tracker Donaciones Pocket Ants v1.4.0</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2778,6 +2778,7 @@
 
                     const effectiveExcess = excess * efficiency;
                     player.accumulatedExcess = currentAccumulated + effectiveExcess;
+                    player.deficitUsed = 0; // No usó déficit, cumplió la meta
 
                     console.log(`[Acumulado v3.6] Jugador: ${name} | Exceso: ${excess} | Nivel: ${(currentAccumulated / oneMonth).toFixed(1)}m | Eficiencia: ${(efficiency * 100)}% | Guardado: ${effectiveExcess}`);
                 } else {
@@ -2785,6 +2786,7 @@
                     const availableExcess = Math.max(0, player.accumulatedExcess || 0);
                     const deduction = Math.min(deficit, availableExcess);
                     player.accumulatedExcess = availableExcess - deduction;
+                    player.deficitUsed = deduction; // Guardar cuánto déficit se usó para el backup
                 }
                 // RESET EFFECTIVE WEEKLY COUNTER
                 // Set 'previous' to 'current' so that next week's calculation (Current - Previous) starts at 0
@@ -3246,28 +3248,116 @@
             }
 
             const dateObj = new Date();
-            const dateStr = dateObj.toISOString().split('T')[0];
+            const dias = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+            const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
-            // Objeto completo de backup
-            const backupState = {
-                version: 2, // Versión del formato de backup
-                timestamp: Date.now(),
-                dateString: dateStr,
-                globalConfig: {
-                    goalDaily: goalDaily,
-                    lastUpdate: lastUpdate,
-                    weekStart: weekStart,
-                    totalPlayers: Object.keys(players).length
-                },
-                players: players // Copia exacta de todo el objeto players
-            };
+            const diaSemana = dias[dateObj.getDay()];
+            const dia = dateObj.getDate();
+            const mes = meses[dateObj.getMonth()];
+            const anio = dateObj.getFullYear();
+            const hora = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 
-            const jsonString = JSON.stringify(backupState, null, 2); // Pretty print para legibilidad opcional
-            const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
+            const fechaFormato = `${diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1)} ${dia} de ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${anio}, ${hora}`;
+            const weekStartDate = weekStart ? new Date(weekStart).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'No definido';
+
+            // Clasificar jugadores
+            const activos = [];
+            const nuevos = [];
+            const baneados = [];
+
+            const weeklyGoal = goalDaily * 7;
+
+            Object.keys(players).forEach(name => {
+                const player = players[name];
+                if (player.absent) {
+                    baneados.push({ name, player });
+                } else if (player.isNew) {
+                    nuevos.push({ name, player });
+                } else {
+                    activos.push({ name, player });
+                }
+            });
+
+            // Ordenar alfabéticamente
+            activos.sort((a, b) => a.name.localeCompare(b.name));
+            nuevos.sort((a, b) => a.name.localeCompare(b.name));
+            baneados.sort((a, b) => a.name.localeCompare(b.name));
+
+            // Calcular totales
+            let totalSemanal = 0;
+            let totalAcumulado = 0;
+            let totalHistorico = 0;
+
+            // Generar contenido TXT
+            let txt = `=== BACKUP DONACIONES INVENCIBLES ===\n`;
+            txt += `Fecha: ${fechaFormato}\n`;
+            txt += `Meta Diaria: ${goalDaily}\n`;
+            txt += `Semana iniciada: ${weekStartDate}\n\n`;
+            txt += `=== JUGADORES ===\n`;
+            txt += `Activos: ${activos.length} | Nuevos: ${nuevos.length} | Baneados: ${baneados.length}\n\n`;
+
+            // ACTIVOS
+            if (activos.length > 0) {
+                txt += `--- ACTIVOS ---\n\n`;
+                activos.forEach(({ name, player }) => {
+                    const semanal = (player.current || 0) - (player.previous || 0);
+                    const promedio = Math.round(semanal / 7);
+                    const metaPct = weeklyGoal > 0 ? ((semanal / weeklyGoal) * 100).toFixed(1) : '0.0';
+                    const acumulado = player.accumulatedExcess || 0;
+                    const total = player.total || 0;
+
+                    // Calcular déficit usado
+                    const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
+                    const availableExcess = Math.max(0, player.accumulatedExcess || 0);
+                    const deficitUsed = player.deficitUsed || 0;
+
+                    totalSemanal += semanal;
+                    totalAcumulado += acumulado;
+                    totalHistorico += total;
+
+                    let deficitInfo = '';
+                    if (deficitUsed > 0) {
+                        deficitInfo = ` (Deficit: -${deficitUsed})`;
+                    }
+
+                    txt += `${name}${deficitInfo}\n`;
+                    txt += `  Tenia: ${player.previous || 0} | Tiene: ${player.current || 0} | Semanal: ${semanal} | Promedio: ${promedio} | Meta%: ${metaPct}% | Acumulado: ${acumulado} | Total: ${total}\n\n`;
+                });
+            }
+
+            // NUEVOS
+            if (nuevos.length > 0) {
+                txt += `--- NUEVOS ---\n\n`;
+                nuevos.forEach(({ name, player }) => {
+                    totalHistorico += (player.total || 0);
+                    txt += `[NUEVO] ${name}\n`;
+                    txt += `  Tiene: ${player.current || 0}\n\n`;
+                });
+            }
+
+            // BANEADOS
+            if (baneados.length > 0) {
+                txt += `--- BANEADOS ---\n\n`;
+                baneados.forEach(({ name }) => {
+                    txt += `[BANEADO] ${name}\n`;
+                });
+                txt += `\n`;
+            }
+
+            // RESUMEN
+            const promedioGeneral = activos.length > 0 ? Math.round(totalSemanal / activos.length) : 0;
+            const metaGeneral = weeklyGoal > 0 && activos.length > 0 ? ((totalSemanal / (weeklyGoal * activos.length)) * 100).toFixed(1) : '0.0';
+
+            txt += `=== RESUMEN ===\n`;
+            txt += `Semanal: ${totalSemanal} | Promedio: ${promedioGeneral} | Meta%: ${metaGeneral}% | Acumulado: ${totalAcumulado} | Total: ${totalHistorico}\n\n`;
+            txt += `=== FIN BACKUP ===`;
+
+            // Descargar archivo
+            const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
             const url = URL.createObjectURL(blob);
 
             const a = document.createElement('a');
-            const fileName = `backup_donaciones_FULL_${dateStr}.json`;
+            const fileName = `backup_${diaSemana}_${dia}_${mes}_${anio}.txt`;
             a.href = url;
             a.download = fileName;
             document.body.appendChild(a);
@@ -3275,7 +3365,7 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            showStatus('✅ Copia de seguridad COMPLETA (.json) descargada.', 'success');
+            showStatus('✅ Copia de seguridad TXT descargada.', 'success');
         }
 
         function restoreBackup(event) {
@@ -3291,82 +3381,169 @@
             reader.onload = function (e) {
                 const content = e.target.result;
 
+                // INTENTO 1: JSON antiguo (compatibilidad)
                 try {
-                    // INTENTO 1: Restauración moderna (JSON)
                     const backupState = JSON.parse(content);
-
                     if (backupState.players && backupState.globalConfig) {
-                        // Es un backup válido JSON V2
-                        if (!confirm(`⚠️ Vas a restaurar una copia COMPLETA del ${backupState.dateString || 'desconocida'}.\nEsto sobrescribirá TODOS los datos actuales.\n¿Continuar?`)) {
+                        if (!confirm(`⚠️ Vas a restaurar una copia JSON del ${backupState.dateString || 'desconocida'}.\nEsto sobrescribirá TODOS los datos actuales.\n¿Continuar?`)) {
                             event.target.value = '';
                             return;
                         }
-
-                        // Restaurar globales
                         if (backupState.globalConfig.goalDaily) goalDaily = backupState.globalConfig.goalDaily;
                         if (backupState.globalConfig.lastUpdate) lastUpdate = backupState.globalConfig.lastUpdate;
                         if (backupState.globalConfig.weekStart) weekStart = backupState.globalConfig.weekStart;
-
-                        // Restaurar jugadores
                         players = backupState.players;
-
                         showUnsavedIndicator();
                         renderTable();
-                        showStatus('✅ Restauración COMPLETA exitosa (Formato JSON).', 'success');
+                        showStatus('✅ Restauración exitosa (Formato JSON antiguo).', 'success');
                         event.target.value = '';
                         return;
                     }
                 } catch (err) {
-                    // No es JSON, intentar legacy
-                    console.log('No es JSON válido, intentando formato Legacy TXT...');
+                    console.log('No es JSON, intentando TXT...');
                 }
 
-                // INTENTO 2: Restauración Legacy (TXT)
-                // (Código original para soporte de archivos viejos)
+                // INTENTO 2: Nuevo formato TXT literal
                 const lines = content.split('\n');
-                if (lines.length < 5) {
+                if (lines.length < 5 || !content.includes('=== BACKUP DONACIONES INVENCIBLES ===')) {
                     showStatus('❌ Archivo no reconocido o dañado.', 'error');
+                    event.target.value = '';
                     return;
                 }
 
-                if (!confirm(`⚠️ Detectado formato ANTIGUO (.txt).\nSe intentará restaurar, pero algunos detalles (como baneos exactos) podrían perderse.\n¿Continuar?`)) {
+                // Extraer fecha del backup para confirmar
+                let fechaBackup = 'desconocida';
+                const fechaLine = lines.find(l => l.startsWith('Fecha:'));
+                if (fechaLine) fechaBackup = fechaLine.replace('Fecha:', '').trim();
+
+                if (!confirm(`⚠️ Vas a restaurar la copia del:\n${fechaBackup}\n\nEsto SOBRESCRIBIRÁ todos los datos actuales.\n¿Continuar?`)) {
                     event.target.value = '';
                     return;
                 }
 
                 const newPlayers = {};
-                let currentName = null;
-                let currentIndex = -1;
+                let currentSection = null;
+                let metaDiariaRestored = null;
+                let weekStartRestored = null;
 
-                // Lógica legacy simplificada y protegida
+                // Extraer meta diaria
+                const metaLine = lines.find(l => l.startsWith('Meta Diaria:'));
+                if (metaLine) {
+                    metaDiariaRestored = parseInt(metaLine.replace('Meta Diaria:', '').trim()) || null;
+                }
+
+                // Parsear líneas
                 for (let i = 0; i < lines.length; i++) {
                     const line = lines[i].trim();
-                    if (line.startsWith('NOMBRE:')) {
-                        currentName = line.split(':')[1].trim();
-                        if (currentName) newPlayers[currentName] = {};
-                    } else if (currentName && newPlayers[currentName]) {
-                        const parts = line.split(':');
-                        if (parts.length === 2) {
-                            const key = parts[0].trim();
-                            const value = parts[1].trim();
-                            if (key === 'TENÍA') newPlayers[currentName].previous = parseInt(value) || 0;
-                            else if (key === 'TIENE') newPlayers[currentName].current = parseInt(value) || 0;
-                            else if (key === 'ACUMULADO') newPlayers[currentName].accumulatedExcess = parseInt(value) || 0;
-                            else if (key === 'TOTAL') {
-                                newPlayers[currentName].total = parseInt(value) || 0;
-                                // Asumimos defaults para legacy
-                                newPlayers[currentName].absent = false;
-                                newPlayers[currentName].isNew = false;
+
+                    // Detectar secciones
+                    if (line === '--- ACTIVOS ---') {
+                        currentSection = 'activos';
+                        continue;
+                    } else if (line === '--- NUEVOS ---') {
+                        currentSection = 'nuevos';
+                        continue;
+                    } else if (line === '--- BANEADOS ---') {
+                        currentSection = 'baneados';
+                        continue;
+                    } else if (line.startsWith('=== RESUMEN ===') || line.startsWith('=== FIN BACKUP ===')) {
+                        currentSection = null;
+                        continue;
+                    }
+
+                    // Parsear jugadores según sección
+                    if (currentSection === 'activos') {
+                        // Línea de nombre: "Juan (Deficit: -500)" o solo "Juan"
+                        if (line && !line.startsWith('Tenia:') && !line.startsWith('  ')) {
+                            let playerName = line;
+                            let deficitUsed = 0;
+
+                            // Extraer déficit si existe
+                            const deficitMatch = line.match(/\(Deficit: -(\d+)\)/);
+                            if (deficitMatch) {
+                                deficitUsed = parseInt(deficitMatch[1]) || 0;
+                                playerName = line.replace(/\s*\(Deficit: -\d+\)/, '').trim();
                             }
+
+                            // La siguiente línea tiene los datos
+                            if (i + 1 < lines.length) {
+                                const dataLine = lines[i + 1].trim();
+                                if (dataLine.startsWith('Tenia:')) {
+                                    // Parsear: "Tenia: 8000 | Tiene: 15500 | Semanal: 7500 | Promedio: 1071 | Meta%: 107.1% | Acumulado: 2000 | Total: 45000"
+                                    const parts = dataLine.split('|').map(p => p.trim());
+                                    const getData = (prefix) => {
+                                        const part = parts.find(p => p.startsWith(prefix));
+                                        if (!part) return 0;
+                                        const val = part.replace(prefix, '').replace('%', '').trim();
+                                        return parseFloat(val) || 0;
+                                    };
+
+                                    newPlayers[playerName] = {
+                                        previous: getData('Tenia:'),
+                                        current: getData('Tiene:'),
+                                        accumulatedExcess: getData('Acumulado:'),
+                                        total: getData('Total:'),
+                                        deficitUsed: deficitUsed,
+                                        absent: false,
+                                        isNew: false
+                                    };
+                                    i++; // Saltar línea de datos
+                                }
+                            }
+                        }
+                    } else if (currentSection === 'nuevos') {
+                        // Línea: "[NUEVO] Pedro"
+                        if (line.startsWith('[NUEVO]')) {
+                            const playerName = line.replace('[NUEVO]', '').trim();
+
+                            // La siguiente línea tiene "Tiene: X"
+                            if (i + 1 < lines.length) {
+                                const dataLine = lines[i + 1].trim();
+                                if (dataLine.startsWith('Tiene:')) {
+                                    const current = parseInt(dataLine.replace('Tiene:', '').trim()) || 0;
+                                    newPlayers[playerName] = {
+                                        previous: 0,
+                                        current: current,
+                                        accumulatedExcess: 0,
+                                        total: 0,
+                                        deficitUsed: 0,
+                                        absent: false,
+                                        isNew: true
+                                    };
+                                    i++; // Saltar línea de datos
+                                }
+                            }
+                        }
+                    } else if (currentSection === 'baneados') {
+                        // Línea: "[BANEADO] Carlos"
+                        if (line.startsWith('[BANEADO]')) {
+                            const playerName = line.replace('[BANEADO]', '').trim();
+                            newPlayers[playerName] = {
+                                previous: 0,
+                                current: 0,
+                                accumulatedExcess: 0,
+                                total: 0,
+                                deficitUsed: 0,
+                                absent: true,
+                                isNew: false
+                            };
                         }
                     }
                 }
 
+                // Aplicar datos restaurados
+                if (Object.keys(newPlayers).length === 0) {
+                    showStatus('❌ No se encontraron jugadores en el archivo.', 'error');
+                    event.target.value = '';
+                    return;
+                }
+
                 players = newPlayers;
+                if (metaDiariaRestored) goalDaily = metaDiariaRestored;
+
                 showUnsavedIndicator();
                 renderTable();
-                showStatus('✅ Restauración PARCIAL exitosa (Formato Legacy TXT).', 'success');
-
+                showStatus(`✅ Restauración exitosa: ${Object.keys(players).length} jugadores cargados.`, 'success');
                 event.target.value = '';
             };
             reader.readAsText(file);
