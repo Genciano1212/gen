@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v0.2</title>
+    <title>Tracker Donaciones Pocket Ants v0.3</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1130,7 +1130,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v0.2</div>
+            <div class="version-tag">v0.3</div>
         </div>
 
         <!-- Botones de acción -->
@@ -2690,7 +2690,6 @@
                 } else {
                     players[name].absent = false;
                     const previousCurrent = players[name].current || 0;
-                    const current = current;
 
                     if (current < previousCurrent) {
                         showStatus(`⚠️ Error: ${name} tiene un valor menor al anterior (${current} < ${previousCurrent})`, 'error');
