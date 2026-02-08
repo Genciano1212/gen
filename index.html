@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.3.8</title>
+    <title>Tracker Donaciones Pocket Ants v1.3.9</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -561,126 +561,6 @@
             color: #721c24;
         }
 
-        /* VISTA PREVIA DE CAMBIOS - Solo para admin */
-        .preview-row {
-            background-color: #e3f2fd !important;
-            /* Azul muy claro */
-            font-size: clamp(7px, 1.8vw, 9px) !important;
-            opacity: 0.9;
-        }
-
-        .preview-row td {
-            padding: clamp(3px, 1vw, 5px) clamp(2px, 0.8vw, 4px) !important;
-            border-right: 1px dashed #90caf9 !important;
-            border-top: 1px dashed #90caf9 !important;
-            border-bottom: 2px dashed #2196f3 !important;
-            color: #1565c0 !important;
-            font-style: italic;
-        }
-
-        .preview-row td:first-child {
-            border-left: 3px solid #2196f3 !important;
-            font-weight: 600;
-        }
-
-        .preview-row td:last-child {
-            border-right: 3px solid #2196f3 !important;
-        }
-
-        .preview-label {
-            display: inline-block;
-            background: #2196f3;
-            color: white;
-            padding: 1px 4px;
-            border-radius: 3px;
-            font-size: clamp(6px, 1.5vw, 8px);
-            margin-right: 3px;
-            font-weight: 600;
-        }
-
-        .preview-section-title {
-            text-align: center;
-            color: #1565c0;
-            font-size: clamp(10px, 2.5vw, 12px);
-            margin: 8px 0;
-            font-weight: 600;
-            background: #e3f2fd;
-            padding: 4px;
-            border-radius: 4px;
-            border-left: 3px solid #2196f3;
-        }
-
-        /* Estilos para indicadores de vista previa */
-        .preview-row-new {
-            background-color: #d4edda !important;
-            font-size: clamp(7px, 1.8vw, 9px) !important;
-            opacity: 0.9;
-        }
-
-        .preview-row-new td {
-            padding: clamp(3px, 1vw, 5px) clamp(2px, 0.8vw, 4px) !important;
-            border-right: 1px dashed #28a745 !important;
-            border-top: 1px dashed #28a745 !important;
-            border-bottom: 2px dashed #28a745 !important;
-            color: #155724 !important;
-            font-style: italic;
-        }
-
-        .preview-row-new td:first-child {
-            border-left: 3px solid #28a745 !important;
-            font-weight: 600;
-        }
-
-        .preview-row-new td:last-child {
-            border-right: 3px solid #28a745 !important;
-        }
-
-        .preview-row-banned {
-            background-color: #f8d7da !important;
-            font-size: clamp(7px, 1.8vw, 9px) !important;
-            opacity: 0.7;
-        }
-
-        .preview-row-banned td {
-            padding: clamp(3px, 1vw, 5px) clamp(2px, 0.8vw, 4px) !important;
-            border-right: 1px dashed #dc3545 !important;
-            border-top: 1px dashed #dc3545 !important;
-            border-bottom: 2px dashed #dc3545 !important;
-            color: #721c24 !important;
-            font-style: italic;
-            text-decoration: line-through;
-        }
-
-        .preview-row-banned td:first-child {
-            border-left: 3px solid #dc3545 !important;
-            font-weight: 600;
-        }
-
-        .preview-row-banned td:last-child {
-            border-right: 3px solid #dc3545 !important;
-        }
-
-        .preview-label-new {
-            display: inline-block;
-            background: #28a745;
-            color: white;
-            padding: 1px 4px;
-            border-radius: 3px;
-            font-size: clamp(6px, 1.5vw, 8px);
-            margin-right: 3px;
-            font-weight: 600;
-        }
-
-        .preview-label-banned {
-            display: inline-block;
-            background: #dc3545;
-            color: white;
-            padding: 1px 4px;
-            border-radius: 3px;
-            font-size: clamp(6px, 1.5vw, 8px);
-            margin-right: 3px;
-            font-weight: 600;
-        }
 
         .absent-player td {
             background: #f1f3f5 !important;
@@ -1328,8 +1208,7 @@
             <h2>📝 Entrada Manual de Datos</h2>
             <p><strong>Formato:</strong> nombre,donación (una por línea)</p>
             <p><strong>Ejemplo:</strong><br>Juan,25000<br>María,18500</p>
-            <textarea id="manualInput" placeholder="Ingresa los datos aquí..."
-                oninput="updateManualPreview()"></textarea>
+            <textarea id="manualInput" placeholder="Ingresa los datos aquí..."></textarea>
             <div class="section-buttons">
                 <button class="btn btn-success" onclick="processManual()">✅ Revisar Datos</button>
                 <button class="btn btn-check-similarity" onclick="checkSimilarity()">🔍 Verificar Similitud</button>
@@ -1547,8 +1426,7 @@
         let lastDataTimestamp = null;
         let indexedDBInitialized = false;
 
-        // Variable para vista previa de cambios
-        let previewData = null; // Almacena los datos calculados para preview
+
 
         const DB_NAME = 'DonacionesDB';
         const DB_VERSION = 1;
@@ -2377,142 +2255,12 @@
                         row.innerHTML = `<td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}</td><td>${formatNumber(player.previous || 0)}</td><td>${formatNumber(player.current || 0)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(calc.semanal)}</td><td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td><td style="position: relative;" title="${tierTitle}">${triangleMarker}${formatNumber(finalPotentialExcess)}${deficitHtml}${formatExtraDonationTime(finalPotentialExcess / (goalDaily || 1))}</td><td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>`;
                     }
 
-                    // Mostrar vista previa si hay cambios pendientes para este jugador (solo admin)
-                    if (previewData && previewData[name] && auth.currentUser) {
-                        const previewPlayer = previewData[name];
-                        const previewRow = tbody.insertRow();
-
-                        // Determinar el tipo de fila de preview según el estado del jugador
-                        let previewClass = 'preview-row';
-                        let previewLabelText = 'VISTA PREVIA';
-                        let previewLabelClass = 'preview-label';
-
-                        if (previewPlayer.willBeBanned) {
-                            previewClass = 'preview-row-banned';
-                            previewLabelText = 'SERÁ BANEADO';
-                            previewLabelClass = 'preview-label-banned';
-                        } else if (previewPlayer.isNew) {
-                            previewClass = 'preview-row-new';
-                            previewLabelText = 'NUEVO';
-                            previewLabelClass = 'preview-label-new';
-                        }
-
-                        previewRow.className = previewClass;
-
-                        // Para jugadores baneados, mostrar datos simplificados
-                        if (previewPlayer.willBeBanned) {
-                            const colspan = isEditMode ? 9 : 8;
-                            previewRow.innerHTML = `
-                            <td><span class="${previewLabelClass}">${previewLabelText}</span> ${name}</td>
-                            <td colspan="${colspan - 1}" style="text-align: center; font-style: italic;">
-                                Este jugador no aparece en los datos nuevos y será marcado como ausente
-                            </td>
-                        `;
-                        } else {
-                            const previewCalc = calculatePercentages(previewPlayer);
-                            // Los valores ya vienen calculados correctamente desde updateManualPreview
-                            // No necesitamos recalcular el futuro, solo mostrarlo.
-                            const finalAccumulated = previewPlayer.accumulatedExcess || 0;
-                            const deficitDraw = previewPlayer.simulatedDeficitDraw || 0;
-
-                            // CORRECCIÓN: El porcentaje debe reflejar la donación efectiva (Lo donado + Lo cubierto con acumulado)
-                            const weeklyGoal = (goalDaily || 0) * 7;
-                            const effectiveDonation = (previewPlayer.weeklyTotal || 0) + deficitDraw;
-                            // NO limitar al 100%. Si donó de más, debe verse. El deficitDraw ya asegura que no se pase de 100% A MENOS que sea por donación real.
-                            const effectiveMetaPerc = (effectiveDonation / weeklyGoal) * 100;
-
-                            previewRow.innerHTML = `
-                            <td><span class="${previewLabelClass}">${previewLabelText}</span> ${name}</td>
-                            <td>${formatNumber(previewPlayer.previous || 0)}</td>
-                            <td>${formatNumber(previewPlayer.current || 0)}</td>
-                            <td class="${getColorClass(previewCalc.metaPerc, 'percentage')}">${formatNumber(previewCalc.semanal)}</td>
-                            <td class="${getColorClass(previewCalc.avgDailyPerc, 'percentage')}">${formatNumber(previewCalc.avgDaily)}</td>
-                            <td class="${getColorClass(effectiveMetaPerc, 'percentage')}">${effectiveMetaPerc.toFixed(1)}%</td>
-                            <td>${formatNumber(finalAccumulated)}${deficitDraw > 0 ? `<br/><span style="color: red;">(-${formatNumber(deficitDraw)})</span>` : ''}</td>
-                            <td class="${getColorClass(previewCalc.totalPerc, 'total')}">${formatNumber(previewPlayer.total || 0)}</td>
-                            ${isEditMode ? '<td></td>' : ''}
-                        `;
-                        }
-                    }
                 });
-
-                // Mostrar jugadores en preview que no están en la tabla actual (nuevos y baneados adicionales)
-                if (previewData && auth.currentUser) {
-                    Object.keys(previewData).forEach(name => {
-                        // Solo mostrar si no está en players actual o si está marcado para ser baneado
-                        const previewPlayer = previewData[name];
-                        const isNewPlayer = previewPlayer.isNew;
-                        const willBeBanned = previewPlayer.willBeBanned;
-
-                        // Si es nuevo o será baneado y no se mostró antes
-                        if ((isNewPlayer || willBeBanned) && !players[name]) {
-                            const previewRow = tbody.insertRow();
-
-                            let previewClass = 'preview-row-new';
-                            let previewLabelText = 'NUEVO';
-                            let previewLabelClass = 'preview-label-new';
-
-                            if (willBeBanned) {
-                                previewClass = 'preview-row-banned';
-                                previewLabelText = 'SERÁ BANEADO';
-                                previewLabelClass = 'preview-label-banned';
-                            }
-
-                            previewRow.className = previewClass;
-
-                            // Para jugadores baneados, mostrar mensaje simplificado
-                            if (willBeBanned) {
-                                const colspan = isEditMode ? 9 : 8;
-                                previewRow.innerHTML = `
-                                <td><span class="${previewLabelClass}">${previewLabelText}</span> ${name}</td>
-                                <td colspan="${colspan - 1}" style="text-align: center; font-style: italic;">
-                                    Este jugador no aparece en los datos nuevos y será marcado como ausente
-                                </td>
-                            `;
-                            } else {
-                                // Para jugadores nuevos, NO mostrar cálculos (son base 0)
-                                // Alinear con el comportamiento de la tabla principal para isNew
-                                const finalAccumulated = previewPlayer.accumulatedExcess || 0;
-                                // Mostrar el valor ingresado en "Tiene" y "-" en "Tenía", o 0 en ambos stats
-
-                                const colspan = isEditMode ? 9 : 8;
-
-                                // Opción: Mostrar igual que en la tabla principal
-                                // <td>NUEVO {name}</td> <td>-</td> <td>{current}</td> <td>0</td> ...
-
-                                previewRow.innerHTML = `
-                                <td><span class="${previewLabelClass}">${previewLabelText}</span> ${name}</td>
-                                <td>-</td>
-                                <td>${formatNumber(previewPlayer.current || 0)}</td>
-                                <td class="percentage">0</td>
-                                <td class="percentage">0</td>
-                                <td class="percentage">0.0%</td>
-                                <td>0</td>
-                                <td class="total">0</td>
-                                ${isEditMode ? '<td></td>' : ''}
-                            `;
-                            }
-                        }
-                    });
-                }
 
                 const avgSemanal = playersActive > 0 ? totalSemanal / playersActive : 0;
                 const colspan = isEditMode ? 9 : 8;
 
                 let footerContent = `📊 TOTALES (${playersActive} jugadores): ${formatNumber(totalSemanal)} donaciones semanales | Promedio: ${formatNumber(avgSemanal)} | Acumulado: ${formatNumber(totalAcumulado)}`;
-
-                // Agregar resumen de cambios en preview
-                if (previewData && auth.currentUser) {
-                    const newPlayersCount = Object.keys(previewData).filter(name => previewData[name].isNew).length;
-                    const bannedPlayersCount = Object.keys(previewData).filter(name => previewData[name].willBeBanned).length;
-
-                    if (newPlayersCount > 0 || bannedPlayersCount > 0) {
-                        const previewSummary = [];
-                        if (newPlayersCount > 0) previewSummary.push(`<span style="color: #155724;">+${newPlayersCount} nuevos</span>`);
-                        if (bannedPlayersCount > 0) previewSummary.push(`<span style="color: #721c24;">-${bannedPlayersCount} baneados</span>`);
-                        footerContent += ` | <span style="font-weight: bold;">📋 VISTA PREVIA: ${previewSummary.join(' | ')}</span>`;
-                    }
-                }
 
                 tfoot.innerHTML = `<tr class="total-row"><td colspan="${colspan}">${footerContent}</td></tr>`;
             } catch (error) {
@@ -2747,19 +2495,8 @@
             renderTable();
             showStatus('✏️ Editando jugador: ' + playerName, 'processing');
         }
-
-        function updatePreviewForEditing() {
-            // Esta función es necesaria para que los inputs no lancen error al escribir.
-            // Por ahora, no forzamos re-render para evitar perder el foco del cursor.
-            if (!editingPlayer) return;
-
-            // Opcional: Aquí podríamos actualizar manualmente las celdas calculadas (Semanal, %) 
-            // accediendo al DOM sin redibujar toda la tabla.
-        }
-
         function cancelEditing() {
             editingPlayer = null;
-            previewData = null; // Limpiar vista previa al cancelar
             renderTable();
             showStatus('❌ Edición cancelada', 'success');
         }
@@ -2813,7 +2550,6 @@
             players[editingPlayer].accumulatedExcess = newAcc;
 
             editingPlayer = null;
-            previewData = null; // Limpiar vista previa después de guardar
             showUnsavedIndicator();
             renderTable();
             showStatus('✅ Cambios guardados. Recuerda pulsar "✓" para guardar en Firebase', 'success');
@@ -3682,9 +3418,8 @@
                         updatePlayers(updates); // Reutilizamos la función existente que ya maneja la lógica correcta
                         pendingDataProcessed = true;
 
-                        // Limpiar entrada manual y preview
+                        // Limpiar entrada manual
                         document.getElementById('manualInput').value = '';
-                        previewData = null;
                         renderTable(); // Refrescar para asegurar que la tabla base esté al día antes del cierre
                     }
                 }
@@ -3700,10 +3435,6 @@
                 }
                 await startNewWeek();
                 await saveData(); // Guardar los cambios post-cierre
-
-                // Asegurar que la vista previa visual se limpie
-                clearPreview();
-                hidemanualWrapper(); // Función helper si existe, o borramos manualmente
                 document.getElementById('manualSection').classList.remove('active'); // Ocultar panel manual si estaba abierto
 
                 showStatus('✅ ¡Semana cerrada y nueva semana iniciada correctamente!', 'success');
@@ -3716,7 +3447,6 @@
 
         function hidemanualWrapper() {
             document.getElementById('manualInput').value = '';
-            previewData = null;
             renderTable();
         }
 
@@ -3871,191 +3601,6 @@
         }, false);
     </script>
 
-    <!-- === FUNCIONES DE VISTA PREVIA === -->
-    <script>
-        function updatePreviewForEditing() {
-            if (!editingPlayer || typeof auth === 'undefined' || !auth.currentUser) return;
-
-            const newPrevInput = document.getElementById(`edit-previous-${editingPlayer}`);
-            const newCurrInput = document.getElementById(`edit-current-${editingPlayer}`);
-
-            if (!newPrevInput || !newCurrInput) return;
-
-            const newPrev = parseInt(newPrevInput.value) || 0;
-            const newCurr = parseInt(newCurrInput.value) || 0;
-
-            // Crear el jugador con los nuevos valores para calcular el futuro estado
-            const previewPlayer = {
-                ...players[editingPlayer],
-                previous: newPrev,
-                current: newCurr,
-                accumulatedExcess: (document.getElementById(`edit-accumulated-${editingPlayer}`) ? parseInt(document.getElementById(`edit-accumulated-${editingPlayer}`).value) : players[editingPlayer].accumulatedExcess)
-            };
-
-            // Calcular el total: si hay aumento en current, se suma al total
-            const currentDiff = newCurr - (players[editingPlayer].current || 0);
-            if (currentDiff > 0) {
-                previewPlayer.total = (players[editingPlayer].total || 0) + currentDiff;
-            }
-
-            // Actualizar previewData
-            previewData = { [editingPlayer]: previewPlayer };
-
-            // Volver a renderizar para mostrar la preview
-            renderTable();
-        }
-
-        function clearPreview() {
-            previewData = null;
-            renderTable();
-        }
-
-        function updateManualPreview() {
-            if (typeof auth === 'undefined' || !auth.currentUser) return;
-
-            const text = document.getElementById('manualInput').value.trim();
-            if (!text) {
-                clearPreview();
-                return;
-            }
-
-            const lines = text.split('\n');
-            const currentData = {};
-            let hasError = false;
-
-            for (let index = 0; index < lines.length; index++) {
-                const line = lines[index].trim();
-                if (!line) continue;
-
-                const parts = line.split(',');
-                if (parts.length !== 2) {
-                    hasError = true;
-                    break;
-                }
-
-                const name = parts[0].trim();
-                const num = parseInt(parts[1].trim());
-
-                if (!name || isNaN(num) || num < 0) {
-                    hasError = true;
-                    break;
-                }
-
-                currentData[name] = num;
-            }
-
-            if (hasError) {
-                clearPreview();
-                return;
-            }
-
-            // Calcular preview para todos los jugadores mencionados
-            previewData = {};
-
-            Object.keys(currentData).forEach(name => {
-                const newCurrent = currentData[name];
-
-                if (!players[name]) {
-                    // Nuevo jugador: se inicia con previous=0, current=valor ingresado
-                    // Al ser nuevo, la donación semanal es todo el valor ingresado
-                    previewData[name] = {
-                        previous: 0,
-                        current: newCurrent,
-                        total: newCurrent, // Total = donación de esta semana
-                        weeklyTotal: newCurrent,
-                        accumulatedExcess: 0,
-                        isNew: true,
-                        absent: false,
-                        willBeBanned: false
-                    };
-                } else {
-                    // Jugador existente
-                    const player = players[name];
-                    const previousCurrent = player.current || 0;
-
-                    // Si el nuevo valor es menor que el INICIO de semana, hay error.
-                    // Pero puede ser menor que 'current' si estamos corrigiendo un error de tipeo previo.
-                    if (newCurrent < (player.previous || 0)) {
-                        console.warn(`⚠️ Error en preview: ${name} tiene valor menor al inicio de semana`);
-                        return;
-                    }
-
-                    const difference = newCurrent - previousCurrent;
-
-
-                    // --- CÁLCULO DE VISTA PREVIA (SIMULACIÓN DE CIERRE) ---
-
-                    const weeklyGoal = (goalDaily || 0) * 7;
-                    // FIX: La donación semanal es el Nuevo Total - El Total al Inicio de la Semana (Previous)
-                    // No usar 'previousCurrent' porque ese es el total hasta hace un momento, no el inicio de semana.
-                    const weeklyDonation = newCurrent - (player.previous || 0);
-
-                    // Usamos 'baseAccumulated' como el punto de partida real (lo que el usuario ve como "Acumulado" hoy)
-                    let finalAccumulated = Math.max(0, player.accumulatedExcess || 0);
-                    let futureDeficitDraw = 0;
-
-                    if (weeklyDonation >= weeklyGoal) {
-                        // Superávit
-                        const excess = weeklyDonation - weeklyGoal;
-
-                        // LÓGICA DE EFICIENCIA REAL (v1.3.3)
-                        // Se aplica el impuesto visualmente para que coincida con lo que se guardará.
-                        const oneWeek = (goalDaily || 0) * 7;
-                        const oneMonth = oneWeek * 4;
-                        const currentAccumulated = player.accumulatedExcess || 0;
-                        let efficiency = 1.0;
-
-                        if (currentAccumulated >= (oneMonth * 5)) {
-                            efficiency = 0.05;  // Tier 4
-                        } else if (currentAccumulated >= (oneMonth * 3)) {
-                            efficiency = 0.10;  // Tier 3
-                        } else if (currentAccumulated >= oneMonth) {
-                            efficiency = 0.50;  // Tier 2
-                        } else {
-                            efficiency = 1.0;   // Tier 1
-                        }
-
-                        const effectiveExcess = excess * efficiency;
-                        finalAccumulated += effectiveExcess;
-                    } else {
-                        // Déficit
-                        const deficit = weeklyGoal - weeklyDonation;
-                        const available = finalAccumulated;
-                        futureDeficitDraw = Math.min(deficit, available);
-                        finalAccumulated = available - futureDeficitDraw;
-                    }
-
-                    previewData[name] = {
-                        ...player,
-                        previous: previousCurrent, // "Tenía" (Preview) = "Tiene" (Tabla Vieja)
-                        current: newCurrent, // "Tiene" (Preview) = "Tiene" (Nuevo Input)
-                        total: (player.total || 0) + difference, // Total aumenta por la diferencia
-                        weeklyTotal: newCurrent - previousCurrent, // Donación semanal para la vista previa = DELTA (Diferencia)
-                        accumulatedExcess: finalAccumulated, // Valor final simulado
-                        isNew: false,
-                        absent: false,
-                        willBeBanned: false,
-                        simulatedDeficitDraw: futureDeficitDraw // Solo lo que se descontó
-                    };
-                }
-            });
-
-            // Identificar jugadores que serán baneados (no aparecen en currentData pero sí existen)
-            Object.keys(players).forEach(name => {
-                if (!currentData[name] && !players[name].absent) {
-                    // Este jugador será marcado como ausente/baneado
-                    previewData[name] = {
-                        ...players[name],
-                        isNew: false,
-                        absent: true,
-                        willBeBanned: true
-                    };
-                }
-            });
-
-            renderTable();
-        }
-    </script>
 
     <!-- Firebase App (el núcleo) -->
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
