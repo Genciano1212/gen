@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v0.3</title>
+    <title>Tracker Donaciones Pocket Ants v0.4</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1130,7 +1130,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v0.3</div>
+            <div class="version-tag">v0.4</div>
         </div>
 
         <!-- Botones de acción -->
@@ -1909,7 +1909,7 @@
                     weekStart
                 };
 
-                await firestoreDB.collection('data').doc('main').set(dataToSave);
+                await firebase.firestore().collection('data').doc('main').set(dataToSave);
                 await saveToLocal(dataToSave);
 
                 lastUpdate = dataToSave.lastUpdate;
@@ -1943,11 +1943,20 @@
                 showStatus('❌ Debes iniciar sesión como admin.', 'error');
                 return;
             }
-            if (!confirm('¿Estás seguro de que deseas guardar los cambios en Firebase? Esto actualizará los datos para todos los usuarios.')) {
-                return;
+
+            // Feedback visual inmediato
+            const saveBtn = document.getElementById('saveBtn');
+            if (saveBtn) saveBtn.style.opacity = '0.5';
+            showStatus('⏳ Guardando en Firebase...', 'processing');
+
+            try {
+                await saveData();
+                showStatus('✅ Datos guardados en Firebase correctamente!', 'success');
+            } catch (e) {
+                showStatus('❌ Error al guardar: ' + e.message, 'error');
+            } finally {
+                if (saveBtn) saveBtn.style.opacity = '1';
             }
-            await saveData();
-            showStatus('✅ Datos guardados en Firebase correctamente!', 'success');
         }
 
         // --- FUNCIONES DE RENDERIZADO Y FORMATO ---
@@ -3625,11 +3634,6 @@
         function hidemanualWrapper() {
             document.getElementById('manualInput').value = '';
             renderTable();
-        }
-
-        // Reemplaza a la antigua función manualSave directa
-        function manualSave() {
-            showSaveOptions();
         }
 
         // --- MANEJO DE LA INTERFAZ (MODALES, ETC.) ---
