@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v0.3</title>
+    <title>Tracker Donaciones Pocket Ants v1.3.7</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1130,7 +1130,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v0.3</div>
+            <div class="version-tag">v1.3.7</div>
         </div>
 
         <!-- Botones de acción -->
@@ -1280,10 +1280,11 @@
                 </div>
                 <div class="legend-item">
                     <div class="legend-color red"></div>
-                    &lt;70% Meta</div>
+                    &lt;70% Meta
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <!-- Sección de Login -->
@@ -1612,9 +1613,17 @@
         document.addEventListener('DOMContentLoaded', function () {
             try {
                 // Inicializar Firebase y los servicios
-                const app = firebase.initializeApp(firebaseConfig);
-                firestoreDB = firebase.firestore();
-                auth = firebase.auth();
+                try {
+                    const app = firebase.initializeApp(firebaseConfig);
+                    firestoreDB = firebase.firestore();
+                    auth = firebase.auth();
+                    console.log('✅ Firebase inicializado correctamente');
+                } catch (firebaseError) {
+                    console.warn('⚠️ Firebase no disponible, operando en modo offline:', firebaseError.message);
+                    firestoreDB = null;
+                    auth = null;
+                    showStatus('⚠️ Modo offline: Servidor no disponible', 'warning', 5000);
+                }
 
                 // ESCAPE HATCH: Borrado de caché forzado por URL
                 const urlParams = new URLSearchParams(window.location.search);
@@ -1632,8 +1641,12 @@
                 updateEditModeButton();
                 updateAdminButtons();
             } catch (error) {
-                console.error("Error inicializando Firebase:", error);
-                showStatus('Error crítico al iniciar la app.', 'error');
+                console.error("Error crítico inicializando la app:", error);
+                showStatus('❌ Error al iniciar la aplicación. Recarga la página.', 'error', 10000);
+                // Intentar renderizar tabla vacía para que el usuario vea algo
+                players = {};
+                goalDaily = CONFIG.DEFAULT_GOAL;
+                renderTable();
             }
 
             // Guardar los textos del encabezado una sola vez
@@ -1725,11 +1738,50 @@
             }
         }
 
+        function promiseWithTimeout(promise, ms, label) {
+            let timeoutId;
+            const timeoutPromise = new Promise((_, reject) => {
+                timeoutId = setTimeout(() => {
+                    reject(new Error(`Timeout en ${label} (${ms}ms)`));
+                }, ms);
+            });
+            return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+        }
+
         async function initDB() {
             try {
-                await initIndexedDB();
+                showStatus('⏳ Iniciando base de datos...', 'processing');
 
-                const localData = await loadFromLocal();
+                // Verificar que Firebase esté inicializado
+                if (!firestoreDB) {
+                    console.warn('Firebase no inicializado, operando en modo offline');
+                    showStatus('⚠️ Modo offline: Servidor no disponible', 'warning', 5000);
+                    players = {};
+                    goalDaily = CONFIG.DEFAULT_GOAL;
+                    lastUpdate = Date.now();
+                    weekStart = getWeekStart();
+                    renderTable();
+                    updateTimeDisplays();
+                    return;
+                }
+
+                // Intento con timeout para IndexedDB (3 segundos máximo)
+                try {
+                    await promiseWithTimeout(initIndexedDB(), 3000, 'IndexedDB');
+                } catch (e) {
+                    console.warn(e.message);
+                    showStatus('⚠️ Aviso: Base de datos offline lenta o no disponible.', 'warning', 3000);
+                    // No detenemos la carga, seguimos intentando
+                }
+
+                // Intento cargar datos locales con timeout (2 segundos máximo)
+                let localData = null;
+                try {
+                    localData = await promiseWithTimeout(loadFromLocal(), 2000, 'Carga Local');
+                } catch (e) {
+                    console.warn(e.message);
+                    // Si falla la carga local, localData sigue siendo null
+                }
 
                 if (localData) {
                     players = localData.players || {};
@@ -1739,15 +1791,22 @@
                     lastDataTimestamp = localData.timestamp;
 
                     console.log('Cargando datos desde IndexedDB');
+                    showStatus('📂 Datos cargados (Cache Local).', 'success', 2000);
                 } else {
+                    showStatus('☁️ Conectando con nube...', 'processing');
                     await loadData();
                 }
 
+            } catch (error) {
+                showStatus('Error al inicializar: ' + error.message, 'error');
+                console.error('DB Error:', error);
+                // Fallback visual
+                const headerEl = document.getElementById('headerLastUpdate');
+                if (headerEl) headerEl.textContent = 'Error al cargar';
+            } finally {
+                // SIEMPRE intentar renderizar para quitar el estado "Cargando..."
                 renderTable();
                 updateTimeDisplays();
-            } catch (error) {
-                showStatus('Error al inicializar la base de datos: ' + error.message, 'error');
-                console.error('DB Error:', error);
             }
         }
 
@@ -1785,6 +1844,12 @@
         // --- LÓGICA DE DATOS (Firestore) ---
 
         async function loadData() {
+            // Verificar que Firebase esté disponible
+            if (!firestoreDB) {
+                showStatus('⚠️ Servidor no disponible. Modo offline.', 'warning');
+                return;
+            }
+
             try {
                 const docRef = firestoreDB.collection('data').doc('main');
                 const doc = await docRef.get();
@@ -1797,6 +1862,14 @@
                     weekStart = data.weekStart || getWeekStart();
                     lastSyncTime = lastUpdate;
                     updateSyncTimeDisplay();
+                    showStatus('✅ Datos cargados desde la nube', 'success', 2000);
+                } else {
+                    // No hay datos en Firebase, usar datos locales o vacíos
+                    if (Object.keys(players).length === 0) {
+                        showStatus('ℹ️ No hay datos disponibles. Inicia sesión como admin para añadir jugadores.', 'info', 5000);
+                    } else {
+                        showStatus('ℹ️ Sin datos en servidor. Usando datos locales.', 'info', 3000);
+                    }
                 }
                 renderTable();
                 updateTimeDisplays();
@@ -1818,6 +1891,12 @@
         let lastSyncTime = null;
 
         async function forceSync() {
+            // Verificar que Firebase esté disponible
+            if (!firestoreDB) {
+                showStatus('⚠️ Servidor no disponible. No se puede sincronizar.', 'warning');
+                return;
+            }
+
             try {
                 const unsavedIndicator = document.getElementById('unsavedIndicator');
                 const hasUnsavedChanges = unsavedIndicator && unsavedIndicator.classList.contains('show');
@@ -1899,6 +1978,19 @@
         }
 
         async function saveData() {
+            // Verificar que Firebase esté disponible
+            if (!firestoreDB) {
+                showStatus('⚠️ Servidor no disponible. Guardando solo localmente.', 'warning');
+                await saveToLocal({
+                    players,
+                    goalDaily,
+                    lastUpdate: Date.now(),
+                    weekStart
+                });
+                showStatus('✅ Datos guardados localmente (pendiente sincronización)', 'success');
+                return;
+            }
+
             try {
                 const dataToSave = {
                     players,
@@ -3450,179 +3542,179 @@
             reader.readAsText(file);
         }
 
-            const file = event.target.files[0];
-            if (!file) return;
+        const file = event.target.files[0];
+        if (!file) return;
 
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const content = e.target.result;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const content = e.target.result;
 
-                // INTENTO 1: JSON antiguo (compatibilidad)
-                try {
-                    const backupState = JSON.parse(content);
-                    if (backupState.players && backupState.globalConfig) {
-                        if (!confirm(`⚠️ Vas a restaurar una copia JSON del ${backupState.dateString || 'desconocida'}.\nEsto sobrescribirá TODOS los datos actuales.\n¿Continuar?`)) {
-                            event.target.value = '';
-                            return;
-                        }
-                        if (backupState.globalConfig.goalDaily) goalDaily = backupState.globalConfig.goalDaily;
-                        if (backupState.globalConfig.lastUpdate) lastUpdate = backupState.globalConfig.lastUpdate;
-                        if (backupState.globalConfig.weekStart) weekStart = backupState.globalConfig.weekStart;
-                        players = backupState.players;
-                        showUnsavedIndicator();
-                        renderTable();
-                        showStatus('✅ Restauración exitosa (Formato JSON antiguo).', 'success');
+            // INTENTO 1: JSON antiguo (compatibilidad)
+            try {
+                const backupState = JSON.parse(content);
+                if (backupState.players && backupState.globalConfig) {
+                    if (!confirm(`⚠️ Vas a restaurar una copia JSON del ${backupState.dateString || 'desconocida'}.\nEsto sobrescribirá TODOS los datos actuales.\n¿Continuar?`)) {
                         event.target.value = '';
                         return;
                     }
-                } catch (err) {
-                    console.log('No es JSON, intentando TXT...');
-                }
-
-                // INTENTO 2: Nuevo formato TXT literal
-                const lines = content.split('\n');
-                if (lines.length < 5 || !content.includes('=== BACKUP DONACIONES INVENCIBLES ===')) {
-                    showStatus('❌ Archivo no reconocido o dañado.', 'error');
+                    if (backupState.globalConfig.goalDaily) goalDaily = backupState.globalConfig.goalDaily;
+                    if (backupState.globalConfig.lastUpdate) lastUpdate = backupState.globalConfig.lastUpdate;
+                    if (backupState.globalConfig.weekStart) weekStart = backupState.globalConfig.weekStart;
+                    players = backupState.players;
+                    showUnsavedIndicator();
+                    renderTable();
+                    showStatus('✅ Restauración exitosa (Formato JSON antiguo).', 'success');
                     event.target.value = '';
                     return;
                 }
+            } catch (err) {
+                console.log('No es JSON, intentando TXT...');
+            }
 
-                // Extraer fecha del backup para confirmar
-                let fechaBackup = 'desconocida';
-                const fechaLine = lines.find(l => l.startsWith('Fecha:'));
-                if (fechaLine) fechaBackup = fechaLine.replace('Fecha:', '').trim();
-
-                if (!confirm(`⚠️ Vas a restaurar la copia del:\n${fechaBackup}\n\nEsto SOBRESCRIBIRÁ todos los datos actuales.\n¿Continuar?`)) {
-                    event.target.value = '';
-                    return;
-                }
-
-                const newPlayers = {};
-                let currentSection = null;
-                let metaDiariaRestored = null;
-                let weekStartRestored = null;
-
-                // Extraer meta diaria
-                const metaLine = lines.find(l => l.startsWith('Meta Diaria:'));
-                if (metaLine) {
-                    metaDiariaRestored = parseInt(metaLine.replace('Meta Diaria:', '').trim()) || null;
-                }
-
-                // Parsear líneas
-                for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i].trim();
-
-                    // Detectar secciones
-                    if (line === '--- ACTIVOS ---') {
-                        currentSection = 'activos';
-                        continue;
-                    } else if (line === '--- NUEVOS ---') {
-                        currentSection = 'nuevos';
-                        continue;
-                    } else if (line === '--- BANEADOS ---') {
-                        currentSection = 'baneados';
-                        continue;
-                    } else if (line.startsWith('=== RESUMEN ===') || line.startsWith('=== FIN BACKUP ===')) {
-                        currentSection = null;
-                        continue;
-                    }
-
-                    // Parsear jugadores según sección
-                    if (currentSection === 'activos') {
-                        // Línea de nombre: "Juan (Deficit: -500)" o solo "Juan"
-                        if (line && !line.startsWith('Tenia:') && !line.startsWith('  ')) {
-                            let playerName = line;
-                            let deficitUsed = 0;
-
-                            // Extraer déficit si existe
-                            const deficitMatch = line.match(/\(Deficit: -(\d+)\)/);
-                            if (deficitMatch) {
-                                deficitUsed = parseInt(deficitMatch[1]) || 0;
-                                playerName = line.replace(/\s*\(Deficit: -\d+\)/, '').trim();
-                            }
-
-                            // La siguiente línea tiene los datos
-                            if (i + 1 < lines.length) {
-                                const dataLine = lines[i + 1].trim();
-                                if (dataLine.startsWith('Tenia:')) {
-                                    // Parsear: "Tenia: 8000 | Tiene: 15500 | Semanal: 7500 | Promedio: 1071 | Meta%: 107.1% | Acumulado: 2000 | Total: 45000"
-                                    const parts = dataLine.split('|').map(p => p.trim());
-                                    const getData = (prefix) => {
-                                        const part = parts.find(p => p.startsWith(prefix));
-                                        if (!part) return 0;
-                                        const val = part.replace(prefix, '').replace('%', '').trim();
-                                        return parseFloat(val) || 0;
-                                    };
-
-                                    newPlayers[playerName] = {
-                                        previous: getData('Tenia:'),
-                                        current: getData('Tiene:'),
-                                        accumulatedExcess: getData('Acumulado:'),
-                                        total: getData('Total:'),
-                                        deficitUsed: deficitUsed,
-                                        absent: false,
-                                        isNew: false
-                                    };
-                                    i++; // Saltar línea de datos
-                                }
-                            }
-                        }
-                    } else if (currentSection === 'nuevos') {
-                        // Línea: "[NUEVO] Pedro"
-                        if (line.startsWith('[NUEVO]')) {
-                            const playerName = line.replace('[NUEVO]', '').trim();
-
-                            // La siguiente línea tiene "Tiene: X"
-                            if (i + 1 < lines.length) {
-                                const dataLine = lines[i + 1].trim();
-                                if (dataLine.startsWith('Tiene:')) {
-                                    const current = parseInt(dataLine.replace('Tiene:', '').trim()) || 0;
-                                    newPlayers[playerName] = {
-                                        previous: 0,
-                                        current: current,
-                                        accumulatedExcess: 0,
-                                        total: 0,
-                                        deficitUsed: 0,
-                                        absent: false,
-                                        isNew: true
-                                    };
-                                    i++; // Saltar línea de datos
-                                }
-                            }
-                        }
-                    } else if (currentSection === 'baneados') {
-                        // Línea: "[BANEADO] Carlos"
-                        if (line.startsWith('[BANEADO]')) {
-                            const playerName = line.replace('[BANEADO]', '').trim();
-                            newPlayers[playerName] = {
-                                previous: 0,
-                                current: 0,
-                                accumulatedExcess: 0,
-                                total: 0,
-                                deficitUsed: 0,
-                                absent: true,
-                                isNew: false
-                            };
-                        }
-                    }
-                }
-
-                // Aplicar datos restaurados
-                if (Object.keys(newPlayers).length === 0) {
-                    showStatus('❌ No se encontraron jugadores en el archivo.', 'error');
-                    event.target.value = '';
-                    return;
-                }
-
-                players = newPlayers;
-                if (metaDiariaRestored) goalDaily = metaDiariaRestored;
-
-                showUnsavedIndicator();
-                renderTable();
-                showStatus(`✅ Restauración exitosa: ${Object.keys(players).length} jugadores cargados.`, 'success');
+            // INTENTO 2: Nuevo formato TXT literal
+            const lines = content.split('\n');
+            if (lines.length < 5 || !content.includes('=== BACKUP DONACIONES INVENCIBLES ===')) {
+                showStatus('❌ Archivo no reconocido o dañado.', 'error');
                 event.target.value = '';
-            };
-            reader.readAsText(file);
+                return;
+            }
+
+            // Extraer fecha del backup para confirmar
+            let fechaBackup = 'desconocida';
+            const fechaLine = lines.find(l => l.startsWith('Fecha:'));
+            if (fechaLine) fechaBackup = fechaLine.replace('Fecha:', '').trim();
+
+            if (!confirm(`⚠️ Vas a restaurar la copia del:\n${fechaBackup}\n\nEsto SOBRESCRIBIRÁ todos los datos actuales.\n¿Continuar?`)) {
+                event.target.value = '';
+                return;
+            }
+
+            const newPlayers = {};
+            let currentSection = null;
+            let metaDiariaRestored = null;
+            let weekStartRestored = null;
+
+            // Extraer meta diaria
+            const metaLine = lines.find(l => l.startsWith('Meta Diaria:'));
+            if (metaLine) {
+                metaDiariaRestored = parseInt(metaLine.replace('Meta Diaria:', '').trim()) || null;
+            }
+
+            // Parsear líneas
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+
+                // Detectar secciones
+                if (line === '--- ACTIVOS ---') {
+                    currentSection = 'activos';
+                    continue;
+                } else if (line === '--- NUEVOS ---') {
+                    currentSection = 'nuevos';
+                    continue;
+                } else if (line === '--- BANEADOS ---') {
+                    currentSection = 'baneados';
+                    continue;
+                } else if (line.startsWith('=== RESUMEN ===') || line.startsWith('=== FIN BACKUP ===')) {
+                    currentSection = null;
+                    continue;
+                }
+
+                // Parsear jugadores según sección
+                if (currentSection === 'activos') {
+                    // Línea de nombre: "Juan (Deficit: -500)" o solo "Juan"
+                    if (line && !line.startsWith('Tenia:') && !line.startsWith('  ')) {
+                        let playerName = line;
+                        let deficitUsed = 0;
+
+                        // Extraer déficit si existe
+                        const deficitMatch = line.match(/\(Deficit: -(\d+)\)/);
+                        if (deficitMatch) {
+                            deficitUsed = parseInt(deficitMatch[1]) || 0;
+                            playerName = line.replace(/\s*\(Deficit: -\d+\)/, '').trim();
+                        }
+
+                        // La siguiente línea tiene los datos
+                        if (i + 1 < lines.length) {
+                            const dataLine = lines[i + 1].trim();
+                            if (dataLine.startsWith('Tenia:')) {
+                                // Parsear: "Tenia: 8000 | Tiene: 15500 | Semanal: 7500 | Promedio: 1071 | Meta%: 107.1% | Acumulado: 2000 | Total: 45000"
+                                const parts = dataLine.split('|').map(p => p.trim());
+                                const getData = (prefix) => {
+                                    const part = parts.find(p => p.startsWith(prefix));
+                                    if (!part) return 0;
+                                    const val = part.replace(prefix, '').replace('%', '').trim();
+                                    return parseFloat(val) || 0;
+                                };
+
+                                newPlayers[playerName] = {
+                                    previous: getData('Tenia:'),
+                                    current: getData('Tiene:'),
+                                    accumulatedExcess: getData('Acumulado:'),
+                                    total: getData('Total:'),
+                                    deficitUsed: deficitUsed,
+                                    absent: false,
+                                    isNew: false
+                                };
+                                i++; // Saltar línea de datos
+                            }
+                        }
+                    }
+                } else if (currentSection === 'nuevos') {
+                    // Línea: "[NUEVO] Pedro"
+                    if (line.startsWith('[NUEVO]')) {
+                        const playerName = line.replace('[NUEVO]', '').trim();
+
+                        // La siguiente línea tiene "Tiene: X"
+                        if (i + 1 < lines.length) {
+                            const dataLine = lines[i + 1].trim();
+                            if (dataLine.startsWith('Tiene:')) {
+                                const current = parseInt(dataLine.replace('Tiene:', '').trim()) || 0;
+                                newPlayers[playerName] = {
+                                    previous: 0,
+                                    current: current,
+                                    accumulatedExcess: 0,
+                                    total: 0,
+                                    deficitUsed: 0,
+                                    absent: false,
+                                    isNew: true
+                                };
+                                i++; // Saltar línea de datos
+                            }
+                        }
+                    }
+                } else if (currentSection === 'baneados') {
+                    // Línea: "[BANEADO] Carlos"
+                    if (line.startsWith('[BANEADO]')) {
+                        const playerName = line.replace('[BANEADO]', '').trim();
+                        newPlayers[playerName] = {
+                            previous: 0,
+                            current: 0,
+                            accumulatedExcess: 0,
+                            total: 0,
+                            deficitUsed: 0,
+                            absent: true,
+                            isNew: false
+                        };
+                    }
+                }
+            }
+
+            // Aplicar datos restaurados
+            if (Object.keys(newPlayers).length === 0) {
+                showStatus('❌ No se encontraron jugadores en el archivo.', 'error');
+                event.target.value = '';
+                return;
+            }
+
+            players = newPlayers;
+            if (metaDiariaRestored) goalDaily = metaDiariaRestored;
+
+            showUnsavedIndicator();
+            renderTable();
+            showStatus(`✅ Restauración exitosa: ${Object.keys(players).length} jugadores cargados.`, 'success');
+            event.target.value = '';
+        };
+        reader.readAsText(file);
         }
 
         // --- FUNCIONES DE GUARDADO CENTRALIZADO ---
@@ -3769,7 +3861,7 @@
             statusDiv.textContent = message;
             statusDiv.className = type;
             statusDiv.style.display = 'block';
-            
+
             if (type === 'success') {
                 setTimeout(() => {
                     if (statusDiv.textContent === message) {
