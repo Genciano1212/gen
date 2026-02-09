@@ -3113,6 +3113,26 @@
                     }
                 });
 
+                // DETECCIÓN DE JUGADORES AUSENTES (BANEADOS)
+                // Si el usuario pega una lista completa, los que faltan deberían ser baneados/ausentes.
+                const allCurrentNames = Object.keys(players);
+                // mappedData tiene las claves finales (nombres reales)
+                const updatedNames = Object.keys(mappedData);
+
+                // Buscar jugadores que existen, NO están en la lista nueva y NO estaban ya baneados
+                const missing = allCurrentNames.filter(name => !updatedNames.includes(name) && !players[name].absent);
+
+                if (missing.length > 0) {
+                    // Preguntar al usuario para evitar banear en cargas parciales
+                    if (confirm(`⚠️ Hay ${missing.length} jugadores registrados que NO están en la lista introducida.\n\n¿Deseas marcarlos como BANEADOS/AUSENTES?\n\n[Aceptar] = Marcar como Baneados (0 donación)\n[Cancelar] = Mantenerlos activos (Cargas parciales)`)) {
+                        missing.forEach(name => {
+                            players[name].absent = true;
+                            players[name].current = 0; // Resetear donación actual al ser baneado
+                        });
+                        showStatus(`🚫 ${missing.length} jugadores marcados como baneados.`, 'warning');
+                    }
+                }
+
                 showUnsavedIndicator();
                 renderTable();
                 showStatus(`✅ ${Object.keys(mappedData).length} registros procesados correctamente.`, 'success');
