@@ -2653,46 +2653,60 @@
 
         // Función updatePlayers obsoleta eliminada (estaba duplicada)
 
-        // [DEPRECATED/DEAD CODE] Esta función es sobrescrita por la definición posterior.
-        // async function startNewWeek() {
-        /*
-        if (!auth.currentUser) return;
 
-        let maxWeekly = 0;
-        let starHolders = [];
-        Object.values(players).forEach(player => {
-            if (!player.absent && (player.weeklyTotal || 0) > maxWeekly) maxWeekly = player.weeklyTotal;
-        });
+        async function startNewWeek() {
+            if (!auth.currentUser) return;
 
-        if (maxWeekly > 0) {
+            const weeklyGoal = goalDaily * 7;
+            const updates = {};
+
             Object.keys(players).forEach(name => {
-                if (!players[name].absent && players[name].weeklyTotal === maxWeekly) starHolders.push(name);
+                const player = players[name];
+
+                // Si está baneado, no hacemos nada (o podríamos resetear, depende la lógica, dejémoslo quieto)
+                if (player.absent) return;
+
+                // LÓGICA CRÍTICA: JUGADORES NUEVOS (Modo Referencia)
+                if (player.isNew) {
+                    // Simplemente "oficializamos" su entrada.
+                    // Su 'current' se convierte en el 'previous' de la semana siguiente.
+                    // NO calculamos deuda ni exceso esta vez.
+                    player.previous = player.current || 0;
+                    player.isNew = false; // Ya no es nuevo para la próxima
+                } else {
+                    // LÓGICA ESTÁNDAR (Jugadores Activos)
+                    const previous = player.previous || 0;
+                    const current = player.current || 0;
+                    const weeklyDonation = current - previous;
+
+                    // Calcular Exceso o Déficit
+                    if (weeklyDonation >= weeklyGoal) {
+                        // Superávit: Se suma al acumulado
+                        const surplus = weeklyDonation - weeklyGoal;
+                        player.accumulatedExcess = (player.accumulatedExcess || 0) + surplus;
+                    } else {
+                        // Déficit: Se descuenta del acumulado
+                        const deficit = weeklyGoal - weeklyDonation;
+                        const availableExcess = Math.max(0, player.accumulatedExcess || 0);
+                        const amountToDeduct = Math.min(deficit, availableExcess);
+
+                        // Restamos lo que se pudo cubrir
+                        player.accumulatedExcess = availableExcess - amountToDeduct;
+                        // Nota: El "déficit no cubierto" no se guarda como deuda negativa en este modelo lineal simple,
+                        // simplemente se queda en 0 acumulado y ya. (Según lógica Lineal v1)
+                    }
+
+                    // AVANZAR SEMANA: El 'current' actual es el 'previous' de la siguiente.
+                    player.previous = current;
+                }
             });
+
+            weekStart = Date.now(); // Guardar timestamp real de inicio
+            showUnsavedIndicator();
+            renderTable();
+            showStatus('🔄 Nueva semana iniciada. Los "Nuevos" ahora son activos.', 'success');
         }
 
-        const weeklyGoal = goalDaily * 7;
-        Object.keys(players).forEach(name => {
-            const player = players[name];
-            player.hasWeeklyStar = starHolders.includes(name);
-            if (player.absent) return;
-            const weeklyDonation = player.weeklyTotal || 0;
-            if (weeklyDonation >= weeklyGoal) {
-                player.accumulatedExcess = (player.accumulatedExcess || 0) + (weeklyDonation - weeklyGoal);
-            } else {
-                const deficit = weeklyGoal - weeklyDonation;
-                const availableExcess = Math.max(0, player.accumulatedExcess || 0);
-                const amountToDeduct = Math.min(deficit, availableExcess);
-                player.accumulatedExcess = availableExcess - amountToDeduct;
-            }
-            player.weeklyTotal = 0;
-        });
-
-        weekStart = getWeekStart();
-        showUnsavedIndicator();
-        renderTable();
-        showStatus('🔄 Nueva semana iniciada correctamente (recuerda guardar en Firebase)', 'success');
-        }
-        */
 
         function levenshteinDistance(str1, str2) {
             const m = str1.length;
