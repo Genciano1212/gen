@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.2</title>
+    <title>Tracker Donaciones Pocket Ants v1.3</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1144,7 +1144,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v1.2</div>
+            <div class="version-tag">v1.3</div>
         </div>
 
         <!-- Botones de acción -->
@@ -3882,7 +3882,7 @@
         // Service Worker con Workbox
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker-v120.js')
+                navigator.serviceWorker.register('./service-worker-v130.js')
                     .then(registration => {
                         console.log('Service Worker registrado con Workbox:', registration);
 
