@@ -1124,6 +1124,20 @@
 
 <body>
     <div class="container">
+        <!-- Error Handler (Hotfix) -->
+        <script>
+            window.onerror = function (msg, url, line) {
+                const status = document.getElementById('status');
+                if (status) {
+                    status.innerText = "⚠️ Error Global: " + msg;
+                    status.classList.add('error');
+                    status.style.display = 'block';
+                }
+                // Intento de recuperación visual
+                const table = document.querySelector('.data-table');
+                if (table) table.style.opacity = '0.5';
+            };
+        </script>
         <!-- Header principal -->
         <div class="header">
             <h1>🐜 Donaciones Invencibles</h1>
@@ -1424,6 +1438,7 @@
         let deferredPrompt = null;
         let lastDataTimestamp = null;
         let indexedDBInitialized = false;
+        let lastSyncTime = null; // Fix: Declaración movida al inicio para evitar TDZ
 
 
 
@@ -1750,37 +1765,21 @@
 
         async function initDB() {
             try {
-                showStatus('⏳ Iniciando base de datos...', 'processing');
+                // 1. Render optimista: Mostrar tabla vacía inmediatamente
+                console.log('🚀 Iniciando render optimista');
+                renderTable();
+                updateTimeDisplays();
 
-                // Verificar que Firebase esté inicializado
-                if (!firestoreDB) {
-                    console.warn('Firebase no inicializado, operando en modo offline');
-                    showStatus('⚠️ Modo offline: Servidor no disponible', 'warning', 5000);
-                    players = {};
-                    goalDaily = CONFIG.DEFAULT_GOAL;
-                    lastUpdate = Date.now();
-                    weekStart = getWeekStart();
-                    renderTable();
-                    updateTimeDisplays();
-                    return;
-                }
+                // 2. Intentar cargar datos locales (sin bloquear validaciones de nube)
+                showStatus('⏳ Cargando datos...', 'processing');
 
-                // Intento con timeout para IndexedDB (3 segundos máximo)
-                try {
-                    await promiseWithTimeout(initIndexedDB(), 3000, 'IndexedDB');
-                } catch (e) {
-                    console.warn(e.message);
-                    showStatus('⚠️ Aviso: Base de datos offline lenta o no disponible.', 'warning', 3000);
-                    // No detenemos la carga, seguimos intentando
-                }
-
-                // Intento cargar datos locales con timeout (2 segundos máximo)
                 let localData = null;
                 try {
-                    localData = await promiseWithTimeout(loadFromLocal(), 2000, 'Carga Local');
+                    // Intento directo sin timeouts complejos
+                    await initIndexedDB();
+                    localData = await loadFromLocal();
                 } catch (e) {
-                    console.warn(e.message);
-                    // Si falla la carga local, localData sigue siendo null
+                    console.warn('⚠️ Fallo carga local:', e);
                 }
 
                 if (localData) {
@@ -1790,23 +1789,28 @@
                     weekStart = localData.weekStart || getWeekStart();
                     lastDataTimestamp = localData.timestamp;
 
-                    console.log('Cargando datos desde IndexedDB');
-                    showStatus('📂 Datos cargados (Cache Local).', 'success', 2000);
+                    console.log('📂 Datos locales aplicados');
+                    showStatus('📂 Datos cargados (Local)', 'success', 2000);
+                    renderTable(); // Actualizar UI con datos locales
+                }
+
+                // 3. Conexión con Firebase (Asíncrona / No bloqueante)
+                if (firestoreDB) {
+                    // No usamos await aquí para no bloquear la UI si la red es lenta
+                    loadData().then(() => {
+                        console.log('☁️ Sincronización nube completada');
+                    }).catch(err => {
+                        console.warn('⚠️ Fallo sincronización nube:', err);
+                        // No mostramos error al usuario si ya tiene datos locales, para no alarmar
+                        if (!localData) showStatus('Modo Offline: ' + err.message, 'warning');
+                    });
                 } else {
-                    showStatus('☁️ Conectando con nube...', 'processing');
-                    await loadData();
+                    console.warn('Firebase no inicializado');
                 }
 
             } catch (error) {
-                showStatus('Error al inicializar: ' + error.message, 'error');
-                console.error('DB Error:', error);
-                // Fallback visual
-                const headerEl = document.getElementById('headerLastUpdate');
-                if (headerEl) headerEl.textContent = 'Error al cargar';
-            } finally {
-                // SIEMPRE intentar renderizar para quitar el estado "Cargando..."
-                renderTable();
-                updateTimeDisplays();
+                console.error('❌ Critical Init Error:', error);
+                showStatus('Error de inicialización: ' + error.message, 'error');
             }
         }
 
@@ -1888,7 +1892,7 @@
             return monday.getTime();
         }
 
-        let lastSyncTime = null;
+
 
         async function forceSync() {
             // Verificar que Firebase esté disponible
