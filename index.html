@@ -326,7 +326,7 @@
             border: 2px solid #ddd;
             border-radius: 8px;
             font-size: 14px;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Inter', sans-serif;
             margin-bottom: 15px;
             resize: vertical;
         }
@@ -337,7 +337,7 @@
             border: 2px solid #ddd;
             border-radius: 8px;
             font-size: 14px;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Inter', sans-serif;
             margin: 8px 0 15px 0;
         }
 
@@ -1191,15 +1191,13 @@
             <p>🗓️ Semana iniciada: <span id="weekStartTime">-</span></p>
             <p id="admin-login-container" style="margin-top: 10px;"></p>
             <div id="backupButtons" style="display: none; margin-top: 10px;">
-                <button class="btn-backup" id="backupBtn" onclick="backupData()">💾 Copia de Seguridad</button>
+                <button class="btn-backup" id="backupBtn" onclick="backupData()">💾 Backup JSON v2</button>
                 <button class="btn-backup" id="restoreBtn" onclick="document.getElementById('restoreFile').click()">📂
-                    Restaurar Copia</button>
-                <input type="file" id="restoreFile" accept=".txt,.json" style="display: none;"
+                    Restaurar Backup</button>
+                <input type="file" id="restoreFile" accept=".json,.txt" style="display: none;"
                     onchange="restoreBackup(event)">
             </div>
         </div>
-    </div>
-    </div>
     </div>
 
     <!-- Sección de entrada manual -->
@@ -1282,7 +1280,7 @@
                 </div>
                 <div class="legend-item">
                     <div class="legend-color red"></div>
-                    <70% Meta</div>
+                    &lt;70% Meta</div>
                 </div>
             </div>
         </div>
@@ -1918,6 +1916,7 @@
                 updateTimeDisplays();
                 updateSyncTimeDisplay();
                 hideUnsavedIndicator();
+                renderTable(); // Forzar actualización visual
             } catch (error) {
                 showStatus('Error al guardar datos: ' + error.message, 'error');
                 console.error('Save Error:', error);
@@ -1943,20 +1942,8 @@
                 showStatus('❌ Debes iniciar sesión como admin.', 'error');
                 return;
             }
-
-            // Feedback visual inmediato
-            const saveBtn = document.getElementById('saveBtn');
-            if (saveBtn) saveBtn.style.opacity = '0.5';
-            showStatus('⏳ Guardando en Firebase...', 'processing');
-
-            try {
-                await saveData();
-                showStatus('✅ Datos guardados en Firebase correctamente!', 'success');
-            } catch (e) {
-                showStatus('❌ Error al guardar: ' + e.message, 'error');
-            } finally {
-                if (saveBtn) saveBtn.style.opacity = '1';
-            }
+            // Restaurado el menú de opciones a petición del usuario
+            showSaveOptions();
         }
 
         // --- FUNCIONES DE RENDERIZADO Y FORMATO ---
@@ -1975,8 +1962,8 @@
                 return 'red';
             }
             if (type === 'total') {
-                if (percentage >= 100) return 'grad-green';
-                return 'grad-red';
+                if (percentage >= 100) return 'green';
+                return 'red';
             }
             return '';
         }
@@ -2445,29 +2432,31 @@
 
         // Modificar forceSync original para que apague el indicador si tiene éxito
         const originalForceSync = forceSync;
-        forceSync = function () { // Reemplazamos la referencia global si existe, o definimos wrapper
-            // Lógica de sincronización de datos existente
-            loadFromFirebase(true).then(() => {
-                hasDataUpdate = false; // Reset flag
-                toggleSmartSyncIndicator(hasAppUpdate); // Mantener solo si hay app update
-            });
+        forceSync = async function () {
+            try {
+                await loadData();
+                hasDataUpdate = false;
+                toggleSmartSyncIndicator(hasAppUpdate);
+            } catch (error) {
+                console.error('Error en sync:', error);
+            }
         };
 
         // Escuchar cambios en Firestore para activar el punto rojo
-        if (db) {
-            db.collection("config").doc("global").onSnapshot((doc) => {
-                if (doc.exists) {
+        if (firestoreDB) {
+            firestoreDB.collection("config").doc("global").onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
                     const data = doc.data();
-                    const cloudTime = data.lastUpdate; // Timestamp
-
-                    // Si la fecha de la nube es más nueva que la local
-                    if (cloudTime && lastUpdate && cloudTime > lastUpdate + 1000) { // 1s margen
+                    const cloudTime = data.lastUpdate;
+                    if (cloudTime && lastUpdate && cloudTime > lastUpdate + 1000) {
                         console.log('🔔 Dato nuevo detectado en nube');
                         hasDataUpdate = true;
                         toggleSmartSyncIndicator(true);
                         showStatus('🔔 Nuevos datos disponibles', 'success');
                     }
                 }
+            }, (error) => {
+                console.error('Error en listener de Firestore:', error);
             });
         }
 
@@ -2608,180 +2597,6 @@
         showStatus('🔄 Nueva semana iniciada correctamente (recuerda guardar en Firebase)', 'success');
         }
         */
-
-        function levenshteinDistance(str1, str2) {
-            if (!editingPlayer || !auth.currentUser) return;
-
-            const newNameInput = document.getElementById(`edit-name-${editingPlayer}`);
-            const newPrevInput = document.getElementById(`edit-previous-${editingPlayer}`);
-            const newCurrInput = document.getElementById(`edit-current-${editingPlayer}`);
-
-            if (!newNameInput || !newPrevInput || !newCurrInput) {
-                showStatus('❌ Error: No se encontraron campos de edición', 'error');
-                return;
-            }
-
-            const newName = newNameInput.value.trim();
-            const newPrev = parseInt(newPrevInput.value);
-            const newCurr = parseInt(newCurrInput.value);
-
-            if (!newName) {
-                showStatus('❌ El nombre no puede estar vacío', 'error');
-                return;
-            }
-
-            if (isNaN(newPrev) || newPrev < 0) {
-                showStatus('❌ "Tenía" debe ser un número válido (>= 0)', 'error');
-                return;
-            }
-
-            if (isNaN(newCurr) || newCurr < 0) {
-                showStatus('❌ "Tiene" debe ser un número válido (>= 0)', 'error');
-                return;
-            }
-
-            if (newName !== editingPlayer && players[newName]) {
-                showStatus('❌ Ya existe un jugador con ese nombre', 'error');
-                return;
-            }
-
-            if (newName !== editingPlayer) {
-                players[newName] = { ...players[editingPlayer] };
-                delete players[editingPlayer];
-                editingPlayer = newName;
-            }
-
-            players[editingPlayer].previous = newPrev;
-            players[editingPlayer].current = newCurr;
-
-            editingPlayer = null;
-            showUnsavedIndicator();
-            renderTable();
-            showStatus('✅ Cambios guardados. Recuerda pulsar "✓" para guardar en Firebase', 'success');
-        }
-
-        // --- FUNCIONES DE ACTUALIZACIÓN DE DATOS (ADMIN) ---
-
-        function updatePlayers(currentData) {
-            // Validación explícita de login
-            if (!auth.currentUser) {
-                console.error('Intento de updatePlayers sin usuario logueado');
-                showStatus('❌ Error: Sesión cerrada o inválida. Recarga la página.', 'error');
-                return;
-            }
-
-            if (!currentData || Object.keys(currentData).length === 0) {
-                showStatus('❌ No hay datos para procesar', 'error');
-                return;
-            }
-
-            const namesToDelete = Object.keys(players).filter(name => players[name].absent);
-            namesToDelete.forEach(name => { delete players[name]; });
-
-            Object.keys(players).forEach(name => {
-                if (!currentData[name]) players[name].absent = true;
-            });
-
-            Object.keys(currentData).forEach(name => {
-                const current = currentData[name];
-                if (!players[name]) {
-                    // FIX: Initialize total to current (since previous is 0) so the TOTAL column reflects this week's donation
-                    players[name] = { previous: 0, current: current, initialDonation: current, total: current, weeklyTotal: 0, accumulatedExcess: 0, lastSeen: Date.now(), absent: false, isNew: true };
-                } else {
-                    players[name].absent = false;
-                    const previousCurrent = players[name].current || 0;
-
-                    if (current < previousCurrent) {
-                        showStatus(`⚠️ Error: ${name} tiene un valor menor al anterior (${current} < ${previousCurrent})`, 'error');
-                        return;
-                    }
-
-                    const difference = current - previousCurrent;
-                    players[name].previous = previousCurrent;
-                    players[name].current = current;
-                    players[name].lastSeen = Date.now();
-                    players[name].total += difference;
-                    players[name].isNew = false;
-                }
-            });
-
-            showUnsavedIndicator();
-            renderTable();
-            console.log('updatePlayers completado con éxito');
-            // Feedback explícito si viene de una importación manual
-            if (document.getElementById('reviewSection').classList.contains('active') === false) {
-                showStatus('⚠️ Datos cargados localmente. Revisa y guarda en Firebase.', 'warning');
-            }
-        }
-
-        // === FUNCIÓN PRINCIPAL DE CIERRE DE SEMANA (ACTIVA) ===
-        // Reemplaza a cualquier definición anterior. Incluye lógica de eficiencia.
-        async function startNewWeek() {
-            if (!auth.currentUser) return;
-
-            let maxWeekly = 0;
-            let starHolders = [];
-            Object.values(players).forEach(player => {
-                if (!player.absent && (player.weeklyTotal || 0) > maxWeekly) maxWeekly = player.weeklyTotal;
-            });
-
-            if (maxWeekly > 0) {
-                Object.keys(players).forEach(name => {
-                    if (!players[name].absent && players[name].weeklyTotal === maxWeekly) starHolders.push(name);
-                });
-            }
-
-            const weeklyGoal = goalDaily * 7;
-            Object.keys(players).forEach(name => {
-                const player = players[name];
-                player.hasWeeklyStar = starHolders.includes(name);
-                if (player.absent) return;
-                const weeklyDonation = player.weeklyTotal || 0;
-                if (weeklyDonation >= weeklyGoal) {
-                    // Lógica de Rendimiento Decreciente (Escala de 4 Niveles - Semáforo + Plus)
-                    const excess = weeklyDonation - weeklyGoal;
-                    const oneWeek = goalDaily * 7;
-                    const oneMonth = oneWeek * 4; // 1 mes = 4 semanas
-                    const currentAccumulated = player.accumulatedExcess || 0;
-
-                    let efficiency = 1.0;
-
-                    if (currentAccumulated >= (oneMonth * 5)) {
-                        efficiency = 0.05;  // > 5 Meses: 5% (Tier 4)
-                    } else if (currentAccumulated >= (oneMonth * 3)) {
-                        efficiency = 0.10;  // 3-5 Meses: 10% (Tier 3 - Rojo)
-                    } else if (currentAccumulated >= oneMonth) {
-                        efficiency = 0.50;  // 1-3 Meses: 50% (Tier 2 - Amarillo)
-                    } else {
-                        efficiency = 1.0;   // 0-1 Mes: 100% (Tier 1 - Verde)
-                    }
-
-                    const effectiveExcess = excess * efficiency;
-                    player.accumulatedExcess = currentAccumulated + effectiveExcess;
-                    player.deficitUsed = 0; // No usó déficit, cumplió la meta
-
-                    console.log(`[Acumulado v3.6] Jugador: ${name} | Exceso: ${excess} | Nivel: ${(currentAccumulated / oneMonth).toFixed(1)}m | Eficiencia: ${(efficiency * 100)}% | Guardado: ${effectiveExcess}`);
-                } else {
-                    const deficit = weeklyGoal - weeklyDonation;
-                    const availableExcess = Math.max(0, player.accumulatedExcess || 0);
-                    const deduction = Math.min(deficit, availableExcess);
-                    player.accumulatedExcess = availableExcess - deduction;
-                    player.deficitUsed = deduction; // Guardar cuánto déficit se usó para el backup
-                }
-                // RESET EFFECTIVE WEEKLY COUNTER
-                // Set 'previous' to 'current' so that next week's calculation (Current - Previous) starts at 0
-                player.previous = player.current || 0;
-                player.weeklyTotal = 0;
-
-                // FIX: Graduate new players to regular players so they show up correctly
-                player.isNew = false;
-            });
-
-            weekStart = getWeekStart();
-            showUnsavedIndicator();
-            renderTable();
-            showStatus('🔄 Nueva semana iniciada correctamente (recuerda guardar en Firebase)', 'success');
-        }
 
         function levenshteinDistance(str1, str2) {
             const m = str1.length;
@@ -3240,12 +3055,7 @@
             showStatus('✅ Meta actualizada correctamente (recuerda guardar en Firebase)', 'success');
         }
 
-        function backupData() {
-            if (!auth.currentUser) {
-                showStatus('❌ Debes iniciar sesión como admin.', 'error');
-                return;
-            }
-
+        function generateSnapshot() {
             const dateObj = new Date();
             const dias = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
             const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -3254,109 +3064,157 @@
             const dia = dateObj.getDate();
             const mes = meses[dateObj.getMonth()];
             const anio = dateObj.getFullYear();
-            const hora = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            const hora = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-            const fechaFormato = `${diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1)} ${dia} de ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${anio}, ${hora}`;
-            const weekStartDate = weekStart ? new Date(weekStart).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'No definido';
-
-            // Clasificar jugadores
-            const activos = [];
-            const nuevos = [];
-            const baneados = [];
-
+            const fechaLegible = `${diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1)} ${dia} de ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${anio}, ${hora}`;
             const weeklyGoal = goalDaily * 7;
+
+            const snapshot = {
+                meta: {
+                    version_backup: "2.0",
+                    timestamp: Date.now(),
+                    fecha_legible: fechaLegible,
+                    checksum: null
+                },
+                configuracion_global: {
+                    meta_diaria: goalDaily,
+                    inicio_semana_timestamp: weekStart || null,
+                    ultimo_update_timestamp: lastUpdate || null
+                },
+                jugadores: {}
+            };
 
             Object.keys(players).forEach(name => {
                 const player = players[name];
-                if (player.absent) {
-                    baneados.push({ name, player });
-                } else if (player.isNew) {
-                    nuevos.push({ name, player });
-                } else {
-                    activos.push({ name, player });
+                const semanal = (player.current || 0) - (player.previous || 0);
+                const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
+                const availableExcess = Math.max(0, player.accumulatedExcess || 0);
+                const deficitDraw = Math.min(weeklyDeficit, availableExcess);
+                const weeklyExcess = Math.max(0, semanal - weeklyGoal);
+                const acumuladoFinal = availableExcess - deficitDraw + weeklyExcess;
+
+                let eficiencia = 1.0;
+                if (semanal < weeklyGoal && weeklyGoal > 0) {
+                    eficiencia = Math.max(0, semanal / weeklyGoal);
+                    if (deficitDraw > 0) eficiencia = (semanal + deficitDraw) / weeklyGoal;
+                } else if (semanal >= weeklyGoal) {
+                    eficiencia = 1.0;
+                }
+
+                let tierColor = '#28a745';
+                const metaPct = weeklyGoal > 0 ? (semanal / weeklyGoal) * 100 : 0;
+                if (metaPct < 70) tierColor = '#dc3545';
+                else if (metaPct < 90) tierColor = '#ffc107';
+
+                snapshot.jugadores[name] = {
+                    datos_core: {
+                        previous: player.previous || 0,
+                        current: player.current || 0,
+                        accumulated_base: player.accumulatedExcess || 0
+                    },
+                    estado_calculado: {
+                        semanal: semanal,
+                        deficit_cubierto: deficitDraw,
+                        exceso_semanal: weeklyExcess,
+                        acumulado_final: acumuladoFinal,
+                        eficiencia_aplicada: Math.round(eficiencia * 100) / 100,
+                        tier_color: tierColor
+                    },
+                    flags: {
+                        is_new: player.isNew || false,
+                        is_absent: player.absent || false
+                    },
+                    total_historico: player.total || 0
+                };
+            });
+
+            snapshot.meta.checksum = simpleHash(JSON.stringify(snapshot));
+            return snapshot;
+        }
+
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return 'sha256-' + Math.abs(hash).toString(16);
+        }
+
+        function validateSnapshot(snapshot) {
+            const errors = [];
+
+            if (!snapshot.meta || snapshot.meta.version_backup !== "2.0") {
+                errors.push("Versión de backup no válida (esperado 2.0)");
+            }
+
+            if (!snapshot.configuracion_global) {
+                errors.push("Falta configuración_global");
+            }
+
+            if (!snapshot.jugadores || typeof snapshot.jugadores !== 'object') {
+                errors.push("Estructura de jugadores inválida");
+            }
+
+            const weeklyGoal = snapshot.configuracion_global.meta_diaria * 7;
+
+            Object.keys(snapshot.jugadores || {}).forEach(name => {
+                const player = snapshot.jugadores[name];
+
+                if (typeof player.datos_core !== 'object') {
+                    errors.push(`Jugador ${name}: falta datos_core`);
+                    return;
+                }
+
+                const dc = player.datos_core;
+                const ec = player.estado_calculado || {};
+
+                const semanalCalculada = (dc.current || 0) - (dc.previous || 0);
+                if (ec.semanal !== semanalCalculada) {
+                    errors.push(`Jugador ${name}: semanal no coincide (esperado ${semanalCalculada}, encontrado ${ec.semanal})`);
+                }
+
+                const weeklyDeficit = Math.max(0, weeklyGoal - semanalCalculada);
+                const availableExcess = Math.max(0, dc.accumulated_base || 0);
+                const expectedDeficitDraw = Math.min(weeklyDeficit, availableExcess);
+
+                if (ec.deficit_cubierto !== expectedDeficitDraw) {
+                    errors.push(`Jugador ${name}: deficit_cubierto no coincide (esperado ${expectedDeficitDraw}, encontrado ${ec.deficit_cubierto})`);
                 }
             });
 
-            // Ordenar alfabéticamente
-            activos.sort((a, b) => a.name.localeCompare(b.name));
-            nuevos.sort((a, b) => a.name.localeCompare(b.name));
-            baneados.sort((a, b) => a.name.localeCompare(b.name));
+            return {
+                valid: errors.length === 0,
+                errors: errors
+            };
+        }
 
-            // Calcular totales
-            let totalSemanal = 0;
-            let totalAcumulado = 0;
-            let totalHistorico = 0;
-
-            // Generar contenido TXT
-            let txt = `=== BACKUP DONACIONES INVENCIBLES ===\n`;
-            txt += `Fecha: ${fechaFormato}\n`;
-            txt += `Meta Diaria: ${goalDaily}\n`;
-            txt += `Semana iniciada: ${weekStartDate}\n\n`;
-            txt += `=== JUGADORES ===\n`;
-            txt += `Activos: ${activos.length} | Nuevos: ${nuevos.length} | Baneados: ${baneados.length}\n\n`;
-
-            // ACTIVOS
-            if (activos.length > 0) {
-                txt += `--- ACTIVOS ---\n\n`;
-                activos.forEach(({ name, player }) => {
-                    const semanal = (player.current || 0) - (player.previous || 0);
-                    const promedio = Math.round(semanal / 7);
-                    const metaPct = weeklyGoal > 0 ? ((semanal / weeklyGoal) * 100).toFixed(1) : '0.0';
-                    const total = player.total || 0;
-
-                    // Calcular déficit EN TIEMPO REAL (igual que renderTable)
-                    const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
-                    const availableExcess = Math.max(0, player.accumulatedExcess || 0);
-                    const deficitDraw = Math.min(weeklyDeficit, availableExcess);
-                    const acumuladoMostrado = availableExcess - deficitDraw;
-
-                    totalSemanal += semanal;
-                    totalAcumulado += acumuladoMostrado;
-                    totalHistorico += total;
-
-                    let deficitInfo = '';
-                    if (deficitDraw > 0) {
-                        deficitInfo = ` (Deficit: -${deficitDraw})`;
-                    }
-
-                    txt += `${name}${deficitInfo}\n`;
-                    txt += `  Tenia: ${player.previous || 0} | Tiene: ${player.current || 0} | Semanal: ${semanal} | Promedio: ${promedio} | Meta%: ${metaPct}% | Acumulado: ${acumuladoMostrado} | Total: ${total}\n\n`;
-                });
+        function backupData() {
+            if (!auth.currentUser) {
+                showStatus('❌ Debes iniciar sesión como admin.', 'error');
+                return;
             }
 
-            // NUEVOS
-            if (nuevos.length > 0) {
-                txt += `--- NUEVOS ---\n\n`;
-                nuevos.forEach(({ name, player }) => {
-                    totalHistorico += (player.total || 0);
-                    txt += `[NUEVO] ${name}\n`;
-                    txt += `  Tiene: ${player.current || 0}\n\n`;
-                });
+            const snapshot = generateSnapshot();
+            const validation = validateSnapshot(snapshot);
+
+            if (!validation.valid) {
+                console.warn('Validación del snapshot falló:', validation.errors);
+                if (!confirm('⚠️ La validación del backup detecto inconsistencias.\n¿Deseas continuar de todas formas?')) {
+                    return;
+                }
             }
 
-            // BANEADOS
-            if (baneados.length > 0) {
-                txt += `--- BANEADOS ---\n\n`;
-                baneados.forEach(({ name }) => {
-                    txt += `[BANEADO] ${name}\n`;
-                });
-                txt += `\n`;
-            }
-
-            // RESUMEN
-            const promedioGeneral = activos.length > 0 ? Math.round(totalSemanal / activos.length) : 0;
-            const metaGeneral = weeklyGoal > 0 && activos.length > 0 ? ((totalSemanal / (weeklyGoal * activos.length)) * 100).toFixed(1) : '0.0';
-
-            txt += `=== RESUMEN ===\n`;
-            txt += `Semanal: ${totalSemanal} | Promedio: ${promedioGeneral} | Meta%: ${metaGeneral}% | Acumulado: ${totalAcumulado} | Total: ${totalHistorico}\n\n`;
-            txt += `=== FIN BACKUP ===`;
-
-            // Descargar archivo
-            const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+            const jsonString = JSON.stringify(snapshot, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
 
+            const dateObj = new Date();
+            const mes = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][dateObj.getMonth()];
+            const fileName = `backup_lineal_v2_${dateObj.getFullYear()}-${mes}-${dateObj.getDate()}_${dateObj.getHours()}${dateObj.getMinutes()}.json`;
+
             const a = document.createElement('a');
-            const fileName = `backup_${diaSemana}_${dia}_${mes}_${anio}.txt`;
             a.href = url;
             a.download = fileName;
             document.body.appendChild(a);
@@ -3364,7 +3222,7 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            showStatus('✅ Copia de seguridad TXT descargada.', 'success');
+            showStatus(`✅ Backup JSON v2.0 descargado (${Object.keys(snapshot.jugadores).length} jugadores).`, 'success');
         }
 
         function restoreBackup(event) {
@@ -3372,6 +3230,225 @@
                 showStatus('❌ Debes iniciar sesión como admin.', 'error');
                 return;
             }
+
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const content = e.target.result;
+
+                // INTENTO 1: JSON v2.0 (NUEVO FORMATO)
+                try {
+                    const backupState = JSON.parse(content);
+                    if (backupState.meta && backupState.meta.version_backup === "2.0") {
+                        if (!confirm(`⚠️ Backup JSON v2.0 del:\n${backupState.meta.fecha_legible || 'desconocida'}\n\nJugadores: ${Object.keys(backupState.jugadores || {}).length}\n\nEsto SOBRESCRIBIRÁ todos los datos actuales.\n¿Continuar?`)) {
+                            event.target.value = '';
+                            return;
+                        }
+
+                        // Validar integridad
+                        const validation = validateSnapshot(backupState);
+                        if (!validation.valid) {
+                            console.warn('Validación fallida:', validation.errors);
+                            if (!confirm(`⚠️ Advertencias de integridad detectadas:\n${validation.errors.slice(0, 3).join('\n')}\n\n¿Continuar de todas formas?`)) {
+                                event.target.value = '';
+                                return;
+                            }
+                        }
+
+                        // Restaurar configuración global
+                        if (backupState.configuracion_global) {
+                            if (backupState.configuracion_global.meta_diaria) {
+                                goalDaily = backupState.configuracion_global.meta_diaria;
+                            }
+                            if (backupState.configuracion_global.inicio_semana_timestamp) {
+                                weekStart = backupState.configuracion_global.inicio_semana_timestamp;
+                            }
+                            if (backupState.configuracion_global.ultimo_update_timestamp) {
+                                lastUpdate = backupState.configuracion_global.ultimo_update_timestamp;
+                            }
+                        }
+
+                        // Restaurar jugadores
+                        const newPlayers = {};
+                        Object.keys(backupState.jugadores || {}).forEach(name => {
+                            const player = backupState.jugadores[name];
+                            const datosCore = player.datos_core || {};
+
+                            newPlayers[name] = {
+                                previous: datosCore.previous || 0,
+                                current: datosCore.current || 0,
+                                accumulatedExcess: datosCore.accumulated_base || 0,
+                                total: player.total_historico || 0,
+                                isNew: player.flags?.is_new || false,
+                                absent: player.flags?.is_absent || false
+                            };
+                        });
+
+                        players = newPlayers;
+                        showUnsavedIndicator();
+                        renderTable();
+                        showStatus(`✅ Restauración JSON v2.0 exitosa: ${Object.keys(players).length} jugadores.`, 'success');
+                        event.target.value = '';
+                        return;
+                    }
+                } catch (err) {
+                    console.log('No es JSON v2.0, intentando formato legacy...');
+                }
+
+                // INTENTO 2: JSON antiguo (compatibilidad legacy)
+                try {
+                    const backupState = JSON.parse(content);
+                    if (backupState.players && backupState.globalConfig) {
+                        if (!confirm(`⚠️ Backup JSON antiguo del ${backupState.dateString || 'desconocida'}.\nEsto sobrescribirá TODOS los datos actuales.\n¿Continuar?`)) {
+                            event.target.value = '';
+                            return;
+                        }
+                        if (backupState.globalConfig.goalDaily) goalDaily = backupState.globalConfig.goalDaily;
+                        if (backupState.globalConfig.lastUpdate) lastUpdate = backupState.globalConfig.lastUpdate;
+                        if (backupState.globalConfig.weekStart) weekStart = backupState.globalConfig.weekStart;
+                        players = backupState.players;
+                        showUnsavedIndicator();
+                        renderTable();
+                        showStatus('✅ Restauración exitosa (Formato JSON antiguo).', 'success');
+                        event.target.value = '';
+                        return;
+                    }
+                } catch (err) {
+                    console.log('No es JSON legacy, intentando TXT...');
+                }
+
+                // INTENTO 3: Formato TXT literal (compatibilidad legacy)
+                const lines = content.split('\n');
+                if (lines.length < 5 || !content.includes('=== BACKUP DONACIONES INVENCIBLES ===')) {
+                    showStatus('❌ Archivo no reconocido o dañado.', 'error');
+                    event.target.value = '';
+                    return;
+                }
+
+                let fechaBackup = 'desconocida';
+                const fechaLine = lines.find(l => l.startsWith('Fecha:'));
+                if (fechaLine) fechaBackup = fechaLine.replace('Fecha:', '').trim();
+
+                if (!confirm(`⚠️ Backup TXT del:\n${fechaBackup}\n\nEsto SOBRESCRIBIRÁ todos los datos actuales.\n¿Continuar?`)) {
+                    event.target.value = '';
+                    return;
+                }
+
+                const newPlayers = {};
+                let currentSection = null;
+                let metaDiariaRestored = null;
+                let weekStartRestored = null;
+
+                const metaLine = lines.find(l => l.startsWith('Meta Diaria:'));
+                if (metaLine) {
+                    metaDiariaRestored = parseInt(metaLine.replace('Meta Diaria:', '').trim()) || null;
+                }
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+
+                    if (line === '--- ACTIVOS ---') {
+                        currentSection = 'activos';
+                        continue;
+                    } else if (line === '--- NUEVOS ---') {
+                        currentSection = 'nuevos';
+                        continue;
+                    } else if (line === '--- BANEADOS ---') {
+                        currentSection = 'baneados';
+                        continue;
+                    } else if (line.startsWith('=== RESUMEN ===') || line.startsWith('=== FIN BACKUP ===')) {
+                        currentSection = null;
+                        continue;
+                    }
+
+                    if (currentSection === 'activos') {
+                        if (line && !line.startsWith('Tenia:') && !line.startsWith('  ')) {
+                            let playerName = line;
+                            let deficitUsed = 0;
+                            const deficitMatch = line.match(/\(Deficit: -(\d+)\)/);
+                            if (deficitMatch) {
+                                deficitUsed = parseInt(deficitMatch[1]) || 0;
+                                playerName = line.replace(/\(Deficit: -\d+\)/, '').trim();
+                            }
+
+                            if (i + 1 < lines.length) {
+                                const dataLine = lines[i + 1].trim();
+                                if (dataLine.startsWith('Tenia:')) {
+                                    const parts = dataLine.split('|').map(p => p.trim());
+                                    const getData = (prefix) => {
+                                        const part = parts.find(p => p.startsWith(prefix));
+                                        if (!part) return 0;
+                                        const val = part.replace(prefix, '').replace('%', '').trim();
+                                        return parseFloat(val) || 0;
+                                    };
+
+                                    newPlayers[playerName] = {
+                                        previous: getData('Tenia:'),
+                                        current: getData('Tiene:'),
+                                        accumulatedExcess: getData('Acumulado:'),
+                                        total: getData('Total:'),
+                                        deficitUsed: deficitUsed,
+                                        absent: false,
+                                        isNew: false
+                                    };
+                                    i++;
+                                }
+                            }
+                        }
+                    } else if (currentSection === 'nuevos') {
+                        if (line.startsWith('[NUEVO]')) {
+                            const playerName = line.replace('[NUEVO]', '').trim();
+                            if (i + 1 < lines.length) {
+                                const dataLine = lines[i + 1].trim();
+                                if (dataLine.startsWith('Tiene:')) {
+                                    const current = parseInt(dataLine.replace('Tiene:', '').trim()) || 0;
+                                    newPlayers[playerName] = {
+                                        previous: 0,
+                                        current: current,
+                                        accumulatedExcess: 0,
+                                        total: 0,
+                                        deficitUsed: 0,
+                                        absent: false,
+                                        isNew: true
+                                    };
+                                    i++;
+                                }
+                            }
+                        }
+                    } else if (currentSection === 'baneados') {
+                        if (line.startsWith('[BANEADO]')) {
+                            const playerName = line.replace('[BANEADO]', '').trim();
+                            newPlayers[playerName] = {
+                                previous: 0,
+                                current: 0,
+                                accumulatedExcess: 0,
+                                total: 0,
+                                deficitUsed: 0,
+                                absent: true,
+                                isNew: false
+                            };
+                        }
+                    }
+                }
+
+                if (Object.keys(newPlayers).length === 0) {
+                    showStatus('❌ No se encontraron jugadores en el archivo.', 'error');
+                    event.target.value = '';
+                    return;
+                }
+
+                players = newPlayers;
+                if (metaDiariaRestored) goalDaily = metaDiariaRestored;
+
+                showUnsavedIndicator();
+                renderTable();
+                showStatus(`✅ Restauración exitosa: ${Object.keys(players).length} jugadores cargados.`, 'success');
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
 
             const file = event.target.files[0];
             if (!file) return;
@@ -3649,6 +3726,11 @@
             if (!auth.currentUser) return showLogin();
             hideAllSections();
             document.getElementById('manualSection').classList.add('active');
+            // Auto-focus para mejorar UX
+            setTimeout(() => {
+                const input = document.getElementById('manualInput');
+                if (input) input.focus();
+            }, 50);
         }
 
         function hideManual() {
@@ -3683,13 +3765,17 @@
 
         function showStatus(message, type = 'success') {
             const statusDiv = document.getElementById('status');
+            if (!statusDiv) return;
             statusDiv.textContent = message;
-            statusDiv.className = `status ${type}`;
+            statusDiv.className = type;
+            statusDiv.style.display = 'block';
+            
             if (type === 'success') {
                 setTimeout(() => {
                     if (statusDiv.textContent === message) {
                         statusDiv.textContent = '';
-                        statusDiv.className = 'status';
+                        statusDiv.className = '';
+                        statusDiv.style.display = 'none';
                     }
                 }, 5000);
             }
@@ -3761,15 +3847,7 @@
             showStatus('✅ App instalada en tu dispositivo', 'success');
         });
 
-        // Prevenir zoom en doble tap en móviles
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function (event) {
-            const now = (new Date()).getTime();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
-            }
-            lastTouchEnd = now;
-        }, false);
+        // Listener de doble tap eliminado por causar problemas con inputs
     </script>
 
 
