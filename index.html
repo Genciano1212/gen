@@ -3089,14 +3089,34 @@
 
                 hideReview();
 
-                // Solo actualizar localmente
-                if (typeof updatePlayers !== 'function') {
-                    throw new Error('La función updatePlayers no existe');
-                }
+                console.log('Aplicando cambios de mapeo...');
 
-                console.log('Llamando a updatePlayers...');
-                updatePlayers(mappedData);
-                console.log('updatePlayers finalizado');
+                // Aplicar cambios directamente al estado local
+                Object.keys(mappedData).forEach(name => {
+                    const donationValue = mappedData[name];
+
+                    if (!players[name]) {
+                        // Es un jugador totalmente nuevo
+                        players[name] = {
+                            previous: 0,
+                            current: donationValue,
+                            accumulatedExcess: 0,
+                            total: 0,
+                            isNew: true, // Marcar como nuevo para la lógica de referencia
+                            absent: false
+                        };
+                    } else {
+                        // Es un jugador existente, actualizamos su donación actual
+                        players[name].current = donationValue;
+                        players[name].isNew = false; // Asegurar que no sea tratado como nuevo si ya existía
+                        players[name].absent = false;
+                    }
+                });
+
+                showUnsavedIndicator();
+                renderTable();
+                showStatus(`✅ ${Object.keys(mappedData).length} registros procesados correctamente.`, 'success');
+                console.log('Mapeo finalizado y tabla renderizada.');
 
                 hideManual();
                 showStatus('✅ Datos importados localmente. Recuerda usar el botón ✓ para guardar en la nube o iniciar semana.', 'success');
