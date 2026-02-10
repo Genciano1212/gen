@@ -1,0 +1,3844 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracker Donaciones Pocket Ants v1.3</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0f9f1 0%, #e6f7ee 100%);
+            color: #333;
+            padding-top: clamp(8px, 2vw, 12px);
+            padding-bottom: clamp(8px, 2vw, 12px);
+            padding-left: 3mm;
+            padding-right: 3mm;
+            margin: 0 auto;
+            min-height: 100vh;
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+            font-weight: 700;
+            /* Make all text bold */
+        }
+
+        .container {
+            width: 100%;
+            max-width: 100%;
+            /* Allow it to fill the available space */
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: clamp(8px, 2vw, 12px);
+        }
+
+        /* Header principal */
+        .header {
+            background: linear-gradient(135deg, #1a8c42 0%, #2db75e 100%);
+            color: white;
+            padding: clamp(12px, 3vw, 16px);
+            border-radius: clamp(10px, 2.5vw, 14px);
+            box-shadow: 0 4px 12px rgba(26, 140, 66, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+            transform: rotate(30deg);
+        }
+
+        .header h1 {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(6px, 1.5vw, 8px);
+            font-size: clamp(16px, 4.5vw, 19px);
+            font-weight: 700;
+            position: relative;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-subtitle {
+            font-size: clamp(10px, 2.5vw, 12px);
+            font-weight: 500;
+            opacity: 0.9;
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        .version-tag {
+            position: absolute;
+            bottom: 6px;
+            right: 12px;
+            font-size: clamp(9px, 2vw, 11px);
+            opacity: 0.9;
+            font-weight: 600;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Botones de acción */
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: clamp(8px, 2vw, 10px);
+            width: 100%;
+        }
+
+        .btn {
+            padding: clamp(8px, 2vw, 10px) clamp(10px, 2.5vw, 12px);
+            border-radius: clamp(10px, 2.5vw, 12px);
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(2px, 0.5vw, 4px);
+            font-size: clamp(11px, 2.5vw, 14px);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            min-height: clamp(32px, 8vw, 40px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+            border: none;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-manual {
+            background: linear-gradient(135deg, #8e24aa 0%, #ab47bc 100%);
+            flex: 1;
+            min-width: 0;
+        }
+
+        .btn-config {
+            background: linear-gradient(135deg, #f57c00 0%, #ff9800 100%);
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* Botón Smart Sync (Nuevo) */
+        .btn-smart-sync {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            width: clamp(36px, 9vw, 40px);
+            height: clamp(36px, 9vw, 40px);
+            border-radius: 50%;
+            padding: 8px;
+            gap: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: none;
+            min-height: unset;
+            position: relative;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+            border: none;
+            cursor: pointer;
+            z-index: 5;
+        }
+
+        .btn-smart-sync:hover {
+            transform: scale(1.05);
+            /* Solo un ligero zoom, sin rotación ni sombra extra */
+        }
+
+        .btn-smart-sync:active {
+            transform: scale(0.95);
+        }
+
+        .btn-smart-sync.has-update::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 12px;
+            height: 12px;
+            background-color: #dc3545;
+            /* Rojo estándar sin brillo */
+            border-radius: 50%;
+            border: 2px solid white;
+            /* Animation pulse removed */
+        }
+
+        .btn-help {
+            background: linear-gradient(135deg, #ff9800 0%, #ffca28 100%);
+            width: clamp(36px, 9vw, 40px);
+            height: clamp(36px, 9vw, 40px);
+            border-radius: 50%;
+            font-size: clamp(18px, 5vw, 20px);
+            padding: 0;
+            gap: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: none;
+            color: #222;
+            font-weight: bold;
+            min-height: unset;
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            width: clamp(32px, 8vw, 36px);
+            height: clamp(32px, 8vw, 36px);
+            border-radius: 50%;
+            font-size: clamp(14px, 3.5vw, 16px);
+            padding: 0;
+            gap: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: none;
+            color: white;
+            font-weight: bold;
+            min-height: unset;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-edit:active {
+            transform: scale(0.95);
+        }
+
+        .btn-edit-mode {
+            background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+            width: clamp(36px, 9vw, 40px);
+            height: clamp(36px, 9vw, 40px);
+            border-radius: 50%;
+            font-size: clamp(16px, 4vw, 18px);
+            padding: 0;
+            gap: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: none;
+            color: white;
+            font-weight: bold;
+            min-height: unset;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-edit-mode.active {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            box-shadow: 0 0 15px rgba(40, 167, 69, 0.5);
+        }
+
+        .btn-undo {
+            background: linear-gradient(135deg, #fd7e14 0%, #e55d00 100%);
+            padding: clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 10px);
+            border-radius: clamp(6px, 1.5vw, 8px);
+            color: white;
+            font-weight: 600;
+            font-size: clamp(11px, 2.8vw, 13px);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s;
+        }
+
+        .btn-undo:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(253, 126, 20, 0.3);
+        }
+
+        .btn-undo:active {
+            transform: scale(0.95);
+        }
+
+        .btn-undo:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+            transform: none;
+        }
+
+        /* Secciones (modales) */
+        .section {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .section.active {
+            display: flex;
+        }
+
+        .section-content {
+            background: white;
+            border-radius: 16px;
+            padding: clamp(20px, 5vw, 30px);
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-content h2 {
+            font-size: clamp(18px, 4vw, 22px);
+            margin-bottom: 15px;
+            color: #1a8c42;
+            text-align: center;
+        }
+
+        .section-content p {
+            margin-bottom: 10px;
+            font-size: clamp(12px, 3vw, 14px);
+        }
+
+        .section-content textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            margin-bottom: 15px;
+            resize: vertical;
+        }
+
+        .section-content input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            margin: 8px 0 15px 0;
+        }
+
+        .section-content label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: clamp(12px, 3vw, 14px);
+        }
+
+        .section-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .section-buttons .btn {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);
+        }
+
+        .btn-cancel {
+            background: linear-gradient(135deg, #6c757d 0%, #868e96 100%);
+        }
+
+        /* Status mensajes */
+        #status {
+            display: none;
+            padding: clamp(10px, 2.5vw, 12px);
+            border-radius: clamp(8px, 2vw, 10px);
+            margin: 10px 0;
+            text-align: center;
+            font-weight: 600;
+            font-size: clamp(12px, 3vw, 14px);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        #status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+            display: block;
+        }
+
+        #status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+            display: block;
+        }
+
+        #status.processing {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffeeba;
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Leyenda */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: clamp(10px, 3vw, 15px);
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: clamp(10px, 2.5vw, 12px);
+            color: #555;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .legend-color.green {
+            background: #d4edda;
+        }
+
+        .legend-color.yellow {
+            background: #fff3cd;
+        }
+
+        .legend-color.red {
+            background: #f8d7da;
+        }
+
+        /* Tabla estilo Excel */
+        .data-table {
+            background-color: white;
+            border-radius: clamp(10px, 2.5vw, 14px);
+            /* overflow-x: auto; - Removed to allow sticky header */
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            width: calc(100% - 2mm);
+            margin: 0 1mm;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Sin márgenes en móvil */
+        @media screen and (max-width: 768px) {
+            .data-table {
+                margin: 0;
+                width: 100%;
+            }
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: clamp(8px, 2vw, 10px);
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #8A2BE2 0%, #9932CC 100%);
+            /* Purple gradient */
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 6px rgba(138, 43, 226, 0.25);
+            /* Adjusted shadow for purple */
+        }
+
+        thead th {
+            padding: clamp(8px, 2vw, 10px) clamp(3px, 1vw, 5px);
+            text-align: center;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: clamp(7px, 1.8vw, 9px);
+            border-right: 1px solid rgba(255, 255, 255, 0.5);
+            white-space: nowrap;
+            line-height: 1.2;
+        }
+
+        thead th:last-child {
+            border-right: none;
+        }
+
+        tbody tr {
+            border-bottom: 1.5px solid black;
+            transition: background-color 0.2s;
+        }
+
+        tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        tbody td {
+            padding: clamp(6px, 1.5vw, 8px) clamp(3px, 1vw, 5px);
+            text-align: center;
+            border-right: 1px solid black;
+            font-size: clamp(9px, 2.2vw, 11px);
+            word-break: break-word;
+        }
+
+        tbody td:last-child {
+            border-right: none;
+        }
+
+        tbody td:first-child {
+            font-weight: 600;
+            text-align: left;
+            padding-left: clamp(4px, 1.5vw, 8px);
+        }
+
+        tfoot td {
+            padding: clamp(8px, 2vw, 10px) clamp(3px, 1vw, 5px);
+            text-align: center;
+            font-weight: 700;
+            background: #f8f9fa;
+            border-top: 2px solid #0d47a1;
+            border-right: 1px solid #e0e0e0;
+            font-size: clamp(9px, 2.2vw, 11px);
+        }
+
+        tfoot td:last-child {
+            border-right: none;
+        }
+
+        /* Colores por rendimiento */
+        .green {
+            background-color: #d4edda !important;
+            color: #155724;
+        }
+
+        .yellow {
+            background-color: #fff3cd !important;
+            color: #856404;
+        }
+
+        .red {
+            background-color: #f8d7da !important;
+            color: #721c24;
+        }
+
+
+        .absent-player td {
+            background: #f1f3f5 !important;
+            color: #adb5bd !important;
+            font-style: italic;
+        }
+
+        /* Estilo para la fila seleccionada */
+        .selected-row td {
+            border: 4px solid #8A2BE2 !important;
+            /* Borde morado para resaltar */
+            /* No cambiar color de fondo ni de texto */
+        }
+
+        .selected-row td:first-child {
+            border-left: 4px solid #8A2BE2 !important;
+        }
+
+        .selected-row td:last-child {
+            border-right: 4px solid #8A2BE2 !important;
+        }
+
+        .selected-row+tr td {
+            border-top: 0 !important;
+            /* Evitar doble borde entre filas seleccionadas */
+        }
+
+        .selected-row td:not(:first-child) {
+            border-left: 0 !important;
+            /* Para que parezca un borde continuo */
+        }
+
+        .selected-row td:not(:last-child) {
+            border-right: 0 !important;
+        }
+
+        .selected-row td span {
+            /* Revertir cambios de color de texto */
+            color: inherit !important;
+            text-shadow: inherit !important;
+        }
+
+        /* Medallas de ranking */
+        .rank-medal {
+            display: inline-block;
+            margin-left: 4px;
+            font-size: clamp(12px, 3vw, 14px);
+        }
+
+        /* Footer de info */
+        .footer-info {
+            text-align: center;
+            color: #6c757d;
+            font-size: clamp(10px, 2.5vw, 12px);
+            margin-top: 15px;
+            padding: 10px;
+        }
+
+        .footer-info p {
+            margin: 5px 0;
+        }
+
+        .btn-backup {
+            background: transparent;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .btn-backup:hover {
+            background: #f8f9fa;
+            color: #495057;
+            border-color: #adb5bd;
+        }
+
+        .btn-check-similarity {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);
+            width: clamp(36px, 9vw, 40px);
+            height: clamp(36px, 9vw, 40px);
+            border-radius: 50%;
+            font-size: clamp(18px, 5vw, 20px);
+            padding: 0;
+            gap: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: none;
+            color: white;
+            font-weight: bold;
+            min-height: unset;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-sync {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            width: clamp(36px, 9vw, 40px);
+            height: clamp(36px, 9vw, 40px);
+            border-radius: 50%;
+            font-size: clamp(16px, 4vw, 18px);
+            padding: 0;
+            gap: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: none;
+            color: white;
+            font-weight: bold;
+            min-height: unset;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-sync:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(23, 162, 184, 0.3);
+        }
+
+        .btn-sync:active {
+            transform: scale(0.95);
+        }
+
+        .btn-sync:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+            transform: none;
+        }
+
+        .unsaved-indicator {
+            display: none;
+            color: #ff9800;
+            font-size: clamp(11px, 2.8vw, 13px);
+            font-weight: bold;
+            text-align: center;
+            margin-top: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .unsaved-indicator.show {
+            display: block;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        /* Panel de revisión de similitud */
+        .review-content {
+            background: white;
+            border-radius: 16px;
+            padding: 15px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .review-content h2 {
+            font-size: clamp(16px, 3.5vw, 20px);
+            margin-bottom: 8px;
+            color: #1a8c42;
+            text-align: center;
+        }
+
+        .review-content p {
+            text-align: center;
+            color: #666;
+            margin-bottom: 10px;
+            font-size: clamp(11px, 2.8vw, 13px);
+        }
+
+        .review-items-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .review-item {
+            background: white;
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 8px;
+            border: 1px solid #dee2e6;
+            transition: all 0.2s;
+            min-height: 50px;
+        }
+
+        .review-item:hover {
+            border-color: #007bff;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
+        }
+
+        .review-item.matched {
+            border-left: 4px solid #ffc107;
+            background: #fffdf5;
+        }
+
+        .review-item.identical {
+            border-left: 4px solid #007bff;
+            background: #e7f3ff;
+        }
+
+        .review-item.new {
+            border-left: 4px solid #28a745;
+            background: #f0fff4;
+        }
+
+        .review-item.selected {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .review-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 0;
+            flex-wrap: nowrap;
+        }
+
+        .review-name-section {
+            flex: 0 0 auto;
+            min-width: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2px;
+        }
+
+        .review-name-section .review-similarity,
+        .review-name-section .review-donation {
+            font-size: clamp(9px, 2.2vw, 11px);
+            padding: 1px 4px;
+        }
+
+        .review-label {
+            font-size: clamp(8px, 2vw, 10px);
+            color: #666;
+            margin-bottom: 1px;
+            font-weight: 600;
+        }
+
+        .review-name {
+            font-size: clamp(12px, 3vw, 14px);
+            font-weight: 700;
+            color: #333;
+            padding: 4px 6px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+
+        .review-name-input {
+            font-size: clamp(11px, 2.8vw, 13px);
+            font-weight: 700;
+            color: #333;
+            padding: 3px 5px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            width: 100px;
+            height: 26px;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            flex-shrink: 0;
+        }
+
+        .review-name-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+        }
+
+        .review-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: nowrap;
+            align-items: center;
+        }
+
+        .review-donation {
+            font-size: clamp(10px, 2.5vw, 12px);
+            color: #666;
+            padding: 3px 6px;
+            background: #fff3cd;
+            border-radius: 4px;
+            border: 1px solid #ffeeba;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .review-similarity {
+            font-size: clamp(10px, 2.5vw, 12px);
+            color: #666;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .similarity-high {
+            background: #d1ecf1;
+            color: #0056b3;
+        }
+
+        .similarity-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .similarity-perfect {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-assign {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: clamp(10px, 2.5vw, 12px);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-assign:not([disabled]) {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        }
+
+        .btn-create-new:not([disabled]) {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        }
+
+        .btn-assign:hover {
+            transform: scale(1.02);
+            box-shadow: 0 1px 4px rgba(0, 123, 255, 0.2);
+        }
+
+        .btn-assign:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+            transform: none;
+        }
+
+        .btn-create-new {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: clamp(10px, 2.5vw, 12px);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-create-new:hover {
+            transform: scale(1.02);
+            box-shadow: 0 1px 4px rgba(40, 167, 69, 0.2);
+        }
+
+        .btn-create-new:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+            transform: none;
+        }
+
+        .review-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Responsive para móviles */
+        @media screen and (max-width:768px) {
+            .review-row {
+                flex-direction: column;
+            }
+
+            .review-name-section {
+                min-width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .review-actions {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Modal de ayuda */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: clamp(20px, 5vw, 30px);
+            border-radius: 16px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #888;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .modal-content h2 {
+            color: #1a8c42;
+            margin-bottom: 15px;
+            font-size: clamp(18px, 4vw, 22px);
+        }
+
+        .modal-content ul {
+            list-style-position: inside;
+            padding-left: 0;
+        }
+
+        .modal-content li {
+            margin-bottom: 10px;
+            font-size: clamp(12px, 3vw, 14px);
+            line-height: 1.5;
+        }
+
+        /* Responsividad para pantallas muy pequeñas */
+        @media screen and (max-width: 360px) {
+
+            .btn-manual span,
+            .btn-config span {
+                display: none;
+            }
+
+            .btn-manual::after {
+                content: '⌨️';
+                font-size: 18px;
+            }
+
+            .btn-config::after {
+                content: '⚙️';
+                font-size: 18px;
+            }
+        }
+
+        /* Asegurar que nada se salga del viewport */
+        * {
+            max-width: 100%;
+        }
+
+        /* Botón de configuración */
+        .btn-settings {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            width: clamp(36px, 9vw, 40px);
+            height: clamp(36px, 9vw, 40px);
+            border-radius: 50%;
+            font-size: clamp(16px, 4vw, 18px);
+            padding: 0;
+            gap: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: none;
+            color: white;
+            font-weight: bold;
+            min-height: unset;
+        }
+
+        /* Items de configuración */
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #ddd;
+            font-size: clamp(14px, 3.5vw, 16px);
+            font-weight: 600;
+        }
+
+        .setting-item input[type="checkbox"] {
+            transform: scale(1.5);
+            margin-left: 10px;
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+        }
+
+        .setting-description {
+            font-size: clamp(11px, 2.8vw, 13px);
+            font-weight: 400;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        /* Botón de instalación */
+        .btn-install {
+            width: 100%;
+            margin-top: 15px;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            padding: 12px 20px;
+            font-size: clamp(13px, 3.3vw, 15px);
+        }
+
+        .btn-install:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Error Handler (Hotfix) -->
+        <script>
+            window.onerror = function (msg, url, line) {
+                const status = document.getElementById('status');
+                if (status) {
+                    status.innerText = "⚠️ Error Global: " + msg;
+                    status.classList.add('error');
+                    status.style.display = 'block';
+                }
+                // Intento de recuperación visual
+                const table = document.querySelector('.data-table');
+                if (table) table.style.opacity = '0.5';
+            };
+        </script>
+        <!-- Header principal -->
+        <div class="header">
+            <h1>🐜 Donaciones Invencibles</h1>
+            <div class="header-subtitle" id="headerLastUpdate">
+                Última actualización: Cargando...
+            </div>
+            <div class="version-tag">v1.3.4</div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="action-buttons">
+            <button class="btn btn-manual" onclick="showManual()" title="Ingresar donaciones manualmente">
+                <span>⌨️ Entrada Manual</span>
+            </button>
+            <button id="smartSyncBtn" class="btn btn-smart-sync" onclick="smartSyncAction()"
+                title="Sincronización Inteligente">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                    style="width: 100%; height: 100%;">
+                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3" />
+                </svg>
+            </button>
+            <button class="btn btn-help" onclick="showInfo()" title="Ver guía de usuario">?</button>
+            <button class="btn-save" id="saveBtn" onclick="manualSave()"
+                title="Opciones de guardado y cierre de semana">✓</button>
+
+            <button class="btn btn-edit-mode" id="editModeBtn" onclick="toggleEditMode()" style="display:none;"
+                title="Modo Edición">📝</button>
+            <button class="btn btn-settings" onclick="showSettings()" title="Ajustes de la aplicación">⚙️</button>
+            <button class="btn btn-config" onclick="configGoal()" title="Cambiar la meta diaria">
+                <span>⚙️ Configurar Meta</span>
+            </button>
+        </div>
+
+        <!-- Indicador de cambios sin guardar -->
+        <div class="unsaved-indicator" id="unsavedIndicator">⚠️ Hay cambios sin guardar en Firebase</div>
+
+        <!-- Status mensajes -->
+        <div id="status"></div>
+
+        <!-- Tabla de datos -->
+        <div class="data-table">
+            <table id="table">
+                <thead class="table-header" id="tableHeader">
+                    <tr>
+                        <th>NOMBRE</th>
+                        <th>TENÍA</th>
+                        <th>TIENE</th>
+                        <th>SEMANAL</th>
+                        <th>Ø DIARIO</th>
+                        <th>%META</th>
+                        <th>ACUMULADO</th>
+                        <th>TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+                <tfoot></tfoot>
+            </table>
+        </div>
+
+        <!-- Footer info -->
+        <!-- Footer info -->
+        <div class="footer-info">
+            <p>📱 Última actualización: <span id="lastUpdateTime">-</span></p>
+            <p>🗓️ Semana iniciada: <span id="weekStartTime">-</span></p>
+            <p id="admin-login-container" style="margin-top: 10px;"></p>
+            <div id="backupButtons" style="display: none; margin-top: 10px;">
+                <button class="btn-backup" id="backupBtn" onclick="backupData()">💾 Backup JSON v2</button>
+                <button class="btn-backup" id="restoreBtn" onclick="document.getElementById('restoreFile').click()">📂
+                    Restaurar Backup</button>
+                <input type="file" id="restoreFile" accept=".json,.txt" style="display: none;"
+                    onchange="restoreBackup(event)">
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de entrada manual -->
+    <div id="manualSection" class="section">
+        <div class="section-content">
+            <h2>📝 Entrada Manual de Datos</h2>
+            <p><strong>Formato:</strong> nombre,donación (una por línea)</p>
+            <p><strong>Ejemplo:</strong><br>Juan,25000<br>María,18500</p>
+            <textarea id="manualInput" placeholder="Ingresa los datos aquí..."></textarea>
+            <div class="section-buttons">
+                <button class="btn btn-success" onclick="processManual()">✅ Revisar Datos</button>
+                <button class="btn btn-check-similarity" onclick="checkSimilarity()">🔍 Verificar Similitud</button>
+                <button class="btn btn-cancel" onclick="hideManual()">❌ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de configuración -->
+    <div id="configSection" class="section">
+        <div class="section-content">
+            <h2>⚙️ Configuración de Meta</h2>
+            <label for="newGoal"><strong>Meta diaria por jugador:</strong></label>
+            <input type="number" id="newGoal" value="15000" min="1000" max="100000" step="1000">
+            <div class="section-buttons">
+                <button class="btn btn-success" onclick="saveGoal()">💾 Guardar Meta</button>
+                <button class="btn btn-cancel" onclick="hideConfig()">❌ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de revisión de similitud -->
+    <div id="reviewSection" class="section">
+        <div class="review-content">
+            <h2>🔍 Revisar Similitud de Nombres</h2>
+            <p>Verifica los nombres nuevos y asigna a usuarios existentes si hay similitud.</p>
+
+            <div id="reviewItemsList" class="review-items-list"></div>
+
+            <div id="reviewSummary" class="review-summary"></div>
+
+            <div class="review-buttons" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                <button class="btn btn-success" onclick="confirmNameMapping()">
+                    ✅ Importar a Tabla (Local)
+                </button>
+                <button class="btn btn-cancel" onclick="hideReview()">❌ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de ayuda -->
+    <div id="infoModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideInfo()">&times;</span>
+            <h2>📖 Guía de Usuario</h2>
+
+            <h3 style="color: #1a8c42; margin-top: 10px; border-bottom: 2px solid #e0e0e0; padding-bottom: 5px;">📊
+                Columnas de la Tabla</h3>
+            <ul style="font-size: 13px; line-height: 1.6;">
+                <li><strong>NOMBRE:</strong> Nombre del jugador. Los Top 5 reciben medallas (🥇🥈🥉...).</li>
+                <li><strong>TENÍA:</strong> Donación total registrada antes de la semana actual.</li>
+                <li><strong>TIENE:</strong> Donación total actual (según el juego).</li>
+                <li><strong>SEMANAL:</strong> Lo donado esta semana (Tiene - Tenía).</li>
+                <li><strong>Ø DIARIO:</strong> Promedio de donación por día (Semanal / 7).</li>
+                <li><strong>%META:</strong> Porcentaje de cumplimiento de la meta semanal.</li>
+                <li><strong>ACUMULADO:</strong> Exceso de donaciones guardado ("Mochila"). Se usa automáticamente para
+                    cubrir faltas.</li>
+                <li><strong>TOTAL:</strong> Suma histórica total de donaciones.</li>
+            </ul>
+
+
+
+            <h3 style="color: #1a8c42; margin-top: 15px; border-bottom: 2px solid #e0e0e0; padding-bottom: 5px;">🎨
+                Leyenda de Colores</h3>
+            <div class="legend" style="justify-content: flex-start; gap: 10px;">
+                <div class="legend-item">
+                    <div class="legend-color green"></div> >90% Meta
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color yellow"></div> 70-89% Meta
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color red"></div>
+                    &lt;70% Meta
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Sección de Login -->
+    <div id="loginSection" class="section">
+        <div class="section-content">
+            <h2>🔐 Iniciar Sesión de Administrador</h2>
+            <label for="loginEmail"><strong>Correo electrónico:</strong></label>
+            <input type="email" id="loginEmail" placeholder="correo@ejemplo.com">
+            <label for="loginPass"><strong>Contraseña:</strong></label>
+            <input type="password" id="loginPass" placeholder="Ingresa la contraseña">
+            <div class="section-buttons">
+                <button class="btn btn-success" onclick="login()">✅ Iniciar Sesión</button>
+                <button class="btn btn-cancel" onclick="hideLogin()">❌ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de configuración -->
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideSettings()">&times;</span>
+            <h2>⚙️ Configuración</h2>
+
+            <div class="setting-item">
+                <div>
+                    <div>🔔 Notificaciones</div>
+                    <div class="setting-description">Recibe avisos cuando hay cambios de datos</div>
+                </div>
+                <input type="checkbox" id="notifToggle" onchange="toggleNotifications()">
+            </div>
+
+            <button class="btn btn-install" id="installBtn" onclick="installApp()" style="display:none;">
+                📱 Instalar App
+            </button>
+
+
+
+            <div class="section-buttons" style="margin-top: 20px;">
+                <button class="btn btn-cancel" onclick="hideSettings()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de opciones de guardado -->
+    <div id="saveOptionsModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideSaveOptions()">&times;</span>
+            <h2>💾 Opciones de Guardado</h2>
+            <p>Elige qué acción deseas realizar:</p>
+
+            <button class="btn btn-success" onclick="executeSave('UPDATE')"
+                style="width: 100%; margin-bottom: 15px; padding: 15px; height: auto; white-space: normal; display: flex; flex-direction: column; align-items: flex-start; text-align: left;">
+                <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">✅ Guardar Cambios</div>
+                <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Actualiza los datos locales y en
+                    Firebase. La semana continúa normalmente.</div>
+            </button>
+
+            <button class="btn btn-manual" onclick="executeSave('NEW_WEEK')"
+                style="width: 100%; padding: 15px; background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); height: auto; white-space: normal; display: flex; flex-direction: column; align-items: flex-start; text-align: left;">
+                <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">🔄 Cerrar Semana e Iniciar Nueva
+                </div>
+                <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Calcula acumulados finales, reinicia
+                    contadores a cero y guarda todo en Firebase.</div>
+            </button>
+
+            <div class="section-buttons" style="margin-top: 20px;">
+                <button class="btn btn-cancel" onclick="hideSaveOptions()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de opciones de Sincronización (Smart Sync) -->
+    <div id="syncOptionsModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideSyncOptions()">&times;</span>
+            <h2 style="color: #007bff;">☁️ Sincronización</h2>
+            <p>Estado y herramientas de reparación:</p>
+
+            <!-- Botón de Actualizar App (Solo visible si hay update) -->
+            <button id="btnUpdateApp" class="btn" onclick="executeSync('UPDATE_APP')"
+                style="display: none; width: 100%; margin-bottom: 15px; padding: 15px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: white; height: auto; white-space: normal; flex-direction: column; align-items: flex-start; text-align: left;">
+                <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">🚀 Actualizar Aplicación</div>
+                <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Nueva versión disponible. Clic para
+                    instalar.</div>
+            </button>
+
+            <!-- Botón de Sincronizar Datos -->
+            <button class="btn" onclick="executeSync('SYNC_DATA')"
+                style="width: 100%; margin-bottom: 15px; padding: 15px; background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white; height: auto; white-space: normal; display: flex; flex-direction: column; align-items: flex-start; text-align: left;">
+                <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">☁️ Sincronizar Datos</div>
+                <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Descargar los últimos datos desde la
+                    nube.</div>
+            </button>
+
+            <!-- Botón de Reparar -->
+            <button class="btn" onclick="executeSync('REPAIR')"
+                style="width: 100%; padding: 15px; background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; height: auto; white-space: normal; display: flex; flex-direction: column; align-items: flex-start; text-align: left;">
+                <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">🛠️ Reparar / Recargar</div>
+                <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">¿Problemas? Limpia la memoria y recarga
+                    la App.</div>
+            </button>
+
+            <div class="section-buttons" style="margin-top: 20px;">
+                <button class="btn btn-cancel" onclick="hideSyncOptions()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- INICIO DE LA INTEGRACIÓN CON FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBey3djeWd5dvhRWpt_RZcqVq3BtwugdIw",
+            authDomain: "donacionespwav2.firebaseapp.com",
+            projectId: "donacionespwav2",
+            storageBucket: "donacionespwav2.firebasestorage.app",
+            messagingSenderId: "854523614232",
+            appId: "1:854523614232:web:0b537fa35a0d9f47ef9f6d",
+            measurementId: "G-5N0MWZT1QC"
+        };
+
+        // Configuración global
+        const CONFIG = {
+            DEFAULT_GOAL: 15000
+        };
+
+        // Variables globales
+        let players = {};
+        let goalDaily = CONFIG.DEFAULT_GOAL;
+        let lastUpdate = Date.now();
+        let weekStart = getWeekStart();
+        let auth;
+        let firestoreDB;
+
+        // Nuevas variables para PWA
+        let db;
+        let notificationsEnabled = false;
+        let deferredPrompt = null;
+        let lastDataTimestamp = null;
+        let indexedDBInitialized = false;
+        let lastSyncTime = null; // Fix: Declaración movida al inicio para evitar TDZ
+
+
+
+        const DB_NAME = 'DonacionesDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'data';
+
+        // --- FUNCIONES DE INDEXEDDB (OFFLINE) ---
+
+        function initIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = (event) => {
+                    console.error('Error al abrir IndexedDB:', event.target.error);
+                    reject(event.target.error);
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    console.log('IndexedDB inicializado correctamente');
+                    indexedDBInitialized = true;
+                    resolve(db);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        const objectStore = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        objectStore.createIndex('timestamp', 'timestamp', { unique: false });
+                    }
+                    console.log('IndexedDB actualizado a versión', DB_VERSION);
+                };
+            });
+        }
+
+        async function saveToLocal(data) {
+            if (!db) return;
+
+            try {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const objectStore = transaction.objectStore(STORE_NAME);
+
+                const record = {
+                    id: 'main',
+                    timestamp: Date.now(),
+                    players: data.players,
+                    goalDaily: data.goalDaily,
+                    lastUpdate: data.lastUpdate,
+                    weekStart: data.weekStart
+                };
+
+                objectStore.put(record);
+
+                return new Promise((resolve, reject) => {
+                    transaction.oncomplete = () => {
+                        console.log('Datos guardados en IndexedDB');
+                        resolve();
+                    };
+                    transaction.onerror = () => {
+                        console.error('Error al guardar en IndexedDB');
+                        reject();
+                    };
+                });
+            } catch (error) {
+                console.error('Error en saveToLocal:', error);
+            }
+        }
+
+        async function loadFromLocal() {
+            if (!db) return null;
+
+            try {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const objectStore = transaction.objectStore(STORE_NAME);
+                const request = objectStore.get('main');
+
+                return new Promise((resolve, reject) => {
+                    request.onsuccess = () => {
+                        const result = request.result;
+                        if (result) {
+                            console.log('Datos cargados desde IndexedDB');
+                            lastDataTimestamp = result.timestamp;
+                        }
+                        resolve(result);
+                    };
+                    request.onerror = () => {
+                        console.error('Error al cargar desde IndexedDB');
+                        reject();
+                    };
+                });
+            } catch (error) {
+                console.error('Error en loadFromLocal:', error);
+                return null;
+            }
+        }
+
+        function notifyNewData() {
+            if (!notificationsEnabled || Notification.permission !== 'granted') return;
+
+            const playerCount = Object.keys(players).length;
+            new Notification('📊 Datos actualizados', {
+                body: `${playerCount} jugadores con nuevas donaciones`,
+                icon: 'icon-192x192.png',
+                badge: 'icon-192x192.png',
+                tag: 'data-update',
+                renotify: true
+            });
+        }
+
+        // --- FUNCIONES DE CONFIGURACIÓN ---
+
+        function toggleNotifications() {
+            const toggle = document.getElementById('notifToggle');
+
+            if (toggle.checked) {
+                if (!('Notification' in window)) {
+                    showStatus('❌ Tu navegador no soporta notificaciones', 'error');
+                    toggle.checked = false;
+                    return;
+                }
+
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        notificationsEnabled = true;
+                        localStorage.setItem('notificationsEnabled', true);
+                        showStatus('✅ Notificaciones activadas', 'success');
+
+                        new Notification('Donaciones Invencibles', {
+                            body: '¡Notificaciones activadas correctamente!',
+                            icon: 'icon-192x192.png'
+                        });
+                    } else {
+                        toggle.checked = false;
+                        showStatus('❌ Permisos de notificación denegados', 'error');
+                    }
+                });
+            } else {
+                notificationsEnabled = false;
+                localStorage.setItem('notificationsEnabled', false);
+                showStatus('🔕 Notificaciones desactivadas', 'success');
+            }
+        }
+
+        function loadNotificationPreference() {
+            notificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
+            const toggle = document.getElementById('notifToggle');
+            if (toggle) toggle.checked = notificationsEnabled;
+        }
+
+
+
+        function showSettings() {
+            hideAllSections();
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function hideSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+
+
+        function installApp() {
+            if (!deferredPrompt) {
+                showStatus('❌ No se puede instalar la app en este momento', 'error');
+                return;
+            }
+
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('Usuario aceptó la instalación');
+                    document.getElementById('installBtn').style.display = 'none';
+                    showStatus('✅ App instalada correctamente', 'success');
+                } else {
+                    console.log('Usuario rechazó la instalación');
+                }
+                deferredPrompt = null;
+            });
+        }
+
+
+
+        // --- INICIALIZACIÓN Y AUTENTICACIÓN ---
+
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                // Inicializar Firebase y los servicios
+                try {
+                    const app = firebase.initializeApp(firebaseConfig);
+                    firestoreDB = firebase.firestore();
+                    auth = firebase.auth();
+                    console.log('✅ Firebase inicializado correctamente');
+                } catch (firebaseError) {
+                    console.warn('⚠️ Firebase no disponible, operando en modo offline:', firebaseError.message);
+                    firestoreDB = null;
+                    auth = null;
+                    showStatus('⚠️ Modo offline: Servidor no disponible', 'warning', 5000);
+                }
+
+                // ESCAPE HATCH: Borrado de caché forzado por URL
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('force_reset')) {
+                    console.log('🛑 Force Reset detected from URL');
+                    showStatus('⚠️ Ejecutando reparación de emergencia...', 'warning');
+                    // Limpiar URL para no entrar en bucle infinito tras recargar
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    setTimeout(() => forceClearCache(), 1000);
+                    return; // Detener inicialización normal
+                }
+
+                initAuth();
+                initDB();
+                updateEditModeButton();
+                updateAdminButtons();
+            } catch (error) {
+                console.error("Error crítico inicializando la app:", error);
+                showStatus('❌ Error al iniciar la aplicación. Recarga la página.', 'error', 10000);
+                // Intentar renderizar tabla vacía para que el usuario vea algo
+                players = {};
+                goalDaily = CONFIG.DEFAULT_GOAL;
+                renderTable();
+            }
+
+            // Guardar los textos del encabezado una sola vez
+            const headerTexts = Array.from(document.querySelectorAll('#table thead th')).map(th => th.innerHTML);
+
+            // Listener para la selección de filas de la tabla
+            const tableBody = document.querySelector('#table tbody');
+            if (tableBody) {
+                tableBody.addEventListener('click', function (e) {
+                    const targetRow = e.target.closest('tr');
+
+                    // Asegurarse de que el clic fue en una fila de datos válida
+                    if (!targetRow || !tableBody.contains(targetRow) || targetRow.classList.contains('injected-header')) return;
+
+                    const isAlreadySelected = targetRow.classList.contains('selected-row');
+
+                    // Siempre remover el encabezado inyectado y la selección anterior primero
+                    const existingInjectedHeader = tableBody.querySelector('.injected-header');
+                    if (existingInjectedHeader) {
+                        existingInjectedHeader.remove();
+                    }
+                    const allRows = tableBody.querySelectorAll('tr');
+                    allRows.forEach(row => {
+                        row.classList.remove('selected-row');
+                    });
+
+                    // Si la fila no estaba ya seleccionada, seleccionarla ahora e inyectar el header si es necesario
+                    if (!isAlreadySelected) {
+                        targetRow.classList.add('selected-row');
+
+                        // No inyectar el header para la primera fila de datos
+                        const isFirstRow = tableBody.querySelector('tr:not(.injected-header)') === targetRow;
+
+                        if (!isFirstRow) {
+                            const newHeaderRow = document.createElement('tr');
+                            newHeaderRow.classList.add('injected-header', 'table-header');
+                            newHeaderRow.style.position = 'static'; // Evitar comportamiento 'sticky' no deseado
+                            newHeaderRow.innerHTML = headerTexts.map(text => `<th>${text}</th>`).join('');
+                            targetRow.parentNode.insertBefore(newHeaderRow, targetRow);
+                        }
+                    }
+                });
+            }
+        });
+
+        async function initAuth() {
+            try {
+                // Usamos persistencia local para mantener al usuario logueado
+                await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+                auth.onAuthStateChanged(user => {
+                    updateUIAfterAuthStateChange(user);
+                });
+            } catch (error) {
+                showStatus('Error de autenticación: ' + error.message, 'error');
+                console.error('Auth Init Error:', error);
+            }
+        }
+
+        function updateUIAfterAuthStateChange(user) {
+            const adminLoginContainer = document.getElementById('admin-login-container');
+            if (!adminLoginContainer) return;
+
+            if (user) {
+                // Usuario logueado
+                adminLoginContainer.innerHTML = `<a href="#" onclick="logout(); return false;" style="color: #6c757d; text-decoration: none;">Cerrar Sesión (Admin)</a>`;
+            } else {
+                // Usuario no logueado
+                adminLoginContainer.innerHTML = `<a href="#" onclick="showLogin(); return false;" style="color: #6c757d; text-decoration: none;">Login Admin</a>`;
+                hideAllSections();
+            }
+
+            updateEditModeButton();
+            updateAdminButtons();
+        }
+
+        function updateAdminButtons() {
+            const saveBtn = document.getElementById('saveBtn');
+            const backupButtons = document.getElementById('backupButtons');
+
+            if (auth.currentUser) {
+                // Admin - Mostrar botones
+                if (saveBtn) saveBtn.style.display = 'flex';
+                if (backupButtons) backupButtons.style.display = 'block';
+            } else {
+                // No admin - Ocultar botones
+                if (saveBtn) saveBtn.style.display = 'none';
+                if (backupButtons) backupButtons.style.display = 'none';
+            }
+        }
+
+        function promiseWithTimeout(promise, ms, label) {
+            let timeoutId;
+            const timeoutPromise = new Promise((_, reject) => {
+                timeoutId = setTimeout(() => {
+                    reject(new Error(`Timeout en ${label} (${ms}ms)`));
+                }, ms);
+            });
+            return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+        }
+
+        async function initDB() {
+            try {
+                // 1. Render optimista: Mostrar tabla vacía inmediatamente
+                console.log('🚀 Iniciando render optimista');
+                renderTable();
+                updateTimeDisplays();
+
+                // 2. Intentar cargar datos locales (sin bloquear validaciones de nube)
+                showStatus('⏳ Cargando datos...', 'processing');
+
+                let localData = null;
+                try {
+                    // Intento directo sin timeouts complejos
+                    await initIndexedDB();
+                    localData = await loadFromLocal();
+                } catch (e) {
+                    console.warn('⚠️ Fallo carga local:', e);
+                }
+
+                if (localData) {
+                    players = localData.players || {};
+                    goalDaily = localData.goalDaily || CONFIG.DEFAULT_GOAL;
+                    lastUpdate = localData.lastUpdate || Date.now();
+                    weekStart = localData.weekStart || getWeekStart();
+                    lastDataTimestamp = localData.timestamp;
+
+                    console.log('📂 Datos locales aplicados');
+                    showStatus('📂 Datos cargados (Local)', 'success', 2000);
+                    renderTable(); // Actualizar UI con datos locales
+                }
+
+                // 3. Conexión con Firebase (Asíncrona / No bloqueante)
+                if (firestoreDB) {
+                    // No usamos await aquí para no bloquear la UI si la red es lenta
+                    loadData().then(() => {
+                        console.log('☁️ Sincronización nube completada');
+                    }).catch(err => {
+                        console.warn('⚠️ Fallo sincronización nube:', err);
+                        // No mostramos error al usuario si ya tiene datos locales, para no alarmar
+                        if (!localData) showStatus('Modo Offline: ' + err.message, 'warning');
+                    });
+                } else {
+                    console.warn('Firebase no inicializado');
+                }
+
+            } catch (error) {
+                console.error('❌ Critical Init Error:', error);
+                showStatus('Error de inicialización: ' + error.message, 'error');
+            }
+        }
+
+        // --- FUNCIONES DE AUTENTICACIÓN ---
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPass').value;
+
+            if (!email || !password) {
+                showStatus('Por favor, ingresa email y contraseña.', 'error');
+                return;
+            }
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                hideLogin();
+                showStatus('¡Sesión iniciada correctamente!', 'success');
+            } catch (error) {
+                showStatus('Error al iniciar sesión: ' + error.message, 'error');
+                console.error('Login Error:', error);
+            }
+        }
+
+        async function logout() {
+            try {
+                await auth.signOut();
+                showStatus('Sesión cerrada.', 'success');
+            } catch (error) {
+                showStatus('Error al cerrar sesión: ' + error.message, 'error');
+                console.error('Logout Error:', error);
+            }
+        }
+
+        // --- LÓGICA DE DATOS (Firestore) ---
+
+        async function loadData() {
+            // Verificar que Firebase esté disponible
+            if (!firestoreDB) {
+                showStatus('⚠️ Servidor no disponible. Modo offline.', 'warning');
+                return;
+            }
+
+            try {
+                const docRef = firestoreDB.collection('data').doc('main');
+                const doc = await docRef.get();
+
+                if (doc.exists) {
+                    const data = doc.data();
+                    players = data.players || {};
+                    goalDaily = data.goalDaily || CONFIG.DEFAULT_GOAL;
+                    lastUpdate = data.lastUpdate || Date.now();
+                    weekStart = data.weekStart || getWeekStart();
+                    lastSyncTime = lastUpdate;
+                    updateSyncTimeDisplay();
+                    showStatus('✅ Datos cargados desde la nube', 'success', 2000);
+                } else {
+                    // No hay datos en Firebase, usar datos locales o vacíos
+                    if (Object.keys(players).length === 0) {
+                        showStatus('ℹ️ No hay datos disponibles. Inicia sesión como admin para añadir jugadores.', 'info', 5000);
+                    } else {
+                        showStatus('ℹ️ Sin datos en servidor. Usando datos locales.', 'info', 3000);
+                    }
+                }
+                renderTable();
+                updateTimeDisplays();
+            } catch (error) {
+                showStatus('Error al cargar datos: ' + error.message, 'error');
+                console.error('Load Error:', error);
+            }
+        }
+
+        function getWeekStart() {
+            const d = new Date();
+            d.setHours(0, 0, 0, 0);
+            const day = d.getDay();
+            const monday = new Date(d);
+            monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+            return monday.getTime();
+        }
+
+
+
+        async function forceSync() {
+            // Verificar que Firebase esté disponible
+            if (!firestoreDB) {
+                showStatus('⚠️ Servidor no disponible. No se puede sincronizar.', 'warning');
+                return;
+            }
+
+            try {
+                const unsavedIndicator = document.getElementById('unsavedIndicator');
+                const hasUnsavedChanges = unsavedIndicator && unsavedIndicator.classList.contains('show');
+
+                if (hasUnsavedChanges) {
+                    const confirmed = confirm(
+                        '⚠️ Tienes cambios sin guardar en Firebase.\n\n' +
+                        '¿Deseas sincronizar de todas formas?\n\n' +
+                        'Esto sobrescribirá tus cambios locales con los datos del servidor.'
+                    );
+
+                    if (!confirmed) {
+                        showStatus('ℹ️ Sincronización cancelada', 'success', 2000);
+                        return;
+                    }
+                }
+
+                showStatus('🔄 Sincronizando datos...', 'processing');
+
+                const docRef = firestoreDB.collection('data').doc('main');
+                const doc = await docRef.get();
+
+                if (doc.exists) {
+                    const data = doc.data();
+                    const newDataTimestamp = data.lastUpdate || Date.now();
+
+                    if (!lastSyncTime || newDataTimestamp > lastSyncTime) {
+                        players = data.players || {};
+                        goalDaily = data.goalDaily || CONFIG.DEFAULT_GOAL;
+                        lastUpdate = data.lastUpdate || Date.now();
+                        weekStart = data.weekStart || getWeekStart();
+                        lastSyncTime = newDataTimestamp;
+
+                        await saveToLocal({
+                            players,
+                            goalDaily,
+                            lastUpdate,
+                            weekStart,
+                            timestamp: newDataTimestamp
+                        });
+
+                        renderTable();
+                        updateTimeDisplays();
+                        updateSyncTimeDisplay();
+                        hideUnsavedIndicator();
+
+                        console.log('Datos sincronizados forzadamente:', newDataTimestamp);
+                        showStatus('✅ Datos sincronizados correctamente', 'success', 3000);
+                    } else {
+                        updateSyncTimeDisplay();
+                        showStatus('ℹ️ Los datos ya están actualizados', 'success', 2000);
+                    }
+                } else {
+                    showStatus('⚠️ No hay datos en Firebase', 'error', 3000);
+                }
+            } catch (error) {
+                showStatus('Error al sincronizar: ' + error.message, 'error', 3000);
+                console.error('Sync Error:', error);
+            }
+        }
+
+        function updateSyncTimeDisplay() {
+            const lastSyncElement = document.getElementById('lastSyncTime');
+            if (!lastSyncElement) return;
+
+            if (lastSyncTime) {
+                const date = new Date(lastSyncTime);
+                const options = {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                };
+                lastSyncElement.textContent = date.toLocaleDateString('es-ES', options);
+            } else {
+                lastSyncElement.textContent = 'Nunca';
+            }
+        }
+
+        async function saveData() {
+            // Verificar que Firebase esté disponible
+            if (!firestoreDB) {
+                showStatus('⚠️ Servidor no disponible. Guardando solo localmente.', 'warning');
+                await saveToLocal({
+                    players,
+                    goalDaily,
+                    lastUpdate: Date.now(),
+                    weekStart
+                });
+                showStatus('✅ Datos guardados localmente (pendiente sincronización)', 'success');
+                return;
+            }
+
+            try {
+                const dataToSave = {
+                    players,
+                    goalDaily,
+                    lastUpdate: Date.now(),
+                    weekStart
+                };
+
+                await firebase.firestore().collection('data').doc('main').set(dataToSave);
+                await saveToLocal(dataToSave);
+
+                lastUpdate = dataToSave.lastUpdate;
+                lastDataTimestamp = lastUpdate;
+                lastSyncTime = Date.now();
+                updateTimeDisplays();
+                updateSyncTimeDisplay();
+                hideUnsavedIndicator();
+                renderTable(); // Forzar actualización visual
+            } catch (error) {
+                showStatus('Error al guardar datos: ' + error.message, 'error');
+                console.error('Save Error:', error);
+            }
+        }
+
+        function showUnsavedIndicator() {
+            const indicator = document.getElementById('unsavedIndicator');
+            if (indicator) {
+                indicator.classList.add('show');
+            }
+        }
+
+        function hideUnsavedIndicator() {
+            const indicator = document.getElementById('unsavedIndicator');
+            if (indicator) {
+                indicator.classList.remove('show');
+            }
+        }
+
+        async function manualSave() {
+            if (!auth.currentUser) {
+                showStatus('❌ Debes iniciar sesión como admin.', 'error');
+                return;
+            }
+            // Restaurado el menú de opciones a petición del usuario
+            showSaveOptions();
+        }
+
+        // --- FUNCIONES DE RENDERIZADO Y FORMATO ---
+
+        function formatNumber(num) {
+            if (typeof num !== 'number' || isNaN(num)) return '0';
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+            return num.toLocaleString('es-ES');
+        }
+
+        function getColorClass(percentage, type) {
+            if (type === 'percentage') {
+                if (percentage >= 90) return 'green';
+                if (percentage >= 70) return 'yellow';
+                return 'red';
+            }
+            if (type === 'total') {
+                if (percentage >= 100) return 'green';
+                return 'red';
+            }
+            return '';
+        }
+
+        function calculatePercentages(player) {
+            const semanal = (player.current || 0) - (player.previous || 0);
+            const weeklyGoal = goalDaily * 7;
+            const avgDaily = semanal / 7;
+            const avgDailyPerc = (avgDaily / goalDaily) * 100;
+
+            const availableExcess = Math.max(0, player.accumulatedExcess || 0);
+            const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
+            const coveredWithAccumulated = Math.min(weeklyDeficit, availableExcess);
+            const effectiveDonation = semanal + coveredWithAccumulated;
+            const metaPerc = coveredWithAccumulated > 0
+                ? Math.min(100, (effectiveDonation / weeklyGoal) * 100)
+                : (semanal / weeklyGoal) * 100;
+
+            const totalPerc = (player.total || 0) / weeklyGoal * 100;
+
+            return {
+                semanal: Math.max(0, semanal),
+                avgDaily: Math.max(0, avgDaily),
+                avgDailyPerc: Math.max(0, avgDailyPerc),
+                metaPerc: Math.max(0, metaPerc),
+                totalPerc: Math.max(0, totalPerc)
+            };
+        }
+
+        function formatExtraDonationTime(totalDays) {
+            if (totalDays < 1) return '';
+            const daysPerWeek = 7, weeksPerMonth = 4, monthsPerYear = 12;
+            const daysPerMonth = daysPerWeek * weeksPerMonth;
+            const daysPerYear = daysPerMonth * monthsPerYear;
+            let remainingDays = totalDays;
+            const years = Math.floor(remainingDays / daysPerYear);
+            remainingDays %= daysPerYear;
+            const months = Math.floor(remainingDays / daysPerMonth);
+            remainingDays %= daysPerMonth;
+            const weeks = Math.floor(remainingDays / daysPerWeek);
+            remainingDays %= daysPerWeek;
+            const days = Math.floor(remainingDays);
+            let parts = [];
+            if (years > 0) parts.push(`${years} año${years > 1 ? 's' : ''}`);
+            if (months > 0) parts.push(`${months} mes${months > 1 ? 'es' : ''}`);
+            if (weeks > 0) parts.push(`${weeks} semana${weeks > 1 ? 's' : ''}`);
+            if (days > 0) parts.push(`${days} día${days > 1 ? 's' : ''}`);
+            if (parts.length === 0) return '';
+            return `(${parts.join(' ')})`;
+        }
+
+        function renderTable() {
+            try {
+                // Selección defensiva de elementos
+                const tbody = document.getElementById('tableBody') || document.querySelector('#table tbody');
+                const tfoot = document.querySelector('#table tfoot');
+                const tableHeader = document.getElementById('tableHeader') || document.querySelector('.table-header');
+
+                if (!tbody) { console.error('Error crítico: No se encuentra tbody'); return; }
+                if (!tfoot) { console.error('Error crítico: No se encuentra tfoot'); return; }
+                if (!tableHeader) { console.error('Error crítico: No se encuentra tableHeader'); return; }
+
+                tbody.innerHTML = '';
+
+                // Actualizar header dinámicamente según modo edición
+                if (isEditMode) {
+                    tableHeader.innerHTML = `
+                    <tr>
+                        <th>NOMBRE</th>
+                        <th>TENÍA</th>
+                        <th>TIENE</th>
+                        <th>SEMANAL</th>
+                        <th>Ø DIARIO</th>
+                        <th>%META</th>
+                        <th>ACUMULADO</th>
+                        <th>TOTAL</th>
+                        <th>ACCIONES</th>
+                    </tr>
+                `;
+                } else {
+                    tableHeader.innerHTML = `
+                    <tr>
+                        <th>NOMBRE</th>
+                        <th>TENÍA</th>
+                        <th>TIENE</th>
+                        <th>SEMANAL</th>
+                        <th>Ø DIARIO</th>
+                        <th>%META</th>
+                        <th>ACUMULADO</th>
+                        <th>TOTAL</th>
+                    </tr>
+                `;
+                }
+
+                const playerNames = Object.keys(players);
+                if (playerNames.length === 0) {
+                    const colspan = isEditMode ? 9 : 8;
+                    tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center; padding: 40px; color: #6c757d;">No hay datos. Inicia sesión como admin para añadir jugadores.</td></tr>`;
+                    tfoot.innerHTML = '';
+                    return;
+                }
+
+                const sorted = playerNames.sort((a, b) => {
+                    const playerA = players[a], playerB = players[b];
+                    const aIsAbsent = playerA.absent || false, bIsAbsent = playerB.absent || false;
+                    if (aIsAbsent !== bIsAbsent) return aIsAbsent ? 1 : -1;
+                    if (aIsAbsent && bIsAbsent) return a.localeCompare(b);
+                    const aTotal = playerA?.total || 0, bTotal = playerB?.total || 0;
+                    return bTotal - aTotal;
+                });
+
+                let maxWeeklyDonation = 0;
+                sorted.forEach(name => {
+                    const player = players[name];
+                    const semanal = (player.current || 0) - (player.previous || 0);
+                    if (!player.absent && semanal > maxWeeklyDonation) maxWeeklyDonation = semanal;
+                });
+
+                let totalSemanal = 0, totalAcumulado = 0, totalAcumuladoExceso = 0, playersActive = 0, activePlayerRank = 0;
+
+                sorted.forEach(name => {
+                    const player = players[name];
+                    if (!player) return;
+                    player.weeklyTotal = (player.current || 0) - (player.previous || 0);
+                    player.accumulatedExcess = player.accumulatedExcess || 0;
+                    player.isNew = player.isNew || false;
+                    const row = tbody.insertRow();
+
+                    if (player.absent) {
+                        row.className = 'absent-player';
+                        const colspan = isEditMode ? 8 : 7;
+                        row.innerHTML = `<td>${name}</td><td colspan="${colspan}">❌ Baneado</td>`;
+                        return;
+                    }
+
+                    if (player.isNew) {
+                        if (isEditMode) {
+                            row.innerHTML = `<td style="font-weight: 500; text-align: center;">${name}<br><span style="color: #28a745; font-size: 0.9em; font-weight: bold;">NUEVO</span></td><td>-</td><td>${formatNumber(player.current || 0)}</td><td>0</td><td>0</td><td>0%</td><td>0</td><td>0</td><td></td>`;
+                        } else {
+                            row.innerHTML = `<td style="font-weight: 500; text-align: center;">${name}<br><span style="color: #28a745; font-size: 0.9em; font-weight: bold;">NUEVO</span></td><td>-</td><td>${formatNumber(player.current || 0)}</td><td>0</td><td>0</td><td>0%</td><td>0</td><td>0</td>`;
+                        }
+                        return;
+                    }
+
+                    // Si está en modo edición para este jugador
+                    if (editingPlayer === name) {
+                        const semanal = (player.current || 0) - (player.previous || 0);
+                        const weeklyGoal = goalDaily * 7;
+                        const weeklyExcess = Math.max(0, semanal - weeklyGoal);
+                        const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
+                        const availableExcess = Math.max(0, player.accumulatedExcess || 0);
+                        const deficitDraw = Math.min(weeklyDeficit, availableExcess);
+                        const finalPotentialExcess = availableExcess - deficitDraw + weeklyExcess;
+
+                        const calc = calculatePercentages(player);
+
+                        let nameHtml = name;
+                        if (activePlayerRank <= 5) {
+                            const starColors = ['#FFD700', '#FFC107', '#FFFF00', '#FFFFE0', '#FFFACD'];
+                            const starIcons = ['🌟', '✶', '★', '✶', '⭑'];
+                            const rank = activePlayerRank - 1;
+                            const starShadow = '-1px -1px 0 #4A4A4A, 1px -1px 0 #4A4A4A, -1px 1px 0 #4A4A4A, 1px 1px 0 #4A4A4A';
+                            let currentStarFontSize = activePlayerRank === 2 ? '20px' : '18px';
+                            nameHtml += `<span style="position: absolute; top: 1px; right: 4px; font-size: ${currentStarFontSize}; color: ${starColors[rank]}; text-shadow: ${starShadow};" title="Top ${activePlayerRank} donador total">${starIcons[rank]}</span>`;
+                        }
+
+                        row.innerHTML = `
+                        <td style="font-weight: 600; padding: 16px 5px; position: relative;">
+                            <input type="text" id="edit-name-${name}" value="${name}"
+                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
+                        </td>
+                        <td>
+                            <input type="number" id="edit-previous-${name}" value="${player.previous || 0}"
+                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
+                        </td>
+                        <td>
+                            <input type="number" id="edit-current-${name}" value="${player.current || 0}"
+                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
+                        </td>
+                        <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
+                            ${formatNumber(calc.semanal)}
+                        </td>
+                        <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
+                            ${formatNumber(calc.avgDaily)}
+                        </td>
+                        <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
+                            ${calc.metaPerc.toFixed(1)}%
+                        </td>
+                        <td>
+                            <input type="number" id="edit-accumulated-${name}" value="${player.accumulatedExcess || 0}"
+                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
+                        </td>
+                        <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
+                            ${formatNumber(player.total || 0)}
+                        </td>
+                        <td style="text-align: center; padding: clamp(4px, 1vw, 8px);">
+                            <button class="btn-save" onclick="saveEditing()" title="Guardar" style="margin-right: clamp(2px, 0.5vw, 4px); font-size: clamp(12px, 3vw, 16px); padding: clamp(4px, 1vw, 8px);">✓</button>
+                            <button class="btn btn-cancel" onclick="cancelEditing()" title="Cancelar" style="font-size: clamp(12px, 3vw, 16px); padding: clamp(4px, 1vw, 8px);">✗</button>
+                        </td>
+                    `;
+                        return;
+                    }
+
+                    playersActive++;
+                    activePlayerRank++;
+                    let nameHtml = name;
+                    if (activePlayerRank <= 5) {
+                        const starColors = ['#FFD700', '#FFC107', '#FFFF00', '#FFFFE0', '#FFFACD'];
+                        const starIcons = ['🌟', '✶', '★', '✶', '⭑'];
+                        const rank = activePlayerRank - 1;
+                        const starShadow = '-1px -1px 0 #4A4A4A, 1px -1px 0 #4A4A4A, -1px 1px 0 #4A4A4A, 1px 1px 0 #4A4A4A';
+                        let currentStarFontSize = activePlayerRank === 2 ? '20px' : '18px';
+                        nameHtml += `<span style="position: absolute; top: 1px; right: 4px; font-size: ${currentStarFontSize}; color: ${starColors[rank]}; text-shadow: ${starShadow};" title="Top ${activePlayerRank} donador total">${starIcons[rank]}</span>`;
+                    }
+
+                    const semanal = (player.current || 0) - (player.previous || 0);
+                    const weeklyGoal = goalDaily * 7;
+                    const weeklyExcess = Math.max(0, semanal - weeklyGoal);
+                    const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
+                    const availableExcess = Math.max(0, player.accumulatedExcess || 0);
+                    const deficitDraw = Math.min(weeklyDeficit, availableExcess);
+
+                    // LÓGICA DE EFICIENCIA EN VIVO
+                    // Para mostrar el valor "Neto" que realmente se guardará.
+                    const oneWeek = (goalDaily || 0) * 7;
+                    const oneMonth = oneWeek * 4;
+                    const currentAccumulated = player.accumulatedExcess || 0;
+                    let efficiency = 1.0;
+
+                    if (currentAccumulated >= (oneMonth * 5)) {
+                        efficiency = 0.05;  // Tier 4
+                    } else if (currentAccumulated >= (oneMonth * 3)) {
+                        efficiency = 0.10;  // Tier 3
+                    } else if (currentAccumulated >= oneMonth) {
+                        efficiency = 0.50;  // Tier 2
+                    } else {
+                        efficiency = 1.0;   // Tier 1
+                    }
+
+                    const effectiveWeeklyExcess = weeklyExcess * efficiency;
+                    const finalPotentialExcess = availableExcess - deficitDraw + effectiveWeeklyExcess;
+
+                    const calc = calculatePercentages(player);
+                    let metaContent = `${calc.metaPerc.toFixed(1)}%`;
+                    if (maxWeeklyDonation > 0 && (player.current - player.previous) === maxWeeklyDonation) {
+                        metaContent += ' <span title="Mayor donación de la semana">⭐</span>';
+                    }
+
+                    let deficitHtml = '';
+                    if (deficitDraw > 0) {
+                        deficitHtml = `<br/><span style="color: red;">(-${formatNumber(deficitDraw)})</span>`;
+                    }
+
+                    totalSemanal += calc.semanal;
+                    totalAcumulado += (player.total || 0);
+                    totalAcumuladoExceso += finalPotentialExcess;
+
+                    // Calculo de Color de Nivel de Acumulado (Tier Color)
+                    const oneWeekC = (goalDaily || 0) * 7;
+                    const oneMonthC = oneWeekC * 4;
+                    const acc = finalPotentialExcess;
+                    let tierColor = '#28a745'; // Default Green (Tier 1)
+                    let tierTitle = 'Nivel Verde: Eficiencia 100%';
+
+                    if (acc >= (oneMonthC * 5)) {
+                        tierColor = '#343a40'; // Black (Tier 4)
+                        tierTitle = 'Nivel Tope: Eficiencia 5%';
+                    } else if (acc >= (oneMonthC * 3)) {
+                        tierColor = '#dc3545'; // Red (Tier 3)
+                        tierTitle = 'Nivel Rojo: Eficiencia 10%';
+                    } else if (acc >= oneMonthC) {
+                        tierColor = '#ffc107'; // Yellow (Tier 2)
+                        tierTitle = 'Nivel Amarillo: Eficiencia 50%';
+                    }
+
+                    // Estilo para el triángulo discreto en la esquina superior izquierda
+                    const triangleMarker = `<div style="position: absolute; top: 0; left: 0; width: 0; height: 0; border-top: 8px solid ${tierColor}; border-right: 8px solid transparent;" title="${tierTitle}"></div>`;
+
+                    if (isEditMode && auth.currentUser) {
+                        const actionsHtml = `<td style="text-align: center; padding: 8px;">
+                        <button class="btn btn-edit" onclick="enableEditing('${name}')" title="Editar jugador">✏️</button>
+                    </td>`;
+                        row.innerHTML = `<td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}</td><td>${formatNumber(player.previous || 0)}</td><td>${formatNumber(player.current || 0)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(calc.semanal)}</td><td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td><td style="position: relative;" title="${tierTitle}">${triangleMarker}${formatNumber(finalPotentialExcess)}${deficitHtml}${formatExtraDonationTime(finalPotentialExcess / (goalDaily || 1))}</td><td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>${actionsHtml}`;
+                    } else {
+                        row.innerHTML = `<td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}</td><td>${formatNumber(player.previous || 0)}</td><td>${formatNumber(player.current || 0)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(calc.semanal)}</td><td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td><td style="position: relative;" title="${tierTitle}">${triangleMarker}${formatNumber(finalPotentialExcess)}${deficitHtml}${formatExtraDonationTime(finalPotentialExcess / (goalDaily || 1))}</td><td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>`;
+                    }
+
+                });
+
+                const avgSemanal = playersActive > 0 ? totalSemanal / playersActive : 0;
+                const colspan = isEditMode ? 9 : 8;
+
+                let footerContent = `📊 TOTALES (${playersActive} jugadores): ${formatNumber(totalSemanal)} donaciones semanales | Promedio: ${formatNumber(avgSemanal)} | Acumulado: ${formatNumber(totalAcumulado)}`;
+
+                tfoot.innerHTML = `<tr class="total-row"><td colspan="${colspan}">${footerContent}</td></tr>`;
+            } catch (error) {
+                console.error("Error crítico en renderTable:", error);
+            }
+
+
+        }
+
+
+
+        // --- FUNCIONES DE EDICIÓN INLINE (ADMIN) ---
+
+        let editingPlayer = null;
+        let isEditMode = false;
+
+        function toggleEditMode() {
+            if (!auth.currentUser) return showLogin();
+
+            isEditMode = !isEditMode;
+            const btn = document.getElementById('editModeBtn');
+
+            if (isEditMode) {
+                btn.classList.add('active');
+                btn.textContent = '✏️';
+                showStatus('✏️ Modo edición activado. Usa los botones ✏️ para editar jugadores.', 'success');
+            } else {
+                btn.classList.remove('active');
+                btn.textContent = '📝';
+                editingPlayer = null;
+                showStatus('❌ Modo edición desactivado', 'success');
+            }
+
+            renderTable();
+        }
+
+        // Referencia a Firestore (db es la variable global)
+
+        // --- LÓGICA DE TIEMPO Y SINCRONIZACIÓN ---
+
+        function updateTimeDisplays() {
+            if (!lastUpdate) return;
+            const date = new Date(lastUpdate);
+
+            // Formato para el Header: "Miércoles 13"
+            const optionsHeader = { weekday: 'long', day: 'numeric' };
+            let headerText = date.toLocaleDateString('es-ES', optionsHeader);
+            // Capitalizar la primera letra
+            headerText = headerText.charAt(0).toUpperCase() + headerText.slice(1);
+
+            // Elemento del header
+            const headerEl = document.getElementById('headerLastUpdate');
+            if (headerEl) {
+                headerEl.textContent = `Última actualización: ${headerText}`;
+
+                // Indicador visual sutil si está muy desactualizado (> 24h)
+                const now = new Date();
+                const diffHours = (now - date) / (1000 * 60 * 60);
+                if (diffHours > 24) {
+                    headerEl.style.color = '#ffeba7'; // Amarillo suave
+                } else {
+                    headerEl.style.color = 'rgba(255, 255, 255, 0.9)';
+                }
+            }
+
+            // Actualizar footer
+            const lastUpdateEl = document.getElementById('lastUpdateTime');
+            const weekStartEl = document.getElementById('weekStartTime');
+            if (lastUpdateEl) lastUpdateEl.textContent = new Date(lastUpdate).toLocaleString('es-ES');
+            if (weekStartEl) weekStartEl.textContent = new Date(weekStart).toLocaleDateString('es-ES');
+        }
+
+        // --- SISTEMA SMART SYNC ---
+
+        // Variable para controlar si hay actualización de SW o Datos
+        let hasAppUpdate = false;
+        let hasDataUpdate = false;
+
+        function smartSyncAction() {
+            // Ahora simplemente abre el menú de opciones modernos
+            showSyncOptions();
+        }
+
+        // --- FUNCIONES DEL NUEVO MENÚ DE SINCRONIZACIÓN (MODAL) ---
+
+        function showSyncOptions() {
+            hideAllSections();
+            const modal = document.getElementById('syncOptionsModal');
+            const btnUpdate = document.getElementById('btnUpdateApp');
+
+            if (modal) {
+                // Mostrar botón de actualización solo si es necesario
+                if (hasAppUpdate && btnUpdate) {
+                    btnUpdate.style.display = 'flex';
+                } else if (btnUpdate) {
+                    btnUpdate.style.display = 'none';
+                }
+                modal.classList.add('active');
+            }
+        }
+
+        function hideSyncOptions() {
+            const modal = document.getElementById('syncOptionsModal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        function executeSync(action) {
+            hideSyncOptions();
+
+            switch (action) {
+                case 'UPDATE_APP':
+                    if (confirm('🚀 ¿Confirmas que quieres actualizar la App?')) {
+                        if (navigator.serviceWorker && navigator.serviceWorker.getRegistration()) {
+                            navigator.serviceWorker.getRegistration().then(reg => {
+                                if (reg && reg.waiting) {
+                                    reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                                    window.location.reload();
+                                } else {
+                                    window.location.reload();
+                                }
+                            });
+                        } else {
+                            window.location.reload();
+                        }
+                    }
+                    break;
+
+                case 'SYNC_DATA':
+                    showStatus('🔄 Buscando datos recientes...', 'success');
+                    forceSync();
+                    break;
+
+                case 'REPAIR':
+                    if (confirm('⚠️ ¿Seguro que quieres borrar la caché y recargar?')) {
+                        forceClearCache();
+                    }
+                    break;
+            }
+        }
+
+        function forceClearCache() {
+            showStatus('🧹 Limpiando caché y recargando...', 'success');
+            // Desregistrar Service Workers
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                    for (let registration of registrations) {
+                        registration.unregister();
+                    }
+                    // Borrar cachés
+                    if ('caches' in window) {
+                        caches.keys().then(function (names) {
+                            for (let name of names) {
+                                caches.delete(name);
+                            }
+                            window.location.reload(true);
+                        });
+                    } else {
+                        window.location.reload(true);
+                    }
+                });
+            } else {
+                window.location.reload(true);
+            }
+        }
+
+        function toggleSmartSyncIndicator(show) {
+            const btn = document.getElementById('smartSyncBtn');
+            if (btn) {
+                if (show) btn.classList.add('has-update');
+                else btn.classList.remove('has-update');
+            }
+        }
+
+        // Modificar forceSync original para que apague el indicador si tiene éxito
+        const originalForceSync = forceSync;
+        forceSync = async function () {
+            try {
+                await loadData();
+                hasDataUpdate = false;
+                toggleSmartSyncIndicator(hasAppUpdate);
+            } catch (error) {
+                console.error('Error en sync:', error);
+            }
+        };
+
+        // Escuchar cambios en Firestore para activar el punto rojo
+        if (firestoreDB) {
+            firestoreDB.collection("config").doc("global").onSnapshot((doc) => {
+                if (doc.exists && doc.data()) {
+                    const data = doc.data();
+                    const cloudTime = data.lastUpdate;
+                    if (cloudTime && lastUpdate && cloudTime > lastUpdate + 1000) {
+                        console.log('🔔 Dato nuevo detectado en nube');
+                        hasDataUpdate = true;
+                        toggleSmartSyncIndicator(true);
+                        showStatus('🔔 Nuevos datos disponibles', 'success');
+                    }
+                }
+            }, (error) => {
+                console.error('Error en listener de Firestore:', error);
+            });
+        }
+
+        // --- FIN SISTEMA SMART SYNC ---
+
+        // Función original modificada para llamar a updateTimeDisplays
+
+
+        function updateEditModeButton() {
+            const btn = document.getElementById('editModeBtn');
+            if (!btn) return;
+
+            if (auth.currentUser) {
+                btn.style.display = 'flex';
+            } else {
+                btn.style.display = 'none';
+                isEditMode = false;
+                btn.classList.remove('active');
+                btn.textContent = '📝';
+            }
+        }
+
+        function enableEditing(playerName) {
+            if (!auth.currentUser) return showLogin();
+
+            isEditMode = false;
+            const btn = document.getElementById('editModeBtn');
+            if (btn) {
+                btn.classList.remove('active');
+                btn.textContent = '📝';
+            }
+
+            editingPlayer = playerName;
+            renderTable();
+            showStatus('✏️ Editando jugador: ' + playerName, 'processing');
+        }
+        function cancelEditing() {
+            editingPlayer = null;
+            renderTable();
+            showStatus('❌ Edición cancelada', 'success');
+        }
+
+        function saveEditing() {
+            if (!editingPlayer || !auth.currentUser) return;
+
+            const newNameInput = document.getElementById(`edit-name-${editingPlayer}`);
+            const newPrevInput = document.getElementById(`edit-previous-${editingPlayer}`);
+            const newCurrInput = document.getElementById(`edit-current-${editingPlayer}`);
+            const newAccInput = document.getElementById(`edit-accumulated-${editingPlayer}`);
+
+            if (!newNameInput || !newPrevInput || !newCurrInput) {
+                showStatus('❌ Error: No se encontraron campos de edición', 'error');
+                return;
+            }
+
+            const newName = newNameInput.value.trim();
+            const newPrev = parseInt(newPrevInput.value);
+            const newCurr = parseInt(newCurrInput.value);
+            const newAcc = newAccInput ? parseInt(newAccInput.value) : (players[editingPlayer].accumulatedExcess || 0);
+
+            if (!newName) {
+                showStatus('❌ El nombre no puede estar vacío', 'error');
+                return;
+            }
+
+            if (isNaN(newPrev) || newPrev < 0) {
+                showStatus('❌ "Tenía" debe ser un número válido (>= 0)', 'error');
+                return;
+            }
+
+            if (isNaN(newCurr) || newCurr < 0) {
+                showStatus('❌ "Tiene" debe ser un número válido (>= 0)', 'error');
+                return;
+            }
+
+            if (newName !== editingPlayer && players[newName]) {
+                showStatus('❌ Ya existe un jugador con ese nombre', 'error');
+                return;
+            }
+
+            if (newName !== editingPlayer) {
+                players[newName] = { ...players[editingPlayer] };
+                delete players[editingPlayer];
+                editingPlayer = newName;
+            }
+
+            players[editingPlayer].previous = newPrev;
+            players[editingPlayer].current = newCurr;
+            players[editingPlayer].accumulatedExcess = newAcc;
+
+            editingPlayer = null;
+            showUnsavedIndicator();
+            renderTable();
+            showStatus('✅ Cambios guardados. Recuerda pulsar "✓" para guardar en Firebase', 'success');
+        }
+
+        // --- FUNCIONES DE ACTUALIZACIÓN DE DATOS (ADMIN) ---
+
+        // Función updatePlayers obsoleta eliminada (estaba duplicada)
+
+
+        async function startNewWeek() {
+            if (!auth.currentUser) return;
+
+            const weeklyGoal = goalDaily * 7;
+            const updates = {};
+
+            // ELIMINAR todos los baneados de semana anterior al iniciar nueva semana
+            const bannedPlayers = Object.keys(players).filter(name => players[name].absent);
+            bannedPlayers.forEach(name => delete players[name]);
+            if (bannedPlayers.length > 0) {
+                showStatus(`🗑️ ${bannedPlayers.length} baneados eliminados del sistema.`, 'info');
+            }
+
+            Object.keys(players).forEach(name => {
+                const player = players[name];
+
+                // Si está baneado, no hacemos nada (ya fueron eliminados arriba)
+                if (player.absent) return;
+
+                // LÓGICA CRÍTICA: JUGADORES NUEVOS (Modo Referencia)
+                if (player.isNew) {
+                    // Simplemente "oficializamos" su entrada.
+                    // Su 'current' se convierte en el 'previous' de la semana siguiente.
+                    // NO calculamos deuda ni exceso esta vez.
+                    player.previous = player.current || 0;
+                    player.isNew = false; // Ya no es nuevo para la próxima
+                } else {
+                    // LÓGICA ESTÁNDAR (Jugadores Activos)
+                    const previous = player.previous || 0;
+                    const current = player.current || 0;
+                    const weeklyDonation = current - previous;
+
+                    // Calcular Exceso o Déficit
+                    if (weeklyDonation >= weeklyGoal) {
+                        // Superávit: Se suma al acumulado
+                        const surplus = weeklyDonation - weeklyGoal;
+                        player.accumulatedExcess = (player.accumulatedExcess || 0) + surplus;
+                    } else {
+                        // Déficit: Se descuenta del acumulado
+                        const deficit = weeklyGoal - weeklyDonation;
+                        const availableExcess = Math.max(0, player.accumulatedExcess || 0);
+                        const amountToDeduct = Math.min(deficit, availableExcess);
+
+                        // Restamos lo que se pudo cubrir
+                        player.accumulatedExcess = availableExcess - amountToDeduct;
+                        // Nota: El "déficit no cubierto" no se guarda como deuda negativa en este modelo lineal simple,
+                        // simplemente se queda en 0 acumulado y ya. (Según lógica Lineal v1)
+                    }
+
+                    // AVANZAR SEMANA: El 'current' actual es el 'previous' de la siguiente.
+                    player.previous = current;
+                }
+            });
+
+            weekStart = Date.now(); // Guardar timestamp real de inicio
+            showUnsavedIndicator();
+            renderTable();
+            showStatus('🔄 Nueva semana iniciada. Los "Nuevos" ahora son activos.', 'success');
+        }
+
+
+        function levenshteinDistance(str1, str2) {
+            const m = str1.length;
+            const n = str2.length;
+            const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+
+            for (let i = 0; i <= m; i++) dp[i][0] = i;
+            for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+            for (let i = 1; i <= m; i++) {
+                for (let j = 1; j <= n; j++) {
+                    if (str1[i - 1] === str2[j - 1]) {
+                        dp[i][j] = dp[i - 1][j - 1];
+                    } else {
+                        dp[i][j] = Math.min(
+                            dp[i - 1][j] + 1,
+                            dp[i][j - 1] + 1,
+                            dp[i - 1][j - 1] + 1
+                        );
+                    }
+                }
+            }
+
+            return dp[m][n];
+        }
+
+        function calculateSimilarity(str1, str2) {
+            const distance = levenshteinDistance(
+                str1.toLowerCase(),
+                str2.toLowerCase()
+            );
+            const maxLength = Math.max(str1.length, str2.length);
+            if (maxLength === 0) return 100;
+            return Math.round(((maxLength - distance) / maxLength) * 100);
+        }
+
+        function findSimilarNames(newName, existingNames, threshold = 70) {
+            const similar = [];
+            const newNameLower = newName.toLowerCase().trim();
+
+            existingNames.forEach(existingName => {
+                const similarity = calculateSimilarity(newName, existingName);
+                if (similarity >= threshold) {
+                    similar.push({
+                        name: existingName,
+                        similarity: similarity
+                    });
+                }
+            });
+
+            return similar.sort((a, b) => b.similarity - a.similarity);
+        }
+
+        let nameMapping = {};
+        let currentDataForReview = {};
+
+        function checkSimilarity() {
+            const text = document.getElementById('manualInput').value.trim();
+            if (!text) {
+                showStatus('❌ Por favor ingresa algunos datos primero', 'error');
+                return;
+            }
+
+            const currentData = {};
+            const lines = text.split('\n');
+            let processedCount = 0;
+            let hasError = false;
+
+            lines.forEach((line, index) => {
+                line = line.trim();
+                if (!line) return;
+                const parts = line.split(',');
+                if (parts.length !== 2) {
+                    showStatus(`❌ Error en línea ${index + 1}: formato incorrecto.`, 'error');
+                    hasError = true;
+                    return;
+                }
+                const name = parts[0].trim();
+                const num = parseInt(parts[1].trim());
+                if (!name || isNaN(num) || num < 0) {
+                    showStatus(`❌ Error en línea ${index + 1}: datos inválidos.`, 'error');
+                    hasError = true;
+                    return;
+                }
+                currentData[name] = num;
+                processedCount++;
+            });
+
+            if (hasError) return;
+
+            if (processedCount === 0) {
+                showStatus('❌ No hay datos válidos para procesar', 'error');
+                return;
+            }
+
+            const existingNames = Object.keys(players);
+            const newNames = Object.keys(currentData).filter(name => !existingNames.includes(name));
+
+            if (newNames.length === 0) {
+                showStatus('✅ Todos los nombres coinciden con usuarios existentes. Puedes proceder con "Iniciar Semana".', 'success');
+                return;
+            }
+
+            reviewNames(currentData);
+        }
+
+        function reviewNames(currentData) {
+            const existingNames = Object.keys(players);
+            const newNames = Object.keys(currentData);
+
+            nameMapping = {};
+            currentDataForReview = { ...currentData };
+
+            const reviewItemsList = document.getElementById('reviewItemsList');
+            reviewItemsList.innerHTML = '';
+
+            const reviewItems = [];
+
+            newNames.forEach(newName => {
+                const similarNames = findSimilarNames(newName, existingNames);
+
+                const item = {
+                    newName: newName,
+                    donation: currentData[newName],
+                    similarNames: similarNames,
+                    selected: false,
+                    actionType: null
+                };
+
+                if (similarNames.length > 0) {
+                    const bestMatch = similarNames[0];
+                    nameMapping[newName] = bestMatch.name;
+                    item.selected = true;
+                    item.actionType = 'assigned';
+                    item.assignedTo = bestMatch.name;
+                } else {
+                    nameMapping[newName] = null;
+                    item.selected = true;
+                    item.actionType = 'new';
+                }
+
+                reviewItems.push(item);
+            });
+
+            reviewItems.sort((a, b) => {
+                const aHasSim = a.similarNames.length > 0;
+                const bHasSim = b.similarNames.length > 0;
+
+                if (aHasSim && bHasSim) {
+                    const aHasPerfect = a.similarNames.some(s => s.similarity === 100);
+                    const bHasPerfect = b.similarNames.some(s => s.similarity === 100);
+
+                    if (!aHasPerfect && bHasPerfect) return -1;
+                    if (aHasPerfect && !bHasPerfect) return 1;
+                    return b.similarNames[0].similarity - a.similarNames[0].similarity;
+                }
+                if (aHasSim && !bHasSim) return -1;
+                if (!aHasSim && bHasSim) return 1;
+
+                return a.newName.localeCompare(b.newName);
+            });
+
+            reviewItems.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'review-item';
+                itemDiv.dataset.newName = item.newName;
+                itemDiv.dataset.index = index;
+
+                if (item.selected) {
+                    itemDiv.classList.add('selected');
+                }
+
+                if (item.similarNames.length > 0) {
+                    const hasPerfect = item.similarNames.some(s => s.similarity === 100);
+                    itemDiv.classList.add(hasPerfect ? 'identical' : 'matched');
+                } else {
+                    itemDiv.classList.add('new');
+                }
+
+                let existingHtml = '<div class="review-name-section"><input type="text" class="review-name-input" style="background: #e7f3ff; border-color: #007bff;" value="-" onchange="updateExistingName(${index}, this.value)" placeholder="Existente" /></div>';
+
+                if (item.similarNames.length > 0) {
+                    const bestMatch = item.similarNames[0];
+                    const isPerfect = bestMatch.similarity === 100;
+                    existingHtml = `
+                        <div class="review-name-section">
+                            <input type="text" class="review-name-input" style="background: #e7f3ff; border-color: #007bff;" value="${bestMatch.name}" onchange="updateExistingName(${index}, this.value)" />
+                            <span class="review-similarity ${isPerfect ? 'similarity-perfect' : 'similarity-medium'}">${bestMatch.similarity}%</span>
+                        </div>
+                    `;
+                }
+
+                let actionsHtml = '';
+                if (item.selected && item.actionType === 'new') {
+                    actionsHtml = `
+                        <button class="btn-create-new" disabled>✓ Nuevo</button>
+                    `;
+                } else if (item.selected && item.actionType === 'assigned') {
+                    actionsHtml = `
+                        <button class="btn-assign" disabled>✓ Existente</button>
+                        <button class="btn-create-new" onclick="markAsNew(${index})" data-index="${index}">
+                            Nuevo
+                        </button>
+                    `;
+                    item.similarNames.slice(1).forEach((similar, simIndex) => {
+                        const adjustedIndex = simIndex + 1;
+                        const isPerfect = similar.similarity === 100;
+                        actionsHtml += `
+                            <button class="btn-assign" onclick="assignUser(${index}, ${adjustedIndex})" data-index="${index}" data-sim-index="${adjustedIndex}">
+                                Existente
+                            </button>
+                        `;
+                    });
+                } else if (item.similarNames.length > 0) {
+                    item.similarNames.forEach((similar, simIndex) => {
+                        const isPerfect = similar.similarity === 100;
+                        actionsHtml += `
+                            <button class="btn-assign" onclick="assignUser(${index}, ${simIndex})" data-index="${index}" data-sim-index="${simIndex}">
+                                Existente
+                            </button>
+                        `;
+                    });
+                } else {
+                    actionsHtml = `
+                        <button class="btn-create-new" onclick="markAsNew(${index})" data-index="${index}">
+                            Nuevo
+                        </button>
+                    `;
+                }
+
+                itemDiv.innerHTML = `
+                    <div class="review-row">
+                        ${existingHtml}
+                        <div class="review-name-section">
+                            <input type="text" class="review-name-input" style="background: #fffdf5; border-color: #ffc107;" value="${item.newName}" onchange="updateNewName(${index}, this.value)" />
+                            <div class="review-donation">${formatNumber(item.donation)}</div>
+                        </div>
+                        <div class="review-actions">
+                            ${actionsHtml}
+                        </div>
+                    </div>
+                `;
+
+                reviewItemsList.appendChild(itemDiv);
+            });
+
+            updateReviewSummary();
+
+            hideAllSections();
+            document.getElementById('reviewSection').classList.add('active');
+        }
+
+        function updateReviewSummary() {
+            const newNames = Object.keys(currentDataForReview);
+            const totalNames = newNames.length;
+            const mappedNames = Object.keys(nameMapping).filter(name => nameMapping[name] !== null).length;
+            const newUsersCount = Object.keys(nameMapping).filter(name => nameMapping[name] === null).length;
+            const pendingCount = totalNames - mappedNames - newUsersCount;
+
+            const summaryEl = document.getElementById('reviewSummary');
+            summaryEl.innerHTML = `
+                <strong>Resumen:</strong>
+                ${totalNames} nombres totales |
+                ${mappedNames} asignados a usuarios existentes |
+                ${newUsersCount} nuevos usuarios |
+                ${pendingCount} pendientes de revisión
+            `;
+        }
+
+        function assignUser(itemIndex, simIndex) {
+            const itemDiv = document.querySelector(`[data-index="${itemIndex}"]`);
+            if (!itemDiv) return;
+
+            const newName = itemDiv.dataset.newName;
+            const existingInput = itemDiv.querySelector('.review-name-input');
+            const existingName = existingInput ? existingInput.value : newName;
+
+            nameMapping[newName] = existingName;
+            itemDiv.dataset.assignedTo = existingName;
+
+            itemDiv.classList.add('selected');
+            itemDiv.classList.remove('matched', 'identical', 'new');
+
+            const actionsSection = itemDiv.querySelector('.review-actions');
+            let actionsHtml = '';
+            actionsHtml += `
+                <button class="btn-assign" disabled>✓ Existente</button>
+                <button class="btn-create-new" onclick="markAsNew(${itemIndex})" data-index="${itemIndex}">
+                    Nuevo
+                </button>
+            `;
+            actionsSection.innerHTML = actionsHtml;
+
+            updateReviewSummary();
+        }
+
+        function markAsNew(itemIndex) {
+            const itemDiv = document.querySelector(`[data-index="${itemIndex}"]`);
+            if (!itemDiv) return;
+
+            const newName = itemDiv.dataset.newName;
+            nameMapping[newName] = null;
+
+            itemDiv.classList.add('selected');
+            itemDiv.classList.remove('matched', 'identical');
+            itemDiv.classList.add('new');
+
+            const actionsSection = itemDiv.querySelector('.review-actions');
+            const actionsHtml = `
+                <button class="btn-create-new" disabled>✓ Nuevo</button>
+            `;
+            actionsSection.innerHTML = actionsHtml;
+
+            updateReviewSummary();
+        }
+
+        function updateExistingName(itemIndex, newName) {
+            const itemDiv = document.querySelector(`[data-index="${itemIndex}"]`);
+            if (!itemDiv) return;
+
+            const oldNewName = itemDiv.dataset.newName;
+            nameMapping[oldNewName] = newName;
+            itemDiv.dataset.assignedTo = newName;
+            updateReviewSummary();
+        }
+
+        function updateNewName(itemIndex, newName) {
+            const itemDiv = document.querySelector(`[data-index="${itemIndex}"]`);
+            if (!itemDiv) return;
+
+            const oldName = itemDiv.dataset.newName;
+            itemDiv.dataset.newName = newName;
+
+            const donation = currentDataForReview[oldName];
+            delete currentDataForReview[oldName];
+            currentDataForReview[newName] = donation;
+
+            if (nameMapping.hasOwnProperty(oldName)) {
+                nameMapping[newName] = nameMapping[oldName];
+                delete nameMapping[oldName];
+            }
+            updateReviewSummary();
+        }
+
+        function hideReview() {
+            document.getElementById('reviewSection').classList.remove('active');
+            nameMapping = {};
+            currentDataForReview = {};
+        }
+
+        async function confirmNameMapping() {
+            console.log('--- Iniciando confirmNameMapping ---');
+            try {
+                const newNames = Object.keys(currentDataForReview);
+                console.log('Nombres a procesar:', newNames.length);
+
+                const pendingCount = newNames.filter(name => !nameMapping.hasOwnProperty(name)).length;
+
+                if (pendingCount > 0) {
+                    if (!confirm(`Aún hay ${pendingCount} nombres pendientes de revisión. ¿Deseas procesarlos como nuevos usuarios?`)) {
+                        console.log('Usuario canceló confirmación de pendientes');
+                        return;
+                    }
+
+                    newNames.forEach(name => {
+                        if (!nameMapping.hasOwnProperty(name)) {
+                            nameMapping[name] = null;
+                        }
+                    });
+                }
+
+                const mappedData = {};
+                Object.keys(currentDataForReview).forEach(newName => {
+                    const targetName = nameMapping[newName];
+                    const finalName = targetName || newName;
+                    mappedData[finalName] = currentDataForReview[newName];
+                });
+
+                console.log('Datos mapeados:', Object.keys(mappedData).length);
+
+                hideReview();
+
+                console.log('Aplicando cambios de mapeo...');
+
+                // Aplicar cambios directamente al estado local
+                Object.keys(mappedData).forEach(name => {
+                    const donationValue = mappedData[name];
+
+                    if (!players[name]) {
+                        // Es un jugador totalmente nuevo
+                        players[name] = {
+                            previous: 0,
+                            current: donationValue,
+                            accumulatedExcess: 0,
+                            total: 0,
+                            isNew: true, // Marcar como nuevo para la lógica de referencia
+                            absent: false
+                        };
+                    } else {
+                        // Es un jugador existente, actualizamos su donación actual
+                        players[name].current = donationValue;
+                        players[name].isNew = false; // Asegurar que no sea tratado como nuevo si ya existía
+                        players[name].absent = false;
+                    }
+                });
+
+                // DETECCIÓN DE JUGADORES AUSENTES (BANEADOS)
+                // Si el usuario pega una lista completa, los que faltan deberían ser baneados/ausentes.
+                const allCurrentNames = Object.keys(players);
+                // mappedData tiene las claves finales (nombres reales)
+                const updatedNames = Object.keys(mappedData);
+
+                // Buscar jugadores que existen, NO están en la lista nueva y NO estaban ya baneados
+                const missing = allCurrentNames.filter(name => !updatedNames.includes(name) && !players[name].absent);
+
+                // Baneo automático sin preguntar
+                if (missing.length > 0) {
+                    missing.forEach(name => {
+                        players[name].absent = true;
+                        players[name].current = 0; // Resetear donación actual al ser baneado
+                    });
+                    showStatus(`🚫 ${missing.length} jugadores marcados como baneados.`, 'warning');
+                }
+
+                showUnsavedIndicator();
+                renderTable();
+                showStatus(`✅ ${Object.keys(mappedData).length} registros procesados correctamente.`, 'success');
+                console.log('Mapeo finalizado y tabla renderizada.');
+
+                hideManual();
+                showStatus('✅ Datos importados localmente. Recuerda usar el botón ✓ para guardar en la nube o iniciar semana.', 'success');
+            } catch (error) {
+                console.error('CRITICAL ERROR in confirmNameMapping:', error);
+                alert('Error crítico al importar: ' + error.message);
+                showStatus('❌ Error crítico: ' + error.message, 'error');
+            }
+        }
+
+        async function processManual() {
+            if (!auth.currentUser) {
+                showStatus('❌ Debes iniciar sesión como admin.', 'error');
+                return;
+            }
+            const text = document.getElementById('manualInput').value.trim();
+            if (!text) {
+                showStatus('❌ Por favor ingresa algunos datos', 'error');
+                return;
+            }
+
+            // ELIMINADO: Confirmación de nueva semana y llamada a startNewWeek
+            // Ahora solo procesamos el texto y lo mandamos a revisar.
+
+            const currentData = {};
+            const lines = text.split('\n');
+            let processedCount = 0;
+
+            lines.forEach((line, index) => {
+                line = line.trim();
+                if (!line) return;
+                const parts = line.split(',');
+                if (parts.length !== 2) return; // Ignorar líneas malformadas silenciosamente o loggear (?)
+                // Mantengamos validación simple
+                const name = parts[0].trim();
+                const num = parseInt(parts[1].trim());
+                if (!name || isNaN(num) || num < 0) return;
+                currentData[name] = num;
+                processedCount++;
+            });
+
+            if (processedCount > 0) {
+                reviewNames(currentData);
+                showReview();
+                showStatus(`🔍 Revisando ${processedCount} registros...`, 'info');
+            } else {
+                showStatus('❌ No se encontraron datos válidos en el texto.', 'error');
+            }
+        }
+
+        function saveGoal() {
+            if (!auth.currentUser) {
+                showStatus('❌ Debes iniciar sesión como admin.', 'error');
+                return;
+            }
+            const newGoal = parseInt(document.getElementById('newGoal').value);
+            if (isNaN(newGoal) || newGoal < 1000 || newGoal > 100000) {
+                showStatus('❌ Meta debe estar entre 1,000 y 100,000', 'error');
+                return;
+            }
+
+            goalDaily = newGoal;
+            showUnsavedIndicator();
+            renderTable();
+            hideConfig();
+            showStatus('✅ Meta actualizada correctamente (recuerda guardar en Firebase)', 'success');
+        }
+
+        function generateSnapshot() {
+            const dateObj = new Date();
+            const dias = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+            const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+            const diaSemana = dias[dateObj.getDay()];
+            const dia = dateObj.getDate();
+            const mes = meses[dateObj.getMonth()];
+            const anio = dateObj.getFullYear();
+            const hora = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            const fechaLegible = `${diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1)} ${dia} de ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${anio}, ${hora}`;
+            const weeklyGoal = goalDaily * 7;
+
+            const snapshot = {
+                meta: {
+                    version_backup: "2.0",
+                    timestamp: Date.now(),
+                    fecha_legible: fechaLegible,
+                    checksum: null
+                },
+                configuracion_global: {
+                    meta_diaria: goalDaily,
+                    inicio_semana_timestamp: weekStart || null,
+                    ultimo_update_timestamp: lastUpdate || null
+                },
+                jugadores: {}
+            };
+
+            Object.keys(players).forEach(name => {
+                const player = players[name];
+                const semanal = (player.current || 0) - (player.previous || 0);
+                const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
+                const availableExcess = Math.max(0, player.accumulatedExcess || 0);
+                const deficitDraw = Math.min(weeklyDeficit, availableExcess);
+                const weeklyExcess = Math.max(0, semanal - weeklyGoal);
+                const acumuladoFinal = availableExcess - deficitDraw + weeklyExcess;
+
+                let eficiencia = 1.0;
+                if (semanal < weeklyGoal && weeklyGoal > 0) {
+                    eficiencia = Math.max(0, semanal / weeklyGoal);
+                    if (deficitDraw > 0) eficiencia = (semanal + deficitDraw) / weeklyGoal;
+                } else if (semanal >= weeklyGoal) {
+                    eficiencia = 1.0;
+                }
+
+                let tierColor = '#28a745';
+                const metaPct = weeklyGoal > 0 ? (semanal / weeklyGoal) * 100 : 0;
+                if (metaPct < 70) tierColor = '#dc3545';
+                else if (metaPct < 90) tierColor = '#ffc107';
+
+                snapshot.jugadores[name] = {
+                    datos_core: {
+                        previous: player.previous || 0,
+                        current: player.current || 0,
+                        accumulated_base: player.accumulatedExcess || 0
+                    },
+                    estado_calculado: {
+                        semanal: semanal,
+                        deficit_cubierto: deficitDraw,
+                        exceso_semanal: weeklyExcess,
+                        acumulado_final: acumuladoFinal,
+                        eficiencia_aplicada: Math.round(eficiencia * 100) / 100,
+                        tier_color: tierColor
+                    },
+                    flags: {
+                        is_new: player.isNew || false,
+                        is_absent: player.absent || false
+                    },
+                    total_historico: player.total || 0
+                };
+            });
+
+            snapshot.meta.checksum = simpleHash(JSON.stringify(snapshot));
+            return snapshot;
+        }
+
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return 'sha256-' + Math.abs(hash).toString(16);
+        }
+
+        function validateSnapshot(snapshot) {
+            const errors = [];
+
+            if (!snapshot.meta || snapshot.meta.version_backup !== "2.0") {
+                errors.push("Versión de backup no válida (esperado 2.0)");
+            }
+
+            if (!snapshot.configuracion_global) {
+                errors.push("Falta configuración_global");
+            }
+
+            if (!snapshot.jugadores || typeof snapshot.jugadores !== 'object') {
+                errors.push("Estructura de jugadores inválida");
+            }
+
+            const weeklyGoal = snapshot.configuracion_global.meta_diaria * 7;
+
+            Object.keys(snapshot.jugadores || {}).forEach(name => {
+                const player = snapshot.jugadores[name];
+
+                if (typeof player.datos_core !== 'object') {
+                    errors.push(`Jugador ${name}: falta datos_core`);
+                    return;
+                }
+
+                const dc = player.datos_core;
+                const ec = player.estado_calculado || {};
+
+                const semanalCalculada = (dc.current || 0) - (dc.previous || 0);
+                if (ec.semanal !== semanalCalculada) {
+                    errors.push(`Jugador ${name}: semanal no coincide (esperado ${semanalCalculada}, encontrado ${ec.semanal})`);
+                }
+
+                const weeklyDeficit = Math.max(0, weeklyGoal - semanalCalculada);
+                const availableExcess = Math.max(0, dc.accumulated_base || 0);
+                const expectedDeficitDraw = Math.min(weeklyDeficit, availableExcess);
+
+                if (ec.deficit_cubierto !== expectedDeficitDraw) {
+                    errors.push(`Jugador ${name}: deficit_cubierto no coincide (esperado ${expectedDeficitDraw}, encontrado ${ec.deficit_cubierto})`);
+                }
+            });
+
+            return {
+                valid: errors.length === 0,
+                errors: errors
+            };
+        }
+
+        function backupData() {
+            if (!auth.currentUser) {
+                showStatus('❌ Debes iniciar sesión como admin.', 'error');
+                return;
+            }
+
+            const snapshot = generateSnapshot();
+            const validation = validateSnapshot(snapshot);
+
+            if (!validation.valid) {
+                console.warn('Validación del snapshot falló:', validation.errors);
+                if (!confirm('⚠️ La validación del backup detecto inconsistencias.\n¿Deseas continuar de todas formas?')) {
+                    return;
+                }
+            }
+
+            const jsonString = JSON.stringify(snapshot, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const dateObj = new Date();
+            const mes = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][dateObj.getMonth()];
+            const fileName = `backup_lineal_v2_${dateObj.getFullYear()}-${mes}-${dateObj.getDate()}_${dateObj.getHours()}${dateObj.getMinutes()}.json`;
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showStatus(`✅ Backup JSON v2.0 descargado (${Object.keys(snapshot.jugadores).length} jugadores).`, 'success');
+        }
+
+        function restoreBackup(event) {
+            if (!auth.currentUser) {
+                showStatus('❌ Debes iniciar sesión como admin.', 'error');
+                return;
+            }
+
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const content = e.target.result;
+
+                // INTENTO 1: JSON v2.0 (NUEVO FORMATO)
+                try {
+                    const backupState = JSON.parse(content);
+                    if (backupState.meta && backupState.meta.version_backup === "2.0") {
+                        if (!confirm(`⚠️ Backup JSON v2.0 del:\n${backupState.meta.fecha_legible || 'desconocida'}\n\nJugadores: ${Object.keys(backupState.jugadores || {}).length}\n\nEsto SOBRESCRIBIRÁ todos los datos actuales.\n¿Continuar?`)) {
+                            event.target.value = '';
+                            return;
+                        }
+
+                        // Validar integridad
+                        const validation = validateSnapshot(backupState);
+                        if (!validation.valid) {
+                            console.warn('Validación fallida:', validation.errors);
+                            if (!confirm(`⚠️ Advertencias de integridad detectadas:\n${validation.errors.slice(0, 3).join('\n')}\n\n¿Continuar de todas formas?`)) {
+                                event.target.value = '';
+                                return;
+                            }
+                        }
+
+                        // Restaurar configuración global
+                        if (backupState.configuracion_global) {
+                            if (backupState.configuracion_global.meta_diaria) {
+                                goalDaily = backupState.configuracion_global.meta_diaria;
+                            }
+                            if (backupState.configuracion_global.inicio_semana_timestamp) {
+                                weekStart = backupState.configuracion_global.inicio_semana_timestamp;
+                            }
+                            if (backupState.configuracion_global.ultimo_update_timestamp) {
+                                lastUpdate = backupState.configuracion_global.ultimo_update_timestamp;
+                            }
+                        }
+
+                        // Restaurar jugadores
+                        const newPlayers = {};
+                        Object.keys(backupState.jugadores || {}).forEach(name => {
+                            const player = backupState.jugadores[name];
+                            const datosCore = player.datos_core || {};
+
+                            newPlayers[name] = {
+                                previous: datosCore.previous || 0,
+                                current: datosCore.current || 0,
+                                accumulatedExcess: datosCore.accumulated_base || 0,
+                                total: player.total_historico || 0,
+                                isNew: player.flags?.is_new || false,
+                                absent: player.flags?.is_absent || false
+                            };
+                        });
+
+                        players = newPlayers;
+                        showUnsavedIndicator();
+                        renderTable();
+                        showStatus(`✅ Restauración JSON v2.0 exitosa: ${Object.keys(players).length} jugadores.`, 'success');
+                        event.target.value = '';
+                        return;
+                    }
+                } catch (err) {
+                    console.log('No es JSON v2.0, intentando formato legacy...');
+                }
+
+                // INTENTO 2: JSON antiguo (compatibilidad legacy)
+                try {
+                    const backupState = JSON.parse(content);
+                    if (backupState.players && backupState.globalConfig) {
+                        if (!confirm(`⚠️ Backup JSON antiguo del ${backupState.dateString || 'desconocida'}.\nEsto sobrescribirá TODOS los datos actuales.\n¿Continuar?`)) {
+                            event.target.value = '';
+                            return;
+                        }
+                        if (backupState.globalConfig.goalDaily) goalDaily = backupState.globalConfig.goalDaily;
+                        if (backupState.globalConfig.lastUpdate) lastUpdate = backupState.globalConfig.lastUpdate;
+                        if (backupState.globalConfig.weekStart) weekStart = backupState.globalConfig.weekStart;
+                        players = backupState.players;
+                        showUnsavedIndicator();
+                        renderTable();
+                        showStatus('✅ Restauración exitosa (Formato JSON antiguo).', 'success');
+                        event.target.value = '';
+                        return;
+                    }
+                } catch (err) {
+                    console.log('No es JSON legacy, intentando TXT...');
+                }
+
+                // INTENTO 3: Formato TXT literal (compatibilidad legacy)
+                const lines = content.split('\n');
+                if (lines.length < 5 || !content.includes('=== BACKUP DONACIONES INVENCIBLES ===')) {
+                    showStatus('❌ Archivo no reconocido o dañado.', 'error');
+                    event.target.value = '';
+                    return;
+                }
+
+                let fechaBackup = 'desconocida';
+                const fechaLine = lines.find(l => l.startsWith('Fecha:'));
+                if (fechaLine) fechaBackup = fechaLine.replace('Fecha:', '').trim();
+
+                if (!confirm(`⚠️ Backup TXT del:\n${fechaBackup}\n\nEsto SOBRESCRIBIRÁ todos los datos actuales.\n¿Continuar?`)) {
+                    event.target.value = '';
+                    return;
+                }
+
+                const newPlayers = {};
+                let currentSection = null;
+                let metaDiariaRestored = null;
+                let weekStartRestored = null;
+
+                const metaLine = lines.find(l => l.startsWith('Meta Diaria:'));
+                if (metaLine) {
+                    metaDiariaRestored = parseInt(metaLine.replace('Meta Diaria:', '').trim()) || null;
+                }
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+
+                    if (line === '--- ACTIVOS ---') {
+                        currentSection = 'activos';
+                        continue;
+                    } else if (line === '--- NUEVOS ---') {
+                        currentSection = 'nuevos';
+                        continue;
+                    } else if (line === '--- BANEADOS ---') {
+                        currentSection = 'baneados';
+                        continue;
+                    } else if (line.startsWith('=== RESUMEN ===') || line.startsWith('=== FIN BACKUP ===')) {
+                        currentSection = null;
+                        continue;
+                    }
+
+                    if (currentSection === 'activos') {
+                        if (line && !line.startsWith('Tenia:') && !line.startsWith('  ')) {
+                            let playerName = line;
+                            let deficitUsed = 0;
+                            const deficitMatch = line.match(/\(Deficit: -(\d+)\)/);
+                            if (deficitMatch) {
+                                deficitUsed = parseInt(deficitMatch[1]) || 0;
+                                playerName = line.replace(/\(Deficit: -\d+\)/, '').trim();
+                            }
+
+                            if (i + 1 < lines.length) {
+                                const dataLine = lines[i + 1].trim();
+                                if (dataLine.startsWith('Tenia:')) {
+                                    const parts = dataLine.split('|').map(p => p.trim());
+                                    const getData = (prefix) => {
+                                        const part = parts.find(p => p.startsWith(prefix));
+                                        if (!part) return 0;
+                                        const val = part.replace(prefix, '').replace('%', '').trim();
+                                        return parseFloat(val) || 0;
+                                    };
+
+                                    newPlayers[playerName] = {
+                                        previous: getData('Tenia:'),
+                                        current: getData('Tiene:'),
+                                        accumulatedExcess: getData('Acumulado:'),
+                                        total: getData('Total:'),
+                                        deficitUsed: deficitUsed,
+                                        absent: false,
+                                        isNew: false
+                                    };
+                                    i++;
+                                }
+                            }
+                        }
+                    } else if (currentSection === 'nuevos') {
+                        if (line.startsWith('[NUEVO]')) {
+                            const playerName = line.replace('[NUEVO]', '').trim();
+                            if (i + 1 < lines.length) {
+                                const dataLine = lines[i + 1].trim();
+                                if (dataLine.startsWith('Tiene:')) {
+                                    const current = parseInt(dataLine.replace('Tiene:', '').trim()) || 0;
+                                    newPlayers[playerName] = {
+                                        previous: 0,
+                                        current: current,
+                                        accumulatedExcess: 0,
+                                        total: 0,
+                                        deficitUsed: 0,
+                                        absent: false,
+                                        isNew: true
+                                    };
+                                    i++;
+                                }
+                            }
+                        }
+                    } else if (currentSection === 'baneados') {
+                        if (line.startsWith('[BANEADO]')) {
+                            const playerName = line.replace('[BANEADO]', '').trim();
+                            newPlayers[playerName] = {
+                                previous: 0,
+                                current: 0,
+                                accumulatedExcess: 0,
+                                total: 0,
+                                deficitUsed: 0,
+                                absent: true,
+                                isNew: false
+                            };
+                        }
+                    }
+                }
+
+                if (Object.keys(newPlayers).length === 0) {
+                    showStatus('❌ No se encontraron jugadores en el archivo.', 'error');
+                    event.target.value = '';
+                    return;
+                }
+
+                players = newPlayers;
+                if (metaDiariaRestored) goalDaily = metaDiariaRestored;
+
+                showUnsavedIndicator();
+                renderTable();
+                showStatus(`✅ Restauración exitosa: ${Object.keys(players).length} jugadores cargados.`, 'success');
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+
+
+        // --- FUNCIONES DE GUARDADO CENTRALIZADO ---
+
+        function showSaveOptions() {
+            if (!auth.currentUser) {
+                showStatus('❌ Debes iniciar sesión como admin.', 'error');
+                return;
+            }
+            hideAllSections(); // Asegurar que no haya solapamientos
+            document.getElementById('saveOptionsModal').classList.add('active');
+        }
+
+        function hideSaveOptions() {
+            document.getElementById('saveOptionsModal').classList.remove('active');
+        }
+
+        async function executeSave(mode) {
+            hideSaveOptions();
+
+            // Verificar si hay datos manuales pendientes (Vista Previa activa)
+            const manualText = document.getElementById('manualInput').value.trim();
+            let pendingDataProcessed = false;
+
+            if (manualText && mode === 'NEW_WEEK') {
+                if (confirm('📝 Hay datos manuales en la vista previa. ¿Quieres usarlos para cerrar la semana?\n(Si dices Cancelar, se ignorarán y se usará solo lo que ya estaba guardado)')) {
+                    // Procesar datos manuales rápidamente
+                    const lines = manualText.split('\n');
+                    const updates = {};
+                    let validLines = 0;
+
+                    lines.forEach(line => {
+                        const parts = line.split(',');
+                        if (parts.length === 2) {
+                            const name = parts[0].trim();
+                            const val = parseInt(parts[1].trim());
+                            if (name && !isNaN(val) && val >= 0) {
+                                updates[name] = val;
+                                validLines++;
+                            }
+                        }
+                    });
+
+                    if (validLines > 0) {
+                        // Aplicar actualizaciones a `players`
+                        updatePlayers(updates); // Reutilizamos la función existente que ya maneja la lógica correcta
+                        pendingDataProcessed = true;
+
+                        // Limpiar entrada manual
+                        document.getElementById('manualInput').value = '';
+                        renderTable(); // Refrescar para asegurar que la tabla base esté al día antes del cierre
+                    }
+                }
+            }
+
+            if (mode === 'NEW_WEEK') {
+                let msg = '⚠️ ¿Estás seguro de CERRAR la semana actual?';
+                if (pendingDataProcessed) msg += '\n(Se incluirán los datos manuales que acabas de confirmar)';
+                msg += '\n\nEsto calculará los acumulados finales, reiniciará los contadores a cero y guardará todo en Firebase.';
+
+                if (!confirm(msg)) {
+                    return;
+                }
+                await startNewWeek();
+                await saveData(); // Guardar los cambios post-cierre
+                document.getElementById('manualSection').classList.remove('active'); // Ocultar panel manual si estaba abierto
+
+                showStatus('✅ ¡Semana cerrada y nueva semana iniciada correctamente!', 'success');
+            } else {
+                // UPDATE
+                await saveData();
+                showStatus('✅ Datos guardados en Firebase correctamente (Semana actual continúa).', 'success');
+            }
+        }
+
+        function hidemanualWrapper() {
+            document.getElementById('manualInput').value = '';
+            renderTable();
+        }
+
+        // --- MANEJO DE LA INTERFAZ (MODALES, ETC.) ---
+
+        function hideAllSections() {
+            document.querySelectorAll('.section, .modal-overlay').forEach(section => {
+                section.classList.remove('active');
+            });
+        }
+
+        function showLogin() {
+            hideAllSections();
+            document.getElementById('loginSection').classList.add('active');
+        }
+
+        function hideLogin() {
+            document.getElementById('loginSection').classList.remove('active');
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPass').value = '';
+        }
+
+        function showManual() {
+            if (!auth.currentUser) return showLogin();
+            hideAllSections();
+            document.getElementById('manualSection').classList.add('active');
+            // Auto-focus para mejorar UX
+            setTimeout(() => {
+                const input = document.getElementById('manualInput');
+                if (input) input.focus();
+            }, 50);
+        }
+
+        function hideManual() {
+            document.getElementById('manualSection').classList.remove('active');
+            document.getElementById('manualInput').value = '';
+        }
+
+        function showReview() {
+            hideAllSections();
+            document.getElementById('reviewSection').classList.add('active');
+        }
+
+        function configGoal() {
+            if (!auth.currentUser) return showLogin();
+            hideAllSections();
+            document.getElementById('configSection').classList.add('active');
+            document.getElementById('newGoal').value = goalDaily;
+        }
+
+        function hideConfig() {
+            document.getElementById('configSection').classList.remove('active');
+        }
+
+        function showInfo() {
+            hideAllSections();
+            document.getElementById('infoModal').classList.add('active');
+        }
+
+        function hideInfo() {
+            document.getElementById('infoModal').classList.remove('active');
+        }
+
+        function showStatus(message, type = 'success') {
+            const statusDiv = document.getElementById('status');
+            if (!statusDiv) return;
+            statusDiv.textContent = message;
+            statusDiv.className = type;
+            statusDiv.style.display = 'block';
+
+            if (type === 'success') {
+                setTimeout(() => {
+                    if (statusDiv.textContent === message) {
+                        statusDiv.textContent = '';
+                        statusDiv.className = '';
+                        statusDiv.style.display = 'none';
+                    }
+                }, 5000);
+            }
+        }
+
+        // --- OTROS ---
+
+        // Service Worker con Workbox
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker-v130.js')
+                    .then(registration => {
+                        console.log('Service Worker registrado con Workbox:', registration);
+
+                        // Detectar nuevas versiones del Service Worker
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            console.log('Nueva versión de Service Worker detectada');
+
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    console.log('Nueva versión lista para activar.');
+                                    hasAppUpdate = true;
+                                    toggleSmartSyncIndicator(true);
+                                    showStatus('🚀 Nueva versión disponible. Toca 🔄 para actualizar.', 'success');
+                                }
+                            });
+                        });
+
+                        // Asegurar que el Service Worker tome control inmediatamente
+                        if (registration.waiting) {
+                            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error registrando Service Worker:', err);
+                    });
+            });
+
+            // Escuchar mensajes del Service Worker
+            navigator.serviceWorker.addEventListener('message', event => {
+                if (event.data && event.data.type === 'SKIP_WAITING') {
+                    console.log('Mensaje SKIP_WAITING recibido del Service Worker');
+                }
+            });
+        }
+
+        // Cargar preferencias guardadas
+        loadNotificationPreference();
+
+        // Listener para instalación de PWA
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('installBtn');
+            if (installBtn) {
+                installBtn.style.display = 'block';
+                installBtn.textContent = '📱 Instalar App';
+            }
+        });
+
+        window.addEventListener('appinstalled', () => {
+            console.log('App instalada correctamente');
+            deferredPrompt = null;
+            const installBtn = document.getElementById('installBtn');
+            if (installBtn) {
+                installBtn.style.display = 'none';
+            }
+            showStatus('✅ App instalada en tu dispositivo', 'success');
+        });
+
+        // Listener de doble tap eliminado por causar problemas con inputs
+    </script>
+
+
+    <!-- Firebase App (el núcleo) -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <!-- Firebase Authentication -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <!-- Firebase Firestore (la base de datos) -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+</body>
+
+</html>
