@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.3.7</title>
+    <title>Tracker Donaciones Pocket Ants v1.3.8</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1144,7 +1144,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v1.3.7</div>
+            <div class="version-tag">v1.3.8</div>
         </div>
 
         <!-- Botones de acción -->
@@ -2654,73 +2654,15 @@
         // Función updatePlayers obsoleta eliminada (estaba duplicada)
 
 
-        async function startNewWeek(presentNames = []) {
+        async function startNewWeek() {
             if (!auth.currentUser) return;
 
-            const weeklyGoal = goalDaily * 7;
-            const updates = {};
-            const presentSet = new Set(presentNames.map(n => n.toLowerCase()));
-
-            // MARCAR AUSENTES: Los que NO están en la lista nueva de datos
-            Object.keys(players).forEach(name => {
-                if (!presentSet.has(name.toLowerCase())) {
-                    players[name].absent = true;  // Marcar como baneado
-                }
-            });
-
-            Object.keys(players).forEach(name => {
-                const player = players[name];
-
-                // Si está baneado, solo mostrar (no calcular nada)
-                if (player.absent) return;
-
-                // LÓGICA CRÍTICA: JUGADORES NUEVOS (Modo Referencia)
-                if (player.isNew) {
-                    // Simplemente "oficializamos" su entrada.
-                    // Su 'current' se convierte en el 'previous' de la siguiente semana.
-                    // NO calculamos deuda ni exceso ni total esta vez.
-                    player.previous = player.current || 0;
-                    player.isNew = false; // Ya no es nuevo para la próxima
-                } else {
-                    // LÓGICA ESTÁNDAR (Jugadores Activos)
-                    const previous = player.previous || 0;
-                    const current = player.current || 0;
-                    const weeklyDonation = current - previous;
-
-                    // ACTUALIZAR TOTAL histórico
-                    player.total = (player.total || 0) + weeklyDonation;
-
-                    // Calcular Exceso o Déficit
-                    if (weeklyDonation >= weeklyGoal) {
-                        // Superávit: Se suma al acumulado
-                        const surplus = weeklyDonation - weeklyGoal;
-                        player.accumulatedExcess = (player.accumulatedExcess || 0) + surplus;
-                    } else {
-                        // Déficit: Se descuenta del acumulado
-                        const deficit = weeklyGoal - weeklyDonation;
-                        const availableExcess = Math.max(0, player.accumulatedExcess || 0);
-                        const amountToDeduct = Math.min(deficit, availableExcess);
-
-                        // Restamos lo que se pudo cubrir
-                        player.accumulatedExcess = availableExcess - amountToDeduct;
-                    }
-
-                    // AVANZAR SEMANA: El 'current' actual es el 'previous' de la siguiente.
-                    player.previous = current;
-                }
-            });
-
-            // ELIMINAR BANEADOS AL FINAL (ya se mostraron esta semana como "❌ Baneado")
-            const bannedPlayers = Object.keys(players).filter(name => players[name].absent);
-            bannedPlayers.forEach(name => delete players[name]);
-            if (bannedPlayers.length > 0) {
-                showStatus(`🗑️ ${bannedPlayers.length} baneados eliminados del sistema.`, 'info');
-            }
-
-            weekStart = Date.now(); // Guardar timestamp real de inicio
+            // NOTA: Los cálculos ya se hacen en "Importar a Tabla (Local)"
+            // Esta función solo inicia una nueva semana limpia
+            weekStart = Date.now();
             showUnsavedIndicator();
             renderTable();
-            showStatus('🔄 Nueva semana iniciada. Los "Nuevos" ahora son activos.', 'success');
+            showStatus('🔄 Nueva semana iniciada.', 'success');
         }
 
 
@@ -3107,42 +3049,64 @@
 
                 console.log('Aplicando cambios de mapeo...');
 
-                // Aplicar cambios directamente al estado local
+                // APLICAR CAMBIOS Y CALCULAR TODO (como inicio de semana)
+                const weeklyGoal = goalDaily * 7;
+
                 Object.keys(mappedData).forEach(name => {
                     const donationValue = mappedData[name];
 
                     if (!players[name]) {
-                        // Es un jugador totalmente nuevo
+                        // Es un jugador totally nuevo
                         players[name] = {
                             previous: 0,
                             current: donationValue,
                             accumulatedExcess: 0,
                             total: 0,
-                            isNew: true, // Marcar como nuevo para la lógica de referencia
+                            isNew: true,
                             absent: false
                         };
                     } else {
-                        // Es un jugador existente, actualizamos su donación actual
-                        players[name].current = donationValue;
-                        players[name].isNew = false; // Asegurar que no sea tratado como nuevo si ya existía
-                        players[name].absent = false;
+                        // Es un jugador existente - CALCULAR TODO
+                        const player = players[name];
+                        const previous = player.previous || 0;
+                        const current = donationValue;
+                        const weeklyDonation = current - previous;
+
+                        // ACTUALIZAR TOTAL histórico
+                        player.total = (player.total || 0) + weeklyDonation;
+
+                        // Calcular Exceso o Déficit
+                        if (weeklyDonation >= weeklyGoal) {
+                            // Superávit
+                            const surplus = weeklyDonation - weeklyGoal;
+                            player.accumulatedExcess = (player.accumulatedExcess || 0) + surplus;
+                        } else {
+                            // Déficit
+                            const deficit = weeklyGoal - weeklyDonation;
+                            const availableExcess = Math.max(0, player.accumulatedExcess || 0);
+                            const amountToDeduct = Math.min(deficit, availableExcess);
+                            player.accumulatedExcess = availableExcess - amountToDeduct;
+                        }
+
+                        // AVANZAR SEMANA
+                        player.previous = current;
+                        player.current = current;
+                        player.isNew = false;
+                        player.absent = false;
                     }
                 });
 
-                // DETECCIÓN DE JUGADORES AUSENTES (BANEADOS)
-                // Si el usuario pega una lista completa, los que faltan deberían ser baneados/ausentes.
+                // DETECCIÓN DE BANEADOS
                 const allCurrentNames = Object.keys(players);
-                // mappedData tiene las claves finales (nombres reales)
                 const updatedNames = Object.keys(mappedData);
 
-                // Buscar jugadores que existen, NO están en la lista nueva y NO estaban ya baneados
+                // Jugadores que NO están en la lista nueva → MARCAR BANEADOS
                 const missing = allCurrentNames.filter(name => !updatedNames.includes(name) && !players[name].absent);
 
-                // Baneo automático sin preguntar
                 if (missing.length > 0) {
                     missing.forEach(name => {
                         players[name].absent = true;
-                        players[name].current = 0; // Resetear donación actual al ser baneado
+                        players[name].current = 0;
                     });
                     showStatus(`🚫 ${missing.length} jugadores marcados como baneados.`, 'warning');
                 }
@@ -3634,74 +3598,22 @@
         async function executeSave(mode) {
             hideSaveOptions();
 
-            // Verificar si hay datos manuales pendientes (Vista Previa activa)
-            const manualText = document.getElementById('manualInput').value.trim();
-            let pendingDataProcessed = false;
-            let presentNames = [];  // Nombres presentes en la lista manual
-
-            // Extraer nombres del texto manual ANTES de procesar
-            if (manualText) {
-                const lines = manualText.split('\n');
-                lines.forEach(line => {
-                    const parts = line.split(',');
-                    if (parts.length >= 1) {
-                        const name = parts[0].trim();
-                        if (name) presentNames.push(name);
-                    }
-                });
-            }
-
-            if (manualText && mode === 'NEW_WEEK') {
-                if (confirm('📝 Hay datos manuales en la vista previa. ¿Quieres usarlos para cerrar la semana?\n(Si dices Cancelar, se ignorarán y se usará solo lo que ya estaba guardado)')) {
-                    // Procesar datos manuales rápidamente
-                    const lines = manualText.split('\n');
-                    const updates = {};
-                    let validLines = 0;
-
-                    lines.forEach(line => {
-                        const parts = line.split(',');
-                        if (parts.length === 2) {
-                            const name = parts[0].trim();
-                            const val = parseInt(parts[1].trim());
-                            if (name && !isNaN(val) && val >= 0) {
-                                updates[name] = val;
-                                validLines++;
-                            }
-                        }
-                    });
-
-                    if (validLines > 0) {
-                        // Aplicar actualizaciones a `players`
-                        updatePlayers(updates); // Reutilizamos la función existente que ya maneja la lógica correcta
-                        pendingDataProcessed = true;
-
-                        // Limpiar entrada manual
-                        document.getElementById('manualInput').value = '';
-                        renderTable(); // Refrescar para asegurar que la tabla base esté al día antes del cierre
-                    }
-                }
-            }
-
             if (mode === 'NEW_WEEK') {
-                let msg = '⚠️ ¿Estás seguro de CERRAR la semana actual?';
-                if (pendingDataProcessed) msg += '\n(Se incluirán los datos manuales que acabas de confirmar)';
-                msg += '\n\nEsto calculará los acumulados finales, reiniciará los contadores a cero y guardará todo en Firebase.';
-
-                if (!confirm(msg)) {
+                // Los cálculos ya se hicieron en "Importar a Tabla (Local)"
+                // Solo confirmamos y guardamos en Firebase
+                if (!confirm('⚠️ ¿Estás seguro de GUARDAR e INICIAR nueva semana?\n\nEsto subirá todos los cálculos (totales, acumulados, etc.) a Firebase.')) {
                     return;
                 }
                 
-                // Si hay datos manuales pendientes, usar esos nombres; si no, usar players actuales
-                const namesToUse = pendingDataProcessed ? presentNames : Object.keys(players);
-                await startNewWeek(namesToUse);
-                await saveData(); // Guardar los cambios post-cierre
-                document.getElementById('manualSection').classList.remove('active'); // Ocultar panel manual si estaba abierto
-
-                showStatus('✅ ¡Semana cerrada y nueva semana iniciada correctamente!', 'success');
-            } else {
-                // UPDATE
+                await startNewWeek();
                 await saveData();
-                showStatus('✅ Datos guardados en Firebase correctamente (Semana actual continúa).', 'success');
+                document.getElementById('manualSection').classList.remove('active');
+
+                showStatus('✅ ¡Semana guardada e iniciada correctamente!', 'success');
+            } else {
+                // UPDATE - Guardar cambios individuales
+                await saveData();
+                showStatus('✅ Datos guardados en Firebase correctamente.', 'success');
             }
         }
 
