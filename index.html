@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.3.6</title>
+    <title>Tracker Donaciones Pocket Ants v1.3.7</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1144,7 +1144,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v1.3.6</div>
+            <div class="version-tag">v1.3.7</div>
         </div>
 
         <!-- Botones de acción -->
@@ -2716,53 +2716,6 @@
             if (bannedPlayers.length > 0) {
                 showStatus(`🗑️ ${bannedPlayers.length} baneados eliminados del sistema.`, 'info');
             }
-
-            weekStart = Date.now(); // Guardar timestamp real de inicio
-            showUnsavedIndicator();
-            renderTable();
-            showStatus('🔄 Nueva semana iniciada. Los "Nuevos" ahora son activos.', 'success');
-        }
-
-            Object.keys(players).forEach(name => {
-                const player = players[name];
-
-                // Si está baneado, no hacemos nada (ya fueron eliminados arriba)
-                if (player.absent) return;
-
-                // LÓGICA CRÍTICA: JUGADORES NUEVOS (Modo Referencia)
-                if (player.isNew) {
-                    // Simplemente "oficializamos" su entrada.
-                    // Su 'current' se convierte en el 'previous' de la semana siguiente.
-                    // NO calculamos deuda ni exceso esta vez.
-                    player.previous = player.current || 0;
-                    player.isNew = false; // Ya no es nuevo para la próxima
-                } else {
-                    // LÓGICA ESTÁNDAR (Jugadores Activos)
-                    const previous = player.previous || 0;
-                    const current = player.current || 0;
-                    const weeklyDonation = current - previous;
-
-                    // Calcular Exceso o Déficit
-                    if (weeklyDonation >= weeklyGoal) {
-                        // Superávit: Se suma al acumulado
-                        const surplus = weeklyDonation - weeklyGoal;
-                        player.accumulatedExcess = (player.accumulatedExcess || 0) + surplus;
-                    } else {
-                        // Déficit: Se descuenta del acumulado
-                        const deficit = weeklyGoal - weeklyDonation;
-                        const availableExcess = Math.max(0, player.accumulatedExcess || 0);
-                        const amountToDeduct = Math.min(deficit, availableExcess);
-
-                        // Restamos lo que se pudo cubrir
-                        player.accumulatedExcess = availableExcess - amountToDeduct;
-                        // Nota: El "déficit no cubierto" no se guarda como deuda negativa en este modelo lineal simple,
-                        // simplemente se queda en 0 acumulado y ya. (Según lógica Lineal v1)
-                    }
-
-                    // AVANZAR SEMANA: El 'current' actual es el 'previous' de la siguiente.
-                    player.previous = current;
-                }
-            });
 
             weekStart = Date.now(); // Guardar timestamp real de inicio
             showUnsavedIndicator();
