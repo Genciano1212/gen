@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.3.8</title>
+    <title>Tracker Donaciones Pocket Ants v1.3.9</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1144,13 +1144,16 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v1.3.8</div>
+            <div class="version-tag">v1.3.9</div>
         </div>
 
         <!-- Botones de acción -->
         <div class="action-buttons">
             <button class="btn btn-manual" onclick="showManual()" title="Ingresar donaciones manualmente">
                 <span>⌨️ Entrada Manual</span>
+            </button>
+            <button id="undoImportBtn" class="btn btn-undo" onclick="undoImport()" style="display:none;" title="Deshacer última importación">
+                <span>⏪ Deshacer Importación</span>
             </button>
             <button id="smartSyncBtn" class="btn btn-smart-sync" onclick="smartSyncAction()"
                 title="Sincronización Inteligente">
@@ -1358,10 +1361,8 @@
 
             <button class="btn btn-manual" onclick="executeSave('NEW_WEEK')"
                 style="width: 100%; padding: 15px; background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); height: auto; white-space: normal; display: flex; flex-direction: column; align-items: flex-start; text-align: left;">
-                <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">🔄 Cerrar Semana e Iniciar Nueva
-                </div>
-                <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Calcula acumulados finales, reinicia
-                    contadores a cero y guarda todo en Firebase.</div>
+                <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">🔄 Salto de semana</div>
+                <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Confirma los cálculos de la importación, finaliza la semana y sube los datos a la nube.</div>
             </button>
 
             <div class="section-buttons" style="margin-top: 20px;">
@@ -1426,6 +1427,7 @@
 
         // Variables globales
         let players = {};
+        let playersBackup = null;
         let goalDaily = CONFIG.DEFAULT_GOAL;
         let lastUpdate = Date.now();
         let weekStart = getWeekStart();
@@ -2065,27 +2067,22 @@
         }
 
         function calculatePercentages(player) {
-            const semanal = (player.current || 0) - (player.previous || 0);
+            const semanal = Math.max(0, (player.current || 0) - (player.previous || 0));
             const weeklyGoal = goalDaily * 7;
             const avgDaily = semanal / 7;
             const avgDailyPerc = (avgDaily / goalDaily) * 100;
-
-            const availableExcess = Math.max(0, player.accumulatedExcess || 0);
-            const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
-            const coveredWithAccumulated = Math.min(weeklyDeficit, availableExcess);
-            const effectiveDonation = semanal + coveredWithAccumulated;
-            const metaPerc = coveredWithAccumulated > 0
-                ? Math.min(100, (effectiveDonation / weeklyGoal) * 100)
-                : (semanal / weeklyGoal) * 100;
-
+            
+            // Si el jugador cumplió la meta o usó su mochila, el % se basa en lo que donó + lo que pudo cubrir
+            // Pero como ya procesamos el acumulado, aquí simplemente mostramos el % real sobre la meta
+            const metaPerc = (semanal / weeklyGoal) * 100;
             const totalPerc = (player.total || 0) / weeklyGoal * 100;
 
             return {
-                semanal: Math.max(0, semanal),
-                avgDaily: Math.max(0, avgDaily),
-                avgDailyPerc: Math.max(0, avgDailyPerc),
-                metaPerc: Math.max(0, metaPerc),
-                totalPerc: Math.max(0, totalPerc)
+                semanal: semanal,
+                avgDaily: avgDaily,
+                avgDailyPerc: avgDailyPerc,
+                metaPerc: Math.min(100, metaPerc),
+                totalPerc: totalPerc
             };
         }
 
@@ -2113,20 +2110,16 @@
 
         function renderTable() {
             try {
-                // Selección defensiva de elementos
                 const tbody = document.getElementById('tableBody') || document.querySelector('#table tbody');
                 const tfoot = document.querySelector('#table tfoot');
                 const tableHeader = document.getElementById('tableHeader') || document.querySelector('.table-header');
 
-                if (!tbody) { console.error('Error crítico: No se encuentra tbody'); return; }
-                if (!tfoot) { console.error('Error crítico: No se encuentra tfoot'); return; }
-                if (!tableHeader) { console.error('Error crítico: No se encuentra tableHeader'); return; }
+                if (!tbody || !tfoot || !tableHeader) return;
 
                 tbody.innerHTML = '';
 
-                // Actualizar header dinámicamente según modo edición
-                if (isEditMode) {
-                    tableHeader.innerHTML = `
+                // Header dinámico
+                tableHeader.innerHTML = `
                     <tr>
                         <th>NOMBRE</th>
                         <th>TENÍA</th>
@@ -2136,218 +2129,130 @@
                         <th>%META</th>
                         <th>ACUMULADO</th>
                         <th>TOTAL</th>
-                        <th>ACCIONES</th>
+                        ${isEditMode ? '<th>ACCIONES</th>' : ''}
                     </tr>
                 `;
-                } else {
-                    tableHeader.innerHTML = `
-                    <tr>
-                        <th>NOMBRE</th>
-                        <th>TENÍA</th>
-                        <th>TIENE</th>
-                        <th>SEMANAL</th>
-                        <th>Ø DIARIO</th>
-                        <th>%META</th>
-                        <th>ACUMULADO</th>
-                        <th>TOTAL</th>
-                    </tr>
-                `;
-                }
 
                 const playerNames = Object.keys(players);
                 if (playerNames.length === 0) {
-                    const colspan = isEditMode ? 9 : 8;
-                    tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center; padding: 40px; color: #6c757d;">No hay datos. Inicia sesión como admin para añadir jugadores.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="${isEditMode ? 9 : 8}" style="text-align: center; padding: 40px; color: #6c757d;">No hay datos. Inicia sesión como admin para añadir jugadores.</td></tr>`;
                     tfoot.innerHTML = '';
                     return;
                 }
 
+                // Ordenar por total histórico (Top 5 visible)
                 const sorted = playerNames.sort((a, b) => {
-                    const playerA = players[a], playerB = players[b];
-                    const aIsAbsent = playerA.absent || false, bIsAbsent = playerB.absent || false;
-                    if (aIsAbsent !== bIsAbsent) return aIsAbsent ? 1 : -1;
-                    if (aIsAbsent && bIsAbsent) return a.localeCompare(b);
-                    const aTotal = playerA?.total || 0, bTotal = playerB?.total || 0;
-                    return bTotal - aTotal;
+                    const pA = players[a], pB = players[b];
+                    if (pA.absent !== pB.absent) return pA.absent ? 1 : -1;
+                    return (pB.total || 0) - (pA.total || 0);
                 });
 
                 let maxWeeklyDonation = 0;
                 sorted.forEach(name => {
-                    const player = players[name];
-                    const semanal = (player.current || 0) - (player.previous || 0);
-                    if (!player.absent && semanal > maxWeeklyDonation) maxWeeklyDonation = semanal;
+                    const p = players[name];
+                    if (!p.absent && !p.isNew) {
+                        const sem = (p.current || 0) - (p.previous || 0);
+                        if (sem > maxWeeklyDonation) maxWeeklyDonation = sem;
+                    }
                 });
 
-                let totalSemanal = 0, totalAcumulado = 0, totalAcumuladoExceso = 0, playersActive = 0, activePlayerRank = 0;
+                let totalSemanal = 0, totalAcumuladoHistorico = 0, totalAcumuladoMochila = 0, playersActive = 0, rankCounter = 0;
 
                 sorted.forEach(name => {
                     const player = players[name];
-                    if (!player) return;
-                    player.weeklyTotal = (player.current || 0) - (player.previous || 0);
-                    player.accumulatedExcess = player.accumulatedExcess || 0;
-                    player.isNew = player.isNew || false;
                     const row = tbody.insertRow();
 
                     if (player.absent) {
                         row.className = 'absent-player';
-                        const colspan = isEditMode ? 8 : 7;
-                        row.innerHTML = `<td>${name}</td><td colspan="${colspan}">❌ Baneado</td>`;
-                        return;
-                    }
-
-                    if (player.isNew) {
-                        if (isEditMode) {
-                            row.innerHTML = `<td style="font-weight: 500; text-align: center;">${name}<br><span style="color: #28a745; font-size: 0.9em; font-weight: bold;">NUEVO</span></td><td>-</td><td>${formatNumber(player.current || 0)}</td><td>0</td><td>0</td><td>0%</td><td>0</td><td>0</td><td></td>`;
-                        } else {
-                            row.innerHTML = `<td style="font-weight: 500; text-align: center;">${name}<br><span style="color: #28a745; font-size: 0.9em; font-weight: bold;">NUEVO</span></td><td>-</td><td>${formatNumber(player.current || 0)}</td><td>0</td><td>0</td><td>0%</td><td>0</td><td>0</td>`;
-                        }
-                        return;
-                    }
-
-                    // Si está en modo edición para este jugador
-                    if (editingPlayer === name) {
-                        const semanal = (player.current || 0) - (player.previous || 0);
-                        const weeklyGoal = goalDaily * 7;
-                        const weeklyExcess = Math.max(0, semanal - weeklyGoal);
-                        const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
-                        const availableExcess = Math.max(0, player.accumulatedExcess || 0);
-                        const deficitDraw = Math.min(weeklyDeficit, availableExcess);
-                        const finalPotentialExcess = availableExcess - deficitDraw + weeklyExcess;
-
-                        const calc = calculatePercentages(player);
-
-                        let nameHtml = name;
-                        if (activePlayerRank <= 5) {
-                            const starColors = ['#FFD700', '#FFC107', '#FFFF00', '#FFFFE0', '#FFFACD'];
-                            const starIcons = ['🌟', '✶', '★', '✶', '⭑'];
-                            const rank = activePlayerRank - 1;
-                            const starShadow = '-1px -1px 0 #4A4A4A, 1px -1px 0 #4A4A4A, -1px 1px 0 #4A4A4A, 1px 1px 0 #4A4A4A';
-                            let currentStarFontSize = activePlayerRank === 2 ? '20px' : '18px';
-                            nameHtml += `<span style="position: absolute; top: 1px; right: 4px; font-size: ${currentStarFontSize}; color: ${starColors[rank]}; text-shadow: ${starShadow};" title="Top ${activePlayerRank} donador total">${starIcons[rank]}</span>`;
-                        }
-
-                        row.innerHTML = `
-                        <td style="font-weight: 600; padding: 16px 5px; position: relative;">
-                            <input type="text" id="edit-name-${name}" value="${name}"
-                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
-                        </td>
-                        <td>
-                            <input type="number" id="edit-previous-${name}" value="${player.previous || 0}"
-                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
-                        </td>
-                        <td>
-                            <input type="number" id="edit-current-${name}" value="${player.current || 0}"
-                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
-                        </td>
-                        <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
-                            ${formatNumber(calc.semanal)}
-                        </td>
-                        <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
-                            ${formatNumber(calc.avgDaily)}
-                        </td>
-                        <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
-                            ${calc.metaPerc.toFixed(1)}%
-                        </td>
-                        <td>
-                            <input type="number" id="edit-accumulated-${name}" value="${player.accumulatedExcess || 0}"
-                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
-                        </td>
-                        <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
-                            ${formatNumber(player.total || 0)}
-                        </td>
-                        <td style="text-align: center; padding: clamp(4px, 1vw, 8px);">
-                            <button class="btn-save" onclick="saveEditing()" title="Guardar" style="margin-right: clamp(2px, 0.5vw, 4px); font-size: clamp(12px, 3vw, 16px); padding: clamp(4px, 1vw, 8px);">✓</button>
-                            <button class="btn btn-cancel" onclick="cancelEditing()" title="Cancelar" style="font-size: clamp(12px, 3vw, 16px); padding: clamp(4px, 1vw, 8px);">✗</button>
-                        </td>
-                    `;
+                        row.innerHTML = `<td>${name}</td><td colspan="${isEditMode ? 8 : 7}">❌ Baneado</td>`;
                         return;
                     }
 
                     playersActive++;
-                    activePlayerRank++;
+                    rankCounter++;
+                    
                     let nameHtml = name;
-                    if (activePlayerRank <= 5) {
+                    if (rankCounter <= 5) {
                         const starColors = ['#FFD700', '#FFC107', '#FFFF00', '#FFFFE0', '#FFFACD'];
                         const starIcons = ['🌟', '✶', '★', '✶', '⭑'];
-                        const rank = activePlayerRank - 1;
+                        const rankIdx = rankCounter - 1;
                         const starShadow = '-1px -1px 0 #4A4A4A, 1px -1px 0 #4A4A4A, -1px 1px 0 #4A4A4A, 1px 1px 0 #4A4A4A';
-                        let currentStarFontSize = activePlayerRank === 2 ? '20px' : '18px';
-                        nameHtml += `<span style="position: absolute; top: 1px; right: 4px; font-size: ${currentStarFontSize}; color: ${starColors[rank]}; text-shadow: ${starShadow};" title="Top ${activePlayerRank} donador total">${starIcons[rank]}</span>`;
+                        nameHtml += `<span style="position: absolute; top: 1px; right: 4px; font-size: 18px; color: ${starColors[rankIdx]}; text-shadow: ${starShadow};" title="Top ${rankCounter} histórico">${starIcons[rankIdx]}</span>`;
                     }
 
-                    const semanal = (player.current || 0) - (player.previous || 0);
-                    const weeklyGoal = goalDaily * 7;
-                    const weeklyExcess = Math.max(0, semanal - weeklyGoal);
-                    const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
-                    const availableExcess = Math.max(0, player.accumulatedExcess || 0);
-                    const deficitDraw = Math.min(weeklyDeficit, availableExcess);
-
-                    // LÓGICA DE EFICIENCIA EN VIVO
-                    // Para mostrar el valor "Neto" que realmente se guardará.
-                    const oneWeek = (goalDaily || 0) * 7;
-                    const oneMonth = oneWeek * 4;
-                    const currentAccumulated = player.accumulatedExcess || 0;
-                    let efficiency = 1.0;
-
-                    if (currentAccumulated >= (oneMonth * 5)) {
-                        efficiency = 0.05;  // Tier 4
-                    } else if (currentAccumulated >= (oneMonth * 3)) {
-                        efficiency = 0.10;  // Tier 3
-                    } else if (currentAccumulated >= oneMonth) {
-                        efficiency = 0.50;  // Tier 2
-                    } else {
-                        efficiency = 1.0;   // Tier 1
+                    if (player.isNew) {
+                        row.innerHTML = `
+                            <td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}<br><span style="color: #28a745; font-size: 0.8em;">[NUEVO]</span></td>
+                            <td>-</td><td>${formatNumber(player.current)}</td>
+                            <td>0</td><td>0</td><td>0%</td><td>0</td><td>0</td>
+                            ${isEditMode ? '<td></td>' : ''}
+                        `;
+                        return;
                     }
 
-                    const effectiveWeeklyExcess = weeklyExcess * efficiency;
-                    const finalPotentialExcess = availableExcess - deficitDraw + effectiveWeeklyExcess;
-
+                    const semanal = Math.max(0, (player.current || 0) - (player.previous || 0));
                     const calc = calculatePercentages(player);
+                    
                     let metaContent = `${calc.metaPerc.toFixed(1)}%`;
-                    if (maxWeeklyDonation > 0 && (player.current - player.previous) === maxWeeklyDonation) {
+                    if (semanal > 0 && semanal === maxWeeklyDonation) {
                         metaContent += ' <span title="Mayor donación de la semana">⭐</span>';
                     }
 
-                    let deficitHtml = '';
-                    if (deficitDraw > 0) {
-                        deficitHtml = `<br/><span style="color: red;">(-${formatNumber(deficitDraw)})</span>`;
-                    }
-
-                    totalSemanal += calc.semanal;
-                    totalAcumulado += (player.total || 0);
-                    totalAcumuladoExceso += finalPotentialExcess;
-
-                    // Calculo de Color de Nivel de Acumulado (Tier Color)
-                    const oneWeekC = (goalDaily || 0) * 7;
-                    const oneMonthC = oneWeekC * 4;
-                    const acc = finalPotentialExcess;
-                    let tierColor = '#28a745'; // Default Green (Tier 1)
-                    let tierTitle = 'Nivel Verde: Eficiencia 100%';
-
-                    if (acc >= (oneMonthC * 5)) {
-                        tierColor = '#343a40'; // Black (Tier 4)
-                        tierTitle = 'Nivel Tope: Eficiencia 5%';
-                    } else if (acc >= (oneMonthC * 3)) {
-                        tierColor = '#dc3545'; // Red (Tier 3)
-                        tierTitle = 'Nivel Rojo: Eficiencia 10%';
-                    } else if (acc >= oneMonthC) {
-                        tierColor = '#ffc107'; // Yellow (Tier 2)
-                        tierTitle = 'Nivel Amarillo: Eficiencia 50%';
-                    }
-
-                    // Estilo para el triángulo discreto en la esquina superior izquierda
+                    const acc = player.accumulatedExcess || 0;
+                    const oneWeek = goalDaily * 7;
+                    const oneMonth = oneWeek * 4;
+                    let tierColor = '#28a745', tierTitle = 'Tier 1: 100%';
+                    if (acc >= oneMonth * 5) { tierColor = '#343a40'; tierTitle = 'Tier 4: 5%'; }
+                    else if (acc >= oneMonth * 3) { tierColor = '#dc3545'; tierTitle = 'Tier 3: 10%'; }
+                    else if (acc >= oneMonth) { tierColor = '#ffc107'; tierTitle = 'Tier 2: 50%'; }
+                    
                     const triangleMarker = `<div style="position: absolute; top: 0; left: 0; width: 0; height: 0; border-top: 8px solid ${tierColor}; border-right: 8px solid transparent;" title="${tierTitle}"></div>`;
 
-                    if (isEditMode && auth.currentUser) {
-                        const actionsHtml = `<td style="text-align: center; padding: 8px;">
-                        <button class="btn btn-edit" onclick="enableEditing('${name}')" title="Editar jugador">✏️</button>
-                    </td>`;
-                        row.innerHTML = `<td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}</td><td>${formatNumber(player.previous || 0)}</td><td>${formatNumber(player.current || 0)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(calc.semanal)}</td><td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td><td style="position: relative;" title="${tierTitle}">${triangleMarker}${formatNumber(finalPotentialExcess)}${deficitHtml}${formatExtraDonationTime(finalPotentialExcess / (goalDaily || 1))}</td><td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>${actionsHtml}`;
+                    if (editingPlayer === name) {
+                        // Fila en edición
+                        row.innerHTML = `
+                            <td style="font-weight: 600; padding: 16px 5px; position: relative;">
+                                <input type="text" id="edit-name-${name}" value="${name}" style="width:100%; font-weight:600; background:#e7f3ff;">
+                            </td>
+                            <td><input type="number" id="edit-previous-${name}" value="${player.previous || 0}" style="width:100%;"></td>
+                            <td><input type="number" id="edit-current-${name}" value="${player.current || 0}" style="width:100%;"></td>
+                            <td style="background:#f8f9fa;">${formatNumber(calc.semanal)}</td>
+                            <td style="background:#f8f9fa;">${formatNumber(calc.avgDaily)}</td>
+                            <td style="background:#f8f9fa;">${calc.metaPerc.toFixed(1)}%</td>
+                            <td><input type="number" id="edit-accumulated-${name}" value="${player.accumulatedExcess || 0}" style="width:100%;"></td>
+                            <td style="background:#f8f9fa;">${formatNumber(player.total || 0)}</td>
+                            <td style="text-align: center;">
+                                <button class="btn-save" onclick="saveEditing()">✓</button>
+                                <button class="btn btn-cancel" onclick="cancelEditing()">✗</button>
+                            </td>
+                        `;
                     } else {
-                        row.innerHTML = `<td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}</td><td>${formatNumber(player.previous || 0)}</td><td>${formatNumber(player.current || 0)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(calc.semanal)}</td><td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td><td style="position: relative;" title="${tierTitle}">${triangleMarker}${formatNumber(finalPotentialExcess)}${deficitHtml}${formatExtraDonationTime(finalPotentialExcess / (goalDaily || 1))}</td><td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>`;
+                        // Fila normal
+                        const actionsHtml = isEditMode ? `<td style="text-align: center;"><button class="btn btn-edit" onclick="enableEditing('${name}')">✏️</button></td>` : '';
+                        row.innerHTML = `
+                            <td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}</td>
+                            <td>${formatNumber(player.previous)}</td>
+                            <td>${formatNumber(player.current)}</td>
+                            <td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(semanal)}</td>
+                            <td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td>
+                            <td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td>
+                            <td style="position: relative;" title="${tierTitle}">${triangleMarker}${formatNumber(acc)}${formatExtraDonationTime(acc / (goalDaily || 1))}</td>
+                            <td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>
+                            ${actionsHtml}
+                        `;
                     }
 
+                    totalSemanal += semanal;
+                    totalAcumuladoHistorico += (player.total || 0);
+                    totalAcumuladoMochila += acc;
                 });
+
+                const avgSemanal = playersActive > 0 ? totalSemanal / playersActive : 0;
+                tfoot.innerHTML = `<tr><td colspan="${isEditMode ? 9 : 8}">📊 TOTALES: ${formatNumber(totalSemanal)} semanales | Ø: ${formatNumber(avgSemanal)} | Histórico: ${formatNumber(totalAcumuladoHistorico)}</td></tr>`;
+            } catch (error) {
+                console.error("Error crítico en renderTable:", error);
+            }
+        }
 
                 const avgSemanal = playersActive > 0 ? totalSemanal / playersActive : 0;
                 const colspan = isEditMode ? 9 : 8;
@@ -2657,12 +2562,22 @@
         async function startNewWeek() {
             if (!auth.currentUser) return;
 
-            // NOTA: Los cálculos ya se hacen en "Importar a Tabla (Local)"
-            // Esta función solo inicia una nueva semana limpia
+            // Shift de valores y actualización de bases para la nueva semana
+            Object.keys(players).forEach(name => {
+                const player = players[name];
+                player.previous = player.current;
+                player.total_base = player.total || 0;
+                player.acc_base = player.accumulatedExcess || 0;
+            });
+
             weekStart = Date.now();
+            playersBackup = null;
+            const undoBtn = document.getElementById('undoImportBtn');
+            if (undoBtn) undoBtn.style.display = 'none';
+
             showUnsavedIndicator();
             renderTable();
-            showStatus('🔄 Nueva semana iniciada.', 'success');
+            showStatus('🔄 Semana cerrada y lista para nuevos datos.', 'success');
         }
 
 
@@ -3015,26 +2930,35 @@
             currentDataForReview = {};
         }
 
+        function undoImport() {
+            if (!playersBackup) return;
+            players = JSON.parse(JSON.stringify(playersBackup));
+            playersBackup = null;
+            renderTable();
+            showStatus('⏪ Importación deshecha.', 'success');
+            const undoBtn = document.getElementById('undoImportBtn');
+            if (undoBtn) undoBtn.style.display = 'none';
+        }
+
         async function confirmNameMapping() {
             console.log('--- Iniciando confirmNameMapping ---');
             try {
                 const newNames = Object.keys(currentDataForReview);
-                console.log('Nombres a procesar:', newNames.length);
-
                 const pendingCount = newNames.filter(name => !nameMapping.hasOwnProperty(name)).length;
 
                 if (pendingCount > 0) {
                     if (!confirm(`Aún hay ${pendingCount} nombres pendientes de revisión. ¿Deseas procesarlos como nuevos usuarios?`)) {
-                        console.log('Usuario canceló confirmación de pendientes');
                         return;
                     }
-
                     newNames.forEach(name => {
-                        if (!nameMapping.hasOwnProperty(name)) {
-                            nameMapping[name] = null;
-                        }
+                        if (!nameMapping.hasOwnProperty(name)) nameMapping[name] = null;
                     });
                 }
+
+                // BACKUP PARA DESHACER
+                playersBackup = JSON.parse(JSON.stringify(players));
+                const undoBtn = document.getElementById('undoImportBtn');
+                if (undoBtn) undoBtn.style.display = 'flex';
 
                 const mappedData = {};
                 Object.keys(currentDataForReview).forEach(newName => {
@@ -3043,84 +2967,89 @@
                     mappedData[finalName] = currentDataForReview[newName];
                 });
 
-                console.log('Datos mapeados:', Object.keys(mappedData).length);
-
                 hideReview();
 
-                console.log('Aplicando cambios de mapeo...');
-
-                // APLICAR CAMBIOS Y CALCULAR TODO (como inicio de semana)
+                // CÁLCULOS MAESTROS
                 const weeklyGoal = goalDaily * 7;
+                const oneMonth = weeklyGoal * 4;
 
                 Object.keys(mappedData).forEach(name => {
                     const donationValue = mappedData[name];
 
                     if (!players[name]) {
-                        // Es un jugador totally nuevo
+                        // Es un jugador totalmente nuevo
                         players[name] = {
-                            previous: 0,
+                            previous: donationValue,
                             current: donationValue,
                             accumulatedExcess: 0,
                             total: 0,
+                            total_base: 0,
+                            acc_base: 0,
                             isNew: true,
                             absent: false
                         };
                     } else {
-                        // Es un jugador existente - CALCULAR TODO
+                        // Jugador existente
                         const player = players[name];
+                        
+                        // Inicializar bases si no existen (migración)
+                        if (player.total_base === undefined) player.total_base = player.total || 0;
+                        if (player.acc_base === undefined) player.acc_base = player.accumulatedExcess || 0;
+
                         const previous = player.previous || 0;
                         const current = donationValue;
-                        const weeklyDonation = current - previous;
+                        const weeklyDonation = Math.max(0, current - previous);
 
-                        // ACTUALIZAR TOTAL histórico
-                        player.total = (player.total || 0) + weeklyDonation;
+                        // 1. ACTUALIZAR TOTAL HISTÓRICO (Desde la base semanal)
+                        player.total = (player.total_base || 0) + weeklyDonation;
 
-                        // Calcular Exceso o Déficit
+                        // 2. CALCULAR ACUMULADO (CON TIERS desde la base semanal)
                         if (weeklyDonation >= weeklyGoal) {
                             // Superávit
                             const surplus = weeklyDonation - weeklyGoal;
-                            player.accumulatedExcess = (player.accumulatedExcess || 0) + surplus;
+                            const accBase = player.acc_base || 0;
+                            
+                            let efficiency = 1.0;
+                            if (accBase >= (oneMonth * 5)) efficiency = 0.05;
+                            else if (accBase >= (oneMonth * 3)) efficiency = 0.10;
+                            else if (accBase >= oneMonth) efficiency = 0.50;
+                            
+                            player.accumulatedExcess = accBase + (surplus * efficiency);
                         } else {
                             // Déficit
                             const deficit = weeklyGoal - weeklyDonation;
-                            const availableExcess = Math.max(0, player.accumulatedExcess || 0);
-                            const amountToDeduct = Math.min(deficit, availableExcess);
-                            player.accumulatedExcess = availableExcess - amountToDeduct;
+                            const accBase = player.acc_base || 0;
+                            player.accumulatedExcess = Math.max(0, accBase - deficit);
                         }
 
-                        // AVANZAR SEMANA
-                        player.previous = current;
+                        // 3. ACTUALIZAR ESTADO ACTUAL
                         player.current = current;
                         player.isNew = false;
                         player.absent = false;
                     }
                 });
 
-                // DETECCIÓN DE BANEADOS
+                // DETECCIÓN DE BANEADOS / LIMPIEZA
                 const allCurrentNames = Object.keys(players);
                 const updatedNames = Object.keys(mappedData);
 
-                // Jugadores que NO están en la lista nueva → MARCAR BANEADOS
-                const missing = allCurrentNames.filter(name => !updatedNames.includes(name) && !players[name].absent);
-
-                if (missing.length > 0) {
-                    missing.forEach(name => {
-                        players[name].absent = true;
-                        players[name].current = 0;
-                    });
-                    showStatus(`🚫 ${missing.length} jugadores marcados como baneados.`, 'warning');
-                }
+                allCurrentNames.forEach(name => {
+                    if (!updatedNames.includes(name)) {
+                        if (players[name].absent) {
+                            delete players[name]; // Segunda semana ausente -> Eliminar
+                        } else {
+                            players[name].absent = true; // Primera semana ausente -> Marcar
+                            players[name].current = players[name].previous;
+                        }
+                    }
+                });
 
                 showUnsavedIndicator();
                 renderTable();
-                showStatus(`✅ ${Object.keys(mappedData).length} registros procesados correctamente.`, 'success');
-                console.log('Mapeo finalizado y tabla renderizada.');
-
                 hideManual();
-                showStatus('✅ Datos importados localmente. Recuerda usar el botón ✓ para guardar en la nube o iniciar semana.', 'success');
+                showStatus('✅ Datos procesados localmente. Revisa la tabla y pulsa "Cerrar Semana" para confirmar.', 'success');
             } catch (error) {
                 console.error('CRITICAL ERROR in confirmNameMapping:', error);
-                alert('Error crítico al importar: ' + error.message);
                 showStatus('❌ Error crítico: ' + error.message, 'error');
             }
         }
