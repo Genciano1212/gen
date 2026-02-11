@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.3.9</title>
+    <title>Tracker Donaciones Pocket Ants v1.3.10</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1144,7 +1144,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v1.3.9</div>
+            <div class="version-tag">v1.3.10</div>
         </div>
 
         <!-- Botones de acción -->
@@ -2252,19 +2252,6 @@
             } catch (error) {
                 console.error("Error crítico en renderTable:", error);
             }
-        }
-
-                const avgSemanal = playersActive > 0 ? totalSemanal / playersActive : 0;
-                const colspan = isEditMode ? 9 : 8;
-
-                let footerContent = `📊 TOTALES (${playersActive} jugadores): ${formatNumber(totalSemanal)} donaciones semanales | Promedio: ${formatNumber(avgSemanal)} | Acumulado: ${formatNumber(totalAcumulado)}`;
-
-                tfoot.innerHTML = `<tr class="total-row"><td colspan="${colspan}">${footerContent}</td></tr>`;
-            } catch (error) {
-                console.error("Error crítico en renderTable:", error);
-            }
-
-
         }
 
 
