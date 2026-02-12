@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.3.11</title>
+    <title>Tracker Donaciones Pocket Ants v1.3.12</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1144,7 +1144,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v1.3.11</div>
+            <div class="version-tag">v1.3.12</div>
         </div>
 
         <!-- Botones de acción -->
@@ -2072,7 +2072,15 @@
             const avgDaily = semanal / 7;
             const avgDailyPerc = (avgDaily / goalDaily) * 100;
             
-            const metaPerc = (semanal / weeklyGoal) * 100;
+            // LÓGICA DE META CON DÉFICIT CUBIERTO (Según Guía)
+            // Si el jugador donó menos de la meta, pero tenía acumulado, el % debe reflejar eso.
+            const deficit = Math.max(0, weeklyGoal - semanal);
+            const availableAcc = player.acc_base || 0; // Usamos la base del inicio de semana
+            const covered = Math.min(deficit, availableAcc);
+            
+            const effectiveDonation = semanal + covered;
+            const metaPerc = (effectiveDonation / weeklyGoal) * 100;
+            
             const totalPerc = (player.total || 0) / weeklyGoal * 100;
 
             return {
@@ -2080,6 +2088,7 @@
                 avgDaily: avgDaily,
                 avgDailyPerc: avgDailyPerc,
                 metaPerc: Math.min(100, metaPerc),
+                covered: covered,
                 totalPerc: totalPerc
             };
         }
@@ -2206,6 +2215,12 @@
                     
                     const triangleMarker = `<div style="position: absolute; top: 0; left: 0; width: 0; height: 0; border-top: 8px solid ${tierColor}; border-right: 8px solid transparent;" title="${tierTitle}"></div>`;
 
+                    // Lógica de déficit visual (en rojo debajo del acumulado)
+                    let deficitHtml = '';
+                    if (calc.covered > 0) {
+                        deficitHtml = `<br/><span style="color: red; font-size: 0.85em;">(-${formatNumber(calc.covered)})</span>`;
+                    }
+
                     if (editingPlayer === name) {
                         // Fila en edición
                         row.innerHTML = `
@@ -2234,7 +2249,7 @@
                             <td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(semanal)}</td>
                             <td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td>
                             <td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td>
-                            <td style="position: relative;" title="${tierTitle}">${triangleMarker}${formatNumber(acc)}${formatExtraDonationTime(acc / (goalDaily || 1))}</td>
+                            <td style="position: relative;" title="${tierTitle}">${triangleMarker}${formatNumber(acc)}${deficitHtml}${formatExtraDonationTime(acc / (goalDaily || 1))}</td>
                             <td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>
                             ${actionsHtml}
                         `;
@@ -2940,7 +2955,7 @@
                     const donationValue = mappedData[name];
 
                     if (!players[name]) {
-                        // Es un jugador totalmente nuevo
+                        // Es un jugador totalmente nuevo (Semana de Referencia)
                         players[name] = {
                             previous: donationValue,
                             current: donationValue,
@@ -2973,13 +2988,13 @@
                             const accBase = player.acc_base || 0;
                             
                             let efficiency = 1.0;
-                            if (accBase >= (oneMonth * 5)) efficiency = 0.05;
-                            else if (accBase >= (oneMonth * 3)) efficiency = 0.10;
-                            else if (accBase >= oneMonth) efficiency = 0.50;
+                            if (accBase >= (oneMonth * 5)) efficiency = 0.05; // Tier 4 (Negro)
+                            else if (accBase >= (oneMonth * 3)) efficiency = 0.10; // Tier 3 (Rojo)
+                            else if (accBase >= oneMonth) efficiency = 0.50; // Tier 2 (Amarillo)
                             
                             player.accumulatedExcess = accBase + (surplus * efficiency);
                         } else {
-                            // Déficit
+                            // Déficit (Se resta de la mochila)
                             const deficit = weeklyGoal - weeklyDonation;
                             const accBase = player.acc_base || 0;
                             player.accumulatedExcess = Math.max(0, accBase - deficit);
