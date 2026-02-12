@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.3.18</title>
+    <title>Tracker Donaciones Pocket Ants v1.3.19</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1156,7 +1156,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v1.3.18</div>
+            <div class="version-tag">v1.3.19</div>
         </div>
 
         <!-- Botones de acción -->
@@ -2041,10 +2041,29 @@
             try {
                 showStatus('⏳ Guardando datos...', 'processing');
                 
-                // Guardar estado actual en Firebase (Cierre de Semana)
+                // 1. Guardar estado actual en Firebase
                 await saveData(); 
                 
-                showStatus('✅ Datos guardados correctamente.', 'success');
+                // 2. OFICIALIZAR CAMBIOS PARA LA PRÓXIMA SEMANA
+                // Esto "congela" el Total y el Acumulado como nuevas bases
+                Object.keys(players).forEach(name => {
+                    const player = players[name];
+                    // Si ya se calcularon nuevos valores, los fijamos como base
+                    if (player.total !== undefined) player.total_base = player.total;
+                    if (player.accumulatedExcess !== undefined) player.acc_base = player.accumulatedExcess;
+                });
+
+                // Guardar localmente esta actualización de bases
+                if (indexedDBInitialized) {
+                    await saveToLocal({
+                        players,
+                        goalDaily,
+                        lastUpdate: Date.now(),
+                        weekStart
+                    });
+                }
+
+                showStatus('✅ Datos guardados y semana cerrada correctamente.', 'success');
             } catch (error) {
                 console.error('Error en manualSave:', error);
                 showStatus('❌ Error al guardar: ' + error.message, 'error');
@@ -2984,32 +3003,34 @@
                         const current = donationValue;
                         const weeklyDonation = Math.max(0, current - previous);
 
-                        // Inicializar bases si no existen (migración)
+                        // Inicializar bases si no existen (migración o seguridad)
                         if (player.total_base === undefined) player.total_base = player.total || 0;
                         if (player.acc_base === undefined) player.acc_base = player.accumulatedExcess || 0;
 
                         // 1. ACTUALIZAR TOTAL HISTÓRICO
-                        // Sumamos lo nuevo al total histórico acumulado
-                        player.total = (player.total || 0) + weeklyDonation;
+                        // Sumamos lo nuevo a la BASE histórica (sagrada mientras no se guarde)
+                        player.total = (player.total_base || 0) + weeklyDonation;
 
                         // 2. CALCULAR ACUMULADO (CON TIERS)
-                        // Usamos el acumulado que ya traía como base
+                        // Usamos SIEMPRE la base (saldo inicial) para calcular
+                        const accStartingBalance = player.acc_base || 0;
+
                         if (weeklyDonation >= weeklyGoal) {
                             // Superávit
                             const surplus = weeklyDonation - weeklyGoal;
-                            const accBase = player.accumulatedExcess || 0;
                             
                             let efficiency = 1.0;
-                            if (accBase >= (oneMonth * 5)) efficiency = 0.05;
-                            else if (accBase >= (oneMonth * 3)) efficiency = 0.10;
-                            else if (accBase >= oneMonth) efficiency = 0.50;
+                            if (accStartingBalance >= (oneMonth * 5)) efficiency = 0.05;
+                            else if (accStartingBalance >= (oneMonth * 3)) efficiency = 0.10;
+                            else if (accStartingBalance >= oneMonth) efficiency = 0.50;
                             
-                            player.accumulatedExcess = accBase + (surplus * efficiency);
+                            // El nuevo saldo es: Lo que tenía al inicio + (Exceso * Eficiencia)
+                            player.accumulatedExcess = accStartingBalance + (surplus * efficiency);
                         } else {
                             // Déficit
                             const deficit = weeklyGoal - weeklyDonation;
-                            const accBase = player.accumulatedExcess || 0;
-                            player.accumulatedExcess = Math.max(0, accBase - deficit);
+                            // El nuevo saldo es: Lo que tenía al inicio - Déficit (mínimo 0)
+                            player.accumulatedExcess = Math.max(0, accStartingBalance - deficit);
                         }
 
                         // 3. ACTUALIZAR ESTADO
@@ -3018,9 +3039,8 @@
                         player.isNew = false;
                         player.absent = false;
                         
-                        // Actualizar bases para futuros cálculos (Snapshot del estado post-cálculo)
-                        player.total_base = player.total;
-                        player.acc_base = player.accumulatedExcess;
+                        // NOTA CRÍTICA: NO actualizamos total_base ni acc_base aquí.
+                        // Eso solo debe ocurrir al darle al botón GUARDAR.
                     }
                 });
 
