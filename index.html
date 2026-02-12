@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.3.15</title>
+    <title>Tracker Donaciones Pocket Ants v1.3.16</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -648,31 +648,29 @@
         }
 
         .btn-save {
-            background: linear-gradient(135deg, #1e7e34 0%, #28a745 100%);
-            padding: clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px);
-            border-radius: clamp(10px, 2.5vw, 12px);
-            color: white;
-            font-weight: 700;
-            text-align: center;
+            background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);
+            width: clamp(36px, 9vw, 40px);
+            height: clamp(36px, 9vw, 40px);
+            border-radius: 50%;
+            font-size: clamp(18px, 5vw, 20px);
+            padding: 0;
+            gap: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            font-size: clamp(12px, 2.8vw, 15px);
+            flex: none;
+            color: white;
+            font-weight: bold;
+            min-height: unset;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+            border: none;
             cursor: pointer;
-            transition: all 0.3s ease;
-            min-height: clamp(32px, 8vw, 40px);
-            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            flex: 1.2; /* Hacerlo un poco más ancho que el resto */
-            min-width: 0;
-            white-space: nowrap;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .btn-save:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(40, 167, 69, 0.4);
-            background: linear-gradient(135deg, #218838 0%, #2ecc71 100%);
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
         }
 
         .btn-save:active {
@@ -1158,7 +1156,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v1.3.15</div>
+            <div class="version-tag">v1.3.16</div>
         </div>
 
         <!-- Botones de acción -->
@@ -1179,10 +1177,7 @@
             </button>
             <button class="btn btn-help" onclick="showInfo()" title="Ver guía de usuario">?</button>
             <button class="btn-save" id="saveBtn" onclick="manualSave()"
-                title="Guardar tabla y cerrar semana">
-                <span style="font-size: 1.2em;">✅</span>
-                <span>Guardar Cierre</span>
-            </button>
+                title="Guardar tabla y cerrar semana">✓</button>
 
             <button class="btn btn-edit-mode" id="editModeBtn" onclick="toggleEditMode()" style="display:none;"
                 title="Modo Edición">📝</button>
@@ -2115,7 +2110,7 @@
                 semanal: semanal,
                 avgDaily: avgDaily,
                 avgDailyPerc: avgDailyPerc,
-                metaPerc: Math.min(100, metaPerc),
+                metaPerc: metaPerc,
                 covered: covered,
                 totalPerc: totalPerc
             };
