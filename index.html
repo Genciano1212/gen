@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.3.17</title>
+    <title>Tracker Donaciones Pocket Ants v1.3.18</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1156,7 +1156,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v1.3.17</div>
+            <div class="version-tag">v1.3.18</div>
         </div>
 
         <!-- Botones de acción -->
@@ -2034,51 +2034,17 @@
                 return;
             }
 
-            if (!confirm('⚠️ ¿Quieres GUARDAR la tabla actual y cerrar la semana?\n\nEsto subirá los datos a la nube y preparará la tabla para la próxima carga.')) {
+            if (!confirm('⚠️ ¿Quieres GUARDAR la tabla actual en la nube?\n\nLos datos se guardarán exactamente como los ves ahora.')) {
                 return;
             }
 
             try {
-                showStatus('⏳ Guardando y cerrando semana...', 'processing');
+                showStatus('⏳ Guardando datos...', 'processing');
                 
-                // 1. CREAR SNAPSHOT (Copia congelada del cierre)
-                // Esto evita que el cambio de semana afecte a lo que se sube
-                const closingSnapshot = {
-                    players: JSON.parse(JSON.stringify(players)),
-                    goalDaily,
-                    lastUpdate: Date.now(),
-                    weekStart
-                };
-
-                // 2. Guardar snapshot en Firebase
-                await saveData(closingSnapshot); 
+                // Guardar estado actual en Firebase (Cierre de Semana)
+                await saveData(); 
                 
-                // 3. Preparar inicio de la próxima semana (Shift local)
-                // Ahora es seguro modificar 'players' porque ya enviamos la copia
-                Object.keys(players).forEach(name => {
-                    const player = players[name];
-                    player.previous = player.current;
-                    player.total_base = player.total || 0;
-                    player.acc_base = player.accumulatedExcess || 0;
-                });
-
-                weekStart = Date.now();
-                playersBackup = null;
-                const undoBtn = document.getElementById('undoImportBtn');
-                if (undoBtn) undoBtn.style.display = 'none';
-
-                // 4. Guardar nuevo estado base localmente (Nueva Semana Limpia)
-                if (indexedDBInitialized) {
-                    await saveToLocal({
-                        players,
-                        goalDaily,
-                        lastUpdate: Date.now(),
-                        weekStart
-                    });
-                }
-                
-                renderTable();
-                showStatus('✅ Datos guardados y semana cerrada correctamente.', 'success');
+                showStatus('✅ Datos guardados correctamente.', 'success');
             } catch (error) {
                 console.error('Error en manualSave:', error);
                 showStatus('❌ Error al guardar: ' + error.message, 'error');
@@ -3011,40 +2977,50 @@
                         // Jugador existente
                         const player = players[name];
                         
+                        // LÓGICA DE AVANCE NATURAL DE SEMANA
+                        // El valor que tenía "Actualmente" pasa a ser su "Tenía" (Previous)
+                        // Y el nuevo valor importado se convierte en su nuevo "Tiene" (Current)
+                        const previous = player.current || 0; 
+                        const current = donationValue;
+                        const weeklyDonation = Math.max(0, current - previous);
+
                         // Inicializar bases si no existen (migración)
                         if (player.total_base === undefined) player.total_base = player.total || 0;
                         if (player.acc_base === undefined) player.acc_base = player.accumulatedExcess || 0;
 
-                        const previous = player.previous || 0;
-                        const current = donationValue;
-                        const weeklyDonation = Math.max(0, current - previous);
+                        // 1. ACTUALIZAR TOTAL HISTÓRICO
+                        // Sumamos lo nuevo al total histórico acumulado
+                        player.total = (player.total || 0) + weeklyDonation;
 
-                        // 1. ACTUALIZAR TOTAL HISTÓRICO (Desde la base semanal)
-                        player.total = (player.total_base || 0) + weeklyDonation;
-
-                        // 2. CALCULAR ACUMULADO (CON TIERS desde la base semanal)
+                        // 2. CALCULAR ACUMULADO (CON TIERS)
+                        // Usamos el acumulado que ya traía como base
                         if (weeklyDonation >= weeklyGoal) {
                             // Superávit
                             const surplus = weeklyDonation - weeklyGoal;
-                            const accBase = player.acc_base || 0;
+                            const accBase = player.accumulatedExcess || 0;
                             
                             let efficiency = 1.0;
-                            if (accBase >= (oneMonth * 5)) efficiency = 0.05; // Tier 4 (Negro)
-                            else if (accBase >= (oneMonth * 3)) efficiency = 0.10; // Tier 3 (Rojo)
-                            else if (accBase >= oneMonth) efficiency = 0.50; // Tier 2 (Amarillo)
+                            if (accBase >= (oneMonth * 5)) efficiency = 0.05;
+                            else if (accBase >= (oneMonth * 3)) efficiency = 0.10;
+                            else if (accBase >= oneMonth) efficiency = 0.50;
                             
                             player.accumulatedExcess = accBase + (surplus * efficiency);
                         } else {
-                            // Déficit (Se resta de la mochila)
+                            // Déficit
                             const deficit = weeklyGoal - weeklyDonation;
-                            const accBase = player.acc_base || 0;
+                            const accBase = player.accumulatedExcess || 0;
                             player.accumulatedExcess = Math.max(0, accBase - deficit);
                         }
 
-                        // 3. ACTUALIZAR ESTADO ACTUAL
+                        // 3. ACTUALIZAR ESTADO
+                        player.previous = previous;
                         player.current = current;
                         player.isNew = false;
                         player.absent = false;
+                        
+                        // Actualizar bases para futuros cálculos (Snapshot del estado post-cálculo)
+                        player.total_base = player.total;
+                        player.acc_base = player.accumulatedExcess;
                     }
                 });
 
