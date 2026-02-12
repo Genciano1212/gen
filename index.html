@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.3.10</title>
+    <title>Tracker Donaciones Pocket Ants v1.3.11</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1144,7 +1144,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v1.3.10</div>
+            <div class="version-tag">v1.3.11</div>
         </div>
 
         <!-- Botones de acción -->
@@ -2072,8 +2072,6 @@
             const avgDaily = semanal / 7;
             const avgDailyPerc = (avgDaily / goalDaily) * 100;
             
-            // Si el jugador cumplió la meta o usó su mochila, el % se basa en lo que donó + lo que pudo cubrir
-            // Pero como ya procesamos el acumulado, aquí simplemente mostramos el % real sobre la meta
             const metaPerc = (semanal / weeklyGoal) * 100;
             const totalPerc = (player.total || 0) / weeklyGoal * 100;
 
@@ -2544,28 +2542,6 @@
         // --- FUNCIONES DE ACTUALIZACIÓN DE DATOS (ADMIN) ---
 
         // Función updatePlayers obsoleta eliminada (estaba duplicada)
-
-
-        async function startNewWeek() {
-            if (!auth.currentUser) return;
-
-            // Shift de valores y actualización de bases para la nueva semana
-            Object.keys(players).forEach(name => {
-                const player = players[name];
-                player.previous = player.current;
-                player.total_base = player.total || 0;
-                player.acc_base = player.accumulatedExcess || 0;
-            });
-
-            weekStart = Date.now();
-            playersBackup = null;
-            const undoBtn = document.getElementById('undoImportBtn');
-            if (undoBtn) undoBtn.style.display = 'none';
-
-            showUnsavedIndicator();
-            renderTable();
-            showStatus('🔄 Semana cerrada y lista para nuevos datos.', 'success');
-        }
 
 
         function levenshteinDistance(str1, str2) {
@@ -3515,22 +3491,52 @@
             hideSaveOptions();
 
             if (mode === 'NEW_WEEK') {
-                // Los cálculos ya se hicieron en "Importar a Tabla (Local)"
-                // Solo confirmamos y guardamos en Firebase
-                if (!confirm('⚠️ ¿Estás seguro de GUARDAR e INICIAR nueva semana?\n\nEsto subirá todos los cálculos (totales, acumulados, etc.) a Firebase.')) {
+                if (!confirm('⚠️ ¿Estás seguro de realizar el SALTO DE SEMANA?\n\nEsto guardará los cálculos actuales como cierre de semana y preparará la tabla para la siguiente.')) {
                     return;
                 }
                 
+                // 1. PRIMERO GUARDAMOS EL ESTADO ACTUAL (EL CIERRE)
+                await saveData(); 
+                
+                // 2. LUEGO PREPARAMOS EL INICIO DE LA PRÓXIMA SEMANA
                 await startNewWeek();
-                await saveData();
+                
                 document.getElementById('manualSection').classList.remove('active');
-
-                showStatus('✅ ¡Semana guardada e iniciada correctamente!', 'success');
+                showStatus('✅ Salto de semana completado y guardado en la nube.', 'success');
             } else {
                 // UPDATE - Guardar cambios individuales
                 await saveData();
                 showStatus('✅ Datos guardados en Firebase correctamente.', 'success');
             }
+        }
+
+        async function startNewWeek() {
+            if (!auth.currentUser) return;
+
+            // Shift de valores: El "Tiene" de hoy es el "Tenía" de mañana
+            Object.keys(players).forEach(name => {
+                const player = players[name];
+                player.previous = player.current;
+                player.total_base = player.total || 0;
+                player.acc_base = player.accumulatedExcess || 0;
+            });
+
+            weekStart = Date.now();
+            playersBackup = null;
+            const undoBtn = document.getElementById('undoImportBtn');
+            if (undoBtn) undoBtn.style.display = 'none';
+
+            // Guardamos el nuevo estado base localmente
+            if (indexedDBInitialized) {
+                await saveToLocal({
+                    players,
+                    goalDaily,
+                    lastUpdate: Date.now(),
+                    weekStart
+                });
+            }
+
+            renderTable();
         }
 
         function hidemanualWrapper() {
