@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.3.12</title>
+    <title>Tracker Donaciones Pocket Ants v1.3.13</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1144,7 +1144,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v1.3.12</div>
+            <div class="version-tag">v1.3.13</div>
         </div>
 
         <!-- Botones de acción -->
@@ -1165,7 +1165,7 @@
             </button>
             <button class="btn btn-help" onclick="showInfo()" title="Ver guía de usuario">?</button>
             <button class="btn-save" id="saveBtn" onclick="manualSave()"
-                title="Opciones de guardado y cierre de semana">✓</button>
+                title="Guardar tabla y cerrar semana">✓ Guardar</button>
 
             <button class="btn btn-edit-mode" id="editModeBtn" onclick="toggleEditMode()" style="display:none;"
                 title="Modo Edición">📝</button>
@@ -1341,32 +1341,6 @@
 
             <div class="section-buttons" style="margin-top: 20px;">
                 <button class="btn btn-cancel" onclick="hideSettings()">Cerrar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de opciones de guardado -->
-    <div id="saveOptionsModal" class="modal-overlay">
-        <div class="modal-content">
-            <span class="modal-close" onclick="hideSaveOptions()">&times;</span>
-            <h2>💾 Opciones de Guardado</h2>
-            <p>Elige qué acción deseas realizar:</p>
-
-            <button class="btn btn-success" onclick="executeSave('UPDATE')"
-                style="width: 100%; margin-bottom: 15px; padding: 15px; height: auto; white-space: normal; display: flex; flex-direction: column; align-items: flex-start; text-align: left;">
-                <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">✅ Guardar Cambios</div>
-                <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Actualiza los datos locales y en
-                    Firebase. La semana continúa normalmente.</div>
-            </button>
-
-            <button class="btn btn-manual" onclick="executeSave('NEW_WEEK')"
-                style="width: 100%; padding: 15px; background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); height: auto; white-space: normal; display: flex; flex-direction: column; align-items: flex-start; text-align: left;">
-                <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">🔄 Salto de semana</div>
-                <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Confirma los cálculos de la importación, finaliza la semana y sube los datos a la nube.</div>
-            </button>
-
-            <div class="section-buttons" style="margin-top: 20px;">
-                <button class="btn btn-cancel" onclick="hideSaveOptions()">Cancelar</button>
             </div>
         </div>
     </div>
@@ -2040,8 +2014,24 @@
                 showStatus('❌ Debes iniciar sesión como admin.', 'error');
                 return;
             }
-            // Restaurado el menú de opciones a petición del usuario
-            showSaveOptions();
+
+            if (!confirm('⚠️ ¿Quieres GUARDAR la tabla actual y cerrar la semana?\n\nEsto subirá los datos a la nube y preparará la tabla para la próxima carga.')) {
+                return;
+            }
+
+            try {
+                showStatus('⏳ Guardando y cerrando semana...', 'processing');
+                
+                // 1. Guardamos el estado actual calculado
+                await saveData(); 
+                
+                // 2. Preparamos bases para la siguiente semana
+                await startNewWeek();
+                
+                showStatus('✅ Datos guardados y semana cerrada correctamente.', 'success');
+            } catch (error) {
+                showStatus('❌ Error al guardar: ' + error.message, 'error');
+            }
         }
 
         // --- FUNCIONES DE RENDERIZADO Y FORMATO ---
@@ -3488,42 +3478,6 @@
 
 
         // --- FUNCIONES DE GUARDADO CENTRALIZADO ---
-
-        function showSaveOptions() {
-            if (!auth.currentUser) {
-                showStatus('❌ Debes iniciar sesión como admin.', 'error');
-                return;
-            }
-            hideAllSections(); // Asegurar que no haya solapamientos
-            document.getElementById('saveOptionsModal').classList.add('active');
-        }
-
-        function hideSaveOptions() {
-            document.getElementById('saveOptionsModal').classList.remove('active');
-        }
-
-        async function executeSave(mode) {
-            hideSaveOptions();
-
-            if (mode === 'NEW_WEEK') {
-                if (!confirm('⚠️ ¿Estás seguro de realizar el SALTO DE SEMANA?\n\nEsto guardará los cálculos actuales como cierre de semana y preparará la tabla para la siguiente.')) {
-                    return;
-                }
-                
-                // 1. PRIMERO GUARDAMOS EL ESTADO ACTUAL (EL CIERRE)
-                await saveData(); 
-                
-                // 2. LUEGO PREPARAMOS EL INICIO DE LA PRÓXIMA SEMANA
-                await startNewWeek();
-                
-                document.getElementById('manualSection').classList.remove('active');
-                showStatus('✅ Salto de semana completado y guardado en la nube.', 'success');
-            } else {
-                // UPDATE - Guardar cambios individuales
-                await saveData();
-                showStatus('✅ Datos guardados en Firebase correctamente.', 'success');
-            }
-        }
 
         async function startNewWeek() {
             if (!auth.currentUser) return;
