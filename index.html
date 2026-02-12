@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.3.14</title>
+    <title>Tracker Donaciones Pocket Ants v1.3.15</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1158,7 +1158,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v1.3.14</div>
+            <div class="version-tag">v1.3.15</div>
         </div>
 
         <!-- Botones de acción -->
@@ -2039,12 +2039,33 @@
             try {
                 showStatus('⏳ Guardando y cerrando semana...', 'processing');
                 
-                // 1. Guardamos el estado actual calculado
+                // 1. Guardar estado actual en Firebase (Cierre de Semana)
                 await saveData(); 
                 
-                // 2. Preparamos bases para la siguiente semana
-                await startNewWeek();
+                // 2. Preparar inicio de la próxima semana (Shift local)
+                Object.keys(players).forEach(name => {
+                    const player = players[name];
+                    player.previous = player.current;
+                    player.total_base = player.total || 0;
+                    player.acc_base = player.accumulatedExcess || 0;
+                });
+
+                weekStart = Date.now();
+                playersBackup = null;
+                const undoBtn = document.getElementById('undoImportBtn');
+                if (undoBtn) undoBtn.style.display = 'none';
+
+                // 3. Guardar nuevo estado base localmente
+                if (indexedDBInitialized) {
+                    await saveToLocal({
+                        players,
+                        goalDaily,
+                        lastUpdate: Date.now(),
+                        weekStart
+                    });
+                }
                 
+                renderTable();
                 showStatus('✅ Datos guardados y semana cerrada correctamente.', 'success');
             } catch (error) {
                 showStatus('❌ Error al guardar: ' + error.message, 'error');
