@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.3.19</title>
+    <title>Tracker Donaciones Pocket Ants v1.3.20</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1156,7 +1156,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v1.3.19</div>
+            <div class="version-tag">v1.3.20</div>
         </div>
 
         <!-- Botones de acción -->
@@ -2098,11 +2098,9 @@
             const avgDaily = semanal / 7;
             const avgDailyPerc = (avgDaily / goalDaily) * 100;
             
-            // LÓGICA DE META CON DÉFICIT CUBIERTO (Según Guía)
-            // Si el jugador donó menos de la meta, pero tenía acumulado, el % debe reflejar eso.
-            const deficit = Math.max(0, weeklyGoal - semanal);
-            const availableAcc = player.acc_base || 0; // Usamos la base del inicio de semana
-            const covered = Math.min(deficit, availableAcc);
+            // LÓGICA DE META CON DÉFICIT CUBIERTO (Visualización Fija)
+            // Usamos el dato histórico guardado 'deficit_covered' para que no cambie al recargar
+            const covered = player.deficit_covered || 0;
             
             const effectiveDonation = semanal + covered;
             const metaPerc = (effectiveDonation / weeklyGoal) * 100;
@@ -2989,6 +2987,7 @@
                             total: 0,
                             total_base: 0,
                             acc_base: 0,
+                            deficit_covered: 0,
                             isNew: true,
                             absent: false
                         };
@@ -3026,11 +3025,18 @@
                             
                             // El nuevo saldo es: Lo que tenía al inicio + (Exceso * Eficiencia)
                             player.accumulatedExcess = accStartingBalance + (surplus * efficiency);
+                            player.deficit_covered = 0; // No hubo déficit
                         } else {
                             // Déficit
                             const deficit = weeklyGoal - weeklyDonation;
-                            // El nuevo saldo es: Lo que tenía al inicio - Déficit (mínimo 0)
-                            player.accumulatedExcess = Math.max(0, accStartingBalance - deficit);
+                            // Calculamos cuánto cubrimos realmente usando la base INTACTA
+                            const covered = Math.min(deficit, accStartingBalance);
+                            
+                            // El nuevo saldo es: Lo que tenía al inicio - Lo cubierto
+                            player.accumulatedExcess = accStartingBalance - covered;
+                            
+                            // Guardamos el dato fijo para visualización perfecta posterior
+                            player.deficit_covered = covered;
                         }
 
                         // 3. ACTUALIZAR ESTADO
