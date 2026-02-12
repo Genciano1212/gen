@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.3.16</title>
+    <title>Tracker Donaciones Pocket Ants v1.3.17</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1156,7 +1156,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v1.3.16</div>
+            <div class="version-tag">v1.3.17</div>
         </div>
 
         <!-- Botones de acción -->
@@ -1969,29 +1969,36 @@
             }
         }
 
-        async function saveData() {
+        async function saveData(dataSnapshot = null) {
             // Verificar que Firebase esté disponible
             if (!firestoreDB) {
                 showStatus('⚠️ Servidor no disponible. Guardando solo localmente.', 'warning');
-                await saveToLocal({
-                    players,
-                    goalDaily,
-                    lastUpdate: Date.now(),
-                    weekStart
-                });
-                showStatus('✅ Datos guardados localmente (pendiente sincronización)', 'success');
-                return;
-            }
-
-            try {
-                const dataToSave = {
+                const localData = dataSnapshot || {
                     players,
                     goalDaily,
                     lastUpdate: Date.now(),
                     weekStart
                 };
+                await saveToLocal(localData);
+                showStatus('✅ Datos guardados localmente (pendiente sincronización)', 'success');
+                return;
+            }
+
+            try {
+                // Usar el snapshot si existe, o crear uno nuevo del estado actual
+                const dataToSave = dataSnapshot || {
+                    players: JSON.parse(JSON.stringify(players)),
+                    goalDaily,
+                    lastUpdate: Date.now(),
+                    weekStart
+                };
+
+                // Forzamos actualización de timestamp si no venía en el snapshot
+                if (!dataSnapshot) dataToSave.lastUpdate = Date.now();
 
                 await firebase.firestore().collection('data').doc('main').set(dataToSave);
+                
+                // Guardar también en local para consistencia offline
                 await saveToLocal(dataToSave);
 
                 lastUpdate = dataToSave.lastUpdate;
@@ -2034,10 +2041,20 @@
             try {
                 showStatus('⏳ Guardando y cerrando semana...', 'processing');
                 
-                // 1. Guardar estado actual en Firebase (Cierre de Semana)
-                await saveData(); 
+                // 1. CREAR SNAPSHOT (Copia congelada del cierre)
+                // Esto evita que el cambio de semana afecte a lo que se sube
+                const closingSnapshot = {
+                    players: JSON.parse(JSON.stringify(players)),
+                    goalDaily,
+                    lastUpdate: Date.now(),
+                    weekStart
+                };
+
+                // 2. Guardar snapshot en Firebase
+                await saveData(closingSnapshot); 
                 
-                // 2. Preparar inicio de la próxima semana (Shift local)
+                // 3. Preparar inicio de la próxima semana (Shift local)
+                // Ahora es seguro modificar 'players' porque ya enviamos la copia
                 Object.keys(players).forEach(name => {
                     const player = players[name];
                     player.previous = player.current;
@@ -2050,7 +2067,7 @@
                 const undoBtn = document.getElementById('undoImportBtn');
                 if (undoBtn) undoBtn.style.display = 'none';
 
-                // 3. Guardar nuevo estado base localmente
+                // 4. Guardar nuevo estado base localmente (Nueva Semana Limpia)
                 if (indexedDBInitialized) {
                     await saveToLocal({
                         players,
@@ -2063,6 +2080,7 @@
                 renderTable();
                 showStatus('✅ Datos guardados y semana cerrada correctamente.', 'success');
             } catch (error) {
+                console.error('Error en manualSave:', error);
                 showStatus('❌ Error al guardar: ' + error.message, 'error');
             }
         }
