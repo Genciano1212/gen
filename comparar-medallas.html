@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estilos de Medallas - Elige uno</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f0f23;
+            color: #fff;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 25px;
+            font-size: 0.9em;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 20px;
+            border: 2px solid transparent;
+            transition: border-color 0.3s;
+        }
+
+        .card:hover {
+            border-color: #6c5ce7;
+        }
+
+        .card-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #a29bfe;
+        }
+
+        .card-desc {
+            font-size: 0.8em;
+            color: #888;
+            margin-bottom: 15px;
+        }
+
+        .rank-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .rank-num {
+            font-weight: bold;
+            color: #6c5ce7;
+            min-width: 20px;
+        }
+
+        .medal {
+            font-size: 20px;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .player-name {
+            font-weight: 600;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .rank-row:first-of-type {
+            background: rgba(255, 215, 0, 0.08);
+        }
+
+        .note {
+            text-align: center;
+            color: #666;
+            margin-top: 25px;
+            font-size: 0.85em;
+        }
+
+        .current-tag {
+            background: #ffc107;
+            color: #000;
+            font-size: 0.65em;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🏅 Estilos de Medallas — Elige uno</h1>
+    <p class="subtitle">4 estilos × 5 niveles. Haz hover para resaltar.</p>
+
+    <div class="grid">
+
+        <!-- SET A -->
+        <div class="card">
+            <div class="card-title">Set A — Medallas Clásicas <span class="current-tag">ACTUAL</span></div>
+            <div class="card-desc">Emojis de medallas olímpicas estándar</div>
+            <div class="rank-row"><span class="rank-num">#1</span><span class="medal">🥇</span><span
+                    class="player-name">DragonMaster</span></div>
+            <div class="rank-row"><span class="rank-num">#2</span><span class="medal">🥈</span><span
+                    class="player-name">AntQueen</span></div>
+            <div class="rank-row"><span class="rank-num">#3</span><span class="medal">🥉</span><span
+                    class="player-name">FireAnt</span></div>
+            <div class="rank-row"><span class="rank-num">#4</span><span class="medal">🏅</span><span
+                    class="player-name">ShadowBug</span></div>
+            <div class="rank-row"><span class="rank-num">#5</span><span class="medal">🏅</span><span
+                    class="player-name">NightCrawler</span></div>
+        </div>
+
+        <!-- SET B -->
+        <div class="card">
+            <div class="card-title">Set B — Coronas y Estrellas</div>
+            <div class="card-desc">Corona para el #1, estrellas progresivas</div>
+            <div class="rank-row"><span class="rank-num">#1</span><span class="medal">👑</span><span
+                    class="player-name">DragonMaster</span></div>
+            <div class="rank-row"><span class="rank-num">#2</span><span class="medal">⭐</span><span
+                    class="player-name">AntQueen</span></div>
+            <div class="rank-row"><span class="rank-num">#3</span><span class="medal">🌟</span><span
+                    class="player-name">FireAnt</span></div>
+            <div class="rank-row"><span class="rank-num">#4</span><span class="medal">✨</span><span
+                    class="player-name">ShadowBug</span></div>
+            <div class="rank-row"><span class="rank-num">#5</span><span class="medal">💫</span><span
+                    class="player-name">NightCrawler</span></div>
+        </div>
+
+        <!-- SET C -->
+        <div class="card">
+            <div class="card-title">Set C — Trofeos y Fuego</div>
+            <div class="card-desc">Trofeo dorado, fuego competitivo</div>
+            <div class="rank-row"><span class="rank-num">#1</span><span class="medal">🏆</span><span
+                    class="player-name">DragonMaster</span></div>
+            <div class="rank-row"><span class="rank-num">#2</span><span class="medal">🔥</span><span
+                    class="player-name">AntQueen</span></div>
+            <div class="rank-row"><span class="rank-num">#3</span><span class="medal">⚡</span><span
+                    class="player-name">FireAnt</span></div>
+            <div class="rank-row"><span class="rank-num">#4</span><span class="medal">💪</span><span
+                    class="player-name">ShadowBug</span></div>
+            <div class="rank-row"><span class="rank-num">#5</span><span class="medal">🎯</span><span
+                    class="player-name">NightCrawler</span></div>
+        </div>
+
+        <!-- SET D -->
+        <div class="card">
+            <div class="card-title">Set D — Gemas y Rangos</div>
+            <div class="card-desc">Diamantes y gemas por nivel</div>
+            <div class="rank-row"><span class="rank-num">#1</span><span class="medal">💎</span><span
+                    class="player-name">DragonMaster</span></div>
+            <div class="rank-row"><span class="rank-num">#2</span><span class="medal">💠</span><span
+                    class="player-name">AntQueen</span></div>
+            <div class="rank-row"><span class="rank-num">#3</span><span class="medal">🔶</span><span
+                    class="player-name">FireAnt</span></div>
+            <div class="rank-row"><span class="rank-num">#4</span><span class="medal">🔷</span><span
+                    class="player-name">ShadowBug</span></div>
+            <div class="rank-row"><span class="rank-num">#5</span><span class="medal">🟣</span><span
+                    class="player-name">NightCrawler</span></div>
+        </div>
+
+    </div>
+
+    <p class="note">Abre este archivo en tu navegador: http://localhost:3456/comparar-medallas.html</p>
+</body>
+
+</html>

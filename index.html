@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.3.20</title>
+    <title>Tracker Donaciones Pocket Ants v1.1</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -607,7 +607,7 @@
         .rank-medal {
             display: inline-block;
             margin-left: 4px;
-            font-size: clamp(12px, 3vw, 14px);
+            font-size: 22px;
         }
 
         /* Footer de info */
@@ -1156,7 +1156,7 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v1.3.20</div>
+            <div class="version-tag">v1.1</div>
         </div>
 
         <!-- Botones de acción -->
@@ -1164,7 +1164,8 @@
             <button class="btn btn-manual" onclick="showManual()" title="Ingresar donaciones manualmente">
                 <span>⌨️ Entrada Manual</span>
             </button>
-            <button id="undoImportBtn" class="btn btn-undo" onclick="undoImport()" style="display:none;" title="Deshacer última importación">
+            <button id="undoImportBtn" class="btn btn-undo" onclick="undoImport()" style="display:none;"
+                title="Deshacer última importación">
                 <span>⏪ Deshacer Importación</span>
             </button>
             <button id="smartSyncBtn" class="btn btn-smart-sync" onclick="smartSyncAction()"
@@ -1176,8 +1177,7 @@
                 </svg>
             </button>
             <button class="btn btn-help" onclick="showInfo()" title="Ver guía de usuario">?</button>
-            <button class="btn-save" id="saveBtn" onclick="manualSave()"
-                title="Guardar tabla y cerrar semana">✓</button>
+            <button class="btn-save" id="saveBtn" onclick="manualSave()" title="Guardar datos mostrados">✓</button>
 
             <button class="btn btn-edit-mode" id="editModeBtn" onclick="toggleEditMode()" style="display:none;"
                 title="Modo Edición">📝</button>
@@ -1997,7 +1997,7 @@
                 if (!dataSnapshot) dataToSave.lastUpdate = Date.now();
 
                 await firebase.firestore().collection('data').doc('main').set(dataToSave);
-                
+
                 // Guardar también en local para consistencia offline
                 await saveToLocal(dataToSave);
 
@@ -2034,36 +2034,30 @@
                 return;
             }
 
-            if (!confirm('⚠️ ¿Quieres GUARDAR la tabla actual en la nube?\n\nLos datos se guardarán exactamente como los ves ahora.')) {
+            if (!confirm('⚠️ ¿Quieres GUARDAR los datos mostrados en la nube?\n\nLos datos se guardarán exactamente como los ves ahora.')) {
                 return;
             }
 
             try {
                 showStatus('⏳ Guardando datos...', 'processing');
-                
-                // 1. Guardar estado actual en Firebase
-                await saveData(); 
-                
-                // 2. OFICIALIZAR CAMBIOS PARA LA PRÓXIMA SEMANA
-                // Esto "congela" el Total y el Acumulado como nuevas bases
+
+                // Congelar bases para la próxima importación
+                // Esto NO recalcula nada, solo dice: "los valores actuales son la nueva base"
                 Object.keys(players).forEach(name => {
                     const player = players[name];
-                    // Si ya se calcularon nuevos valores, los fijamos como base
                     if (player.total !== undefined) player.total_base = player.total;
                     if (player.accumulatedExcess !== undefined) player.acc_base = player.accumulatedExcess;
                 });
 
-                // Guardar localmente esta actualización de bases
-                if (indexedDBInitialized) {
-                    await saveToLocal({
-                        players,
-                        goalDaily,
-                        lastUpdate: Date.now(),
-                        weekStart
-                    });
-                }
+                // Guardar estado actual en Firebase (sin cálculos, solo persistir)
+                await saveData();
 
-                showStatus('✅ Datos guardados y semana cerrada correctamente.', 'success');
+                // Ocultar botón de deshacer ya que los datos fueron oficializados
+                playersBackup = null;
+                const undoBtn = document.getElementById('undoImportBtn');
+                if (undoBtn) undoBtn.style.display = 'none';
+
+                showStatus('✅ Datos guardados correctamente.', 'success');
             } catch (error) {
                 console.error('Error en manualSave:', error);
                 showStatus('❌ Error al guardar: ' + error.message, 'error');
@@ -2097,14 +2091,14 @@
             const weeklyGoal = goalDaily * 7;
             const avgDaily = semanal / 7;
             const avgDailyPerc = (avgDaily / goalDaily) * 100;
-            
+
             // LÓGICA DE META CON DÉFICIT CUBIERTO (Visualización Fija)
             // Usamos el dato histórico guardado 'deficit_covered' para que no cambie al recargar
             const covered = player.deficit_covered || 0;
-            
+
             const effectiveDonation = semanal + covered;
             const metaPerc = (effectiveDonation / weeklyGoal) * 100;
-            
+
             const totalPerc = (player.total || 0) / weeklyGoal * 100;
 
             return {
@@ -2201,21 +2195,20 @@
 
                     playersActive++;
                     rankCounter++;
-                    
+
                     let nameHtml = name;
                     if (rankCounter <= 5) {
-                        const starColors = ['#FFD700', '#FFC107', '#FFFF00', '#FFFFE0', '#FFFACD'];
-                        const starIcons = ['🌟', '✶', '★', '✶', '⭑'];
+                        const medalIcons = ['🥇', '🥈', '🥉', '🏅', '🏅'];
+                        const medalSizes = [22, 20, 18, 16, 14];
                         const rankIdx = rankCounter - 1;
-                        const starShadow = '-1px -1px 0 #4A4A4A, 1px -1px 0 #4A4A4A, -1px 1px 0 #4A4A4A, 1px 1px 0 #4A4A4A';
-                        nameHtml += `<span style="position: absolute; top: 1px; right: 4px; font-size: 18px; color: ${starColors[rankIdx]}; text-shadow: ${starShadow};" title="Top ${rankCounter} histórico">${starIcons[rankIdx]}</span>`;
+                        nameHtml += `<span class="rank-medal" style="font-size:${medalSizes[rankIdx]}px" title="Top ${rankCounter} histórico">${medalIcons[rankIdx]}</span>`;
                     }
 
                     if (player.isNew) {
                         row.innerHTML = `
                             <td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}<br><span style="color: #28a745; font-size: 0.8em;">[NUEVO]</span></td>
                             <td>-</td><td>${formatNumber(player.current)}</td>
-                            <td>0</td><td>0</td><td>0%</td><td>0</td><td>0</td>
+                            <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
                             ${isEditMode ? '<td></td>' : ''}
                         `;
                         return;
@@ -2223,7 +2216,7 @@
 
                     const semanal = Math.max(0, (player.current || 0) - (player.previous || 0));
                     const calc = calculatePercentages(player);
-                    
+
                     let metaContent = `${calc.metaPerc.toFixed(1)}%`;
                     if (semanal > 0 && semanal === maxWeeklyDonation) {
                         metaContent += ' <span title="Mayor donación de la semana">⭐</span>';
@@ -2236,7 +2229,7 @@
                     if (acc >= oneMonth * 5) { tierColor = '#343a40'; tierTitle = 'Tier 4: 5%'; }
                     else if (acc >= oneMonth * 3) { tierColor = '#dc3545'; tierTitle = 'Tier 3: 10%'; }
                     else if (acc >= oneMonth) { tierColor = '#ffc107'; tierTitle = 'Tier 2: 50%'; }
-                    
+
                     const triangleMarker = `<div style="position: absolute; top: 0; left: 0; width: 0; height: 0; border-top: 8px solid ${tierColor}; border-right: 8px solid transparent;" title="${tierTitle}"></div>`;
 
                     // Lógica de déficit visual (en rojo debajo del acumulado)
@@ -2274,7 +2267,7 @@
                             <td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td>
                             <td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td>
                             <td style="position: relative;" title="${tierTitle}">${triangleMarker}${formatNumber(acc)}${deficitHtml}${formatExtraDonationTime(acc / (goalDaily || 1))}</td>
-                            <td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>
+                            <td>${formatNumber(player.total || 0)}</td>
                             ${actionsHtml}
                         `;
                     }
@@ -2980,8 +2973,10 @@
 
                     if (!players[name]) {
                         // Es un jugador totalmente nuevo (Semana de Referencia)
+                        // TENÍA = 0 (no tenía nada), TIENE = donación ingresada
+                        // Todo lo demás = "-" (sin cálculos esta semana)
                         players[name] = {
-                            previous: donationValue,
+                            previous: 0,
                             current: donationValue,
                             accumulatedExcess: 0,
                             total: 0,
@@ -2994,11 +2989,11 @@
                     } else {
                         // Jugador existente
                         const player = players[name];
-                        
+
                         // LÓGICA DE AVANCE NATURAL DE SEMANA
                         // El valor que tenía "Actualmente" pasa a ser su "Tenía" (Previous)
                         // Y el nuevo valor importado se convierte en su nuevo "Tiene" (Current)
-                        const previous = player.current || 0; 
+                        const previous = player.current || 0;
                         const current = donationValue;
                         const weeklyDonation = Math.max(0, current - previous);
 
@@ -3017,12 +3012,12 @@
                         if (weeklyDonation >= weeklyGoal) {
                             // Superávit
                             const surplus = weeklyDonation - weeklyGoal;
-                            
+
                             let efficiency = 1.0;
                             if (accStartingBalance >= (oneMonth * 5)) efficiency = 0.05;
                             else if (accStartingBalance >= (oneMonth * 3)) efficiency = 0.10;
                             else if (accStartingBalance >= oneMonth) efficiency = 0.50;
-                            
+
                             // El nuevo saldo es: Lo que tenía al inicio + (Exceso * Eficiencia)
                             player.accumulatedExcess = accStartingBalance + (surplus * efficiency);
                             player.deficit_covered = 0; // No hubo déficit
@@ -3031,10 +3026,10 @@
                             const deficit = weeklyGoal - weeklyDonation;
                             // Calculamos cuánto cubrimos realmente usando la base INTACTA
                             const covered = Math.min(deficit, accStartingBalance);
-                            
+
                             // El nuevo saldo es: Lo que tenía al inicio - Lo cubierto
                             player.accumulatedExcess = accStartingBalance - covered;
-                            
+
                             // Guardamos el dato fijo para visualización perfecta posterior
                             player.deficit_covered = covered;
                         }
@@ -3044,7 +3039,7 @@
                         player.current = current;
                         player.isNew = false;
                         player.absent = false;
-                        
+
                         // NOTA CRÍTICA: NO actualizamos total_base ni acc_base aquí.
                         // Eso solo debe ocurrir al darle al botón GUARDAR.
                     }
@@ -3188,7 +3183,10 @@
                     datos_core: {
                         previous: player.previous || 0,
                         current: player.current || 0,
-                        accumulated_base: player.accumulatedExcess || 0
+                        accumulated_base: player.accumulatedExcess || 0,
+                        total_base: player.total_base || 0,
+                        acc_base: player.acc_base || 0,
+                        deficit_covered: player.deficit_covered || 0
                     },
                     estado_calculado: {
                         semanal: semanal,
@@ -3359,6 +3357,9 @@
                                 current: datosCore.current || 0,
                                 accumulatedExcess: datosCore.accumulated_base || 0,
                                 total: player.total_historico || 0,
+                                total_base: datosCore.total_base || (player.total_historico || 0),
+                                acc_base: datosCore.acc_base || (datosCore.accumulated_base || 0),
+                                deficit_covered: datosCore.deficit_covered || 0,
                                 isNew: player.flags?.is_new || false,
                                 absent: player.flags?.is_absent || false
                             };

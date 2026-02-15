@@ -1,0 +1,107 @@
+DOCUMENTACIÓN TÉCNICA Y LÓGICA DE FUNCIONAMIENTO - APP POCKET ANTS DONACIONES
+================================================================================
+
+A. INTRODUCCIÓN
+---------------
+Esta App (PWA) es un sistema de gestión para rastrear donaciones en el juego "Pocket Ants". Funciona como una hoja de cálculo inteligente con persistencia en la nube (Firebase) y soporte offline. Su objetivo es calcular cuánto aporta cada jugador semanalmente, gestionar un "acumulado" (saldo a favor/mochila) y aplicar reglas de negocio específicas.
+
+B. CÁLCULO DETALLADO DE COLUMNAS (ALGORITMOS)
+---------------------------------------------
+A continuación se detalla la lógica matemática exacta detrás de cada columna de la tabla principal.
+
+1. COLUMNA "TENÍA" (PREVIOUS)
+   - Definición: La cantidad total de donaciones que el jugador tenía al INICIO oficial de la semana.
+   - Origen: Se carga desde la base de datos (Firebase/IndexedDB). Es un valor estático que no cambia durante la semana.
+   - Fórmula: `Valor almacenado en base de datos.previous`
+
+2. COLUMNA "TIENE" (CURRENT)
+   - Definición: La cantidad total actual que el jugador tiene en el juego.
+   - Origen: Se actualiza mediante la "Entrada Manual" o el "Modo Edición".
+   - Fórmula: `Input del Admin (Valor directo)`
+
+3. COLUMNA "SEMANAL" (WEEKLY DONATION)
+   - Definición: Lo que el jugador ha donado estrictamente dentro de la semana actual.
+   - Fórmula: `MAX(0, TIENE - TENÍA)`
+   - Nota: Si el resultado es negativo (por error de tipeo o bug del juego), se muestra 0 para no romper cálculos, pero visualmente debería alertar si el "TIENE" es menor al "TENÍA".
+
+4. COLUMNA "Ø DIARIO" (DAILY AVERAGE)
+   - Definición: El promedio simple de donación diaria en la semana actual.
+   - Fórmula: `SEMANAL / 7`
+   - Formato: Número entero o con 1 decimal (ej. 2.1k).
+
+5. COLUMNA "%META" (GOAL PERCENTAGE)
+   - Definición: Porcentaje de cumplimiento de la meta semanal, considerando ayudas del acumulado.
+   - Variables:
+     * `Meta Semanal` = `Meta Diaria Configurada` * 7
+     * `Donación Efectiva` = `SEMANAL` + `Déficit Cubierto` (ver columna Acumulado)
+   - Fórmula: `(Donación Efectiva / Meta Semanal) * 100`
+   - Visualización:
+     * Verde: >= 90%
+     * Amarillo: 70% - 89.9%
+     * Rojo: < 70%
+
+6. COLUMNA "ACUMULADO" (ACCUMULATED EXCESS / MOCHILA)
+   - Definición: Saldo a favor histórico. Es la columna más compleja.
+   - Lógica de Cálculo (Se ejecuta en cada cambio de datos):
+     
+     Variable `Acumulado Inicial` = Valor traído de la semana anterior.
+     
+     ESCENARIO A: SUPERÁVIT (Jugador dona MÁS de la meta)
+     * Condición: `SEMANAL >= Meta Semanal`
+     * `Exceso` = `SEMANAL` - `Meta Semanal`
+     * `Factor Eficiencia` = Ver Tabla de Tiers abajo (1.0, 0.5, 0.1, 0.05)
+     * `Nuevo Acumulado` = `Acumulado Inicial` + (`Exceso` * `Factor Eficiencia`)
+     * `Déficit Cubierto` = 0
+
+     ESCENARIO B: DÉFICIT (Jugador dona MENOS de la meta)
+     * Condición: `SEMANAL < Meta Semanal`
+     * `Falta` = `Meta Semanal` - `SEMANAL`
+     * `Déficit Cubierto` = `MIN(Falta, Acumulado Inicial)` (Se toma lo que se pueda del saldo)
+     * `Nuevo Acumulado` = `Acumulado Inicial` - `Déficit Cubierto`
+   
+   - Visualización Roja: Si hubo `Déficit Cubierto` > 0, se muestra en texto rojo pequeño debajo del acumulado final (ej: "(-15.000)").
+
+7. COLUMNA "TOTAL" (LIFETIME TOTAL)
+   - Definición: La suma histórica absoluta de donaciones desde que el jugador existe en el registro.
+   - Fórmula: `Total Base (al inicio de semana)` + `SEMANAL`
+   - Nota: Se usa para ordenar el Ranking de la tabla.
+
+C. CICLO DE FUNCIONAMIENTO EXACTO
+---------------------------------
+1. INICIO DE SEMANA: El sistema congela los valores. "TIENE" pasa a ser el nuevo "TENÍA". "SEMANAL" vuelve a 0.
+2. CARGA DE DATOS: Admin pega los datos. El sistema busca por nombre.
+3. PROCESAMIENTO: Se ejecutan las fórmulas de arriba.
+4. CIERRE (GUARDAR): Se sube a la nube y se fijan las nuevas bases.
+
+D. INTERFAZ Y BOTONES
+---------------------
+1. ENTRADA MANUAL (Teclado): Pegar lista CSV. Dispara el algoritmo de similitud de nombres.
+2. DESHACER (Flecha): Revierte al estado anterior inmediato.
+3. SINCRONIZACIÓN (Nube):
+   - Azul: Al día.
+   - Punto Rojo: Datos nuevos en nube. Clic para bajar.
+4. GUARDAR (Check Verde): CONFIRMA la semana. Crítico para la persistencia.
+5. EDICIÓN (Lápiz): Permite corregir "TENÍA", "TIENE" o "ACUMULADO" celda por celda.
+6. CONFIGURACIÓN (Engranaje): Cambiar valor de Meta Diaria.
+
+E. TABLA DE TIERS (EFICIENCIA)
+------------------------------
+Define qué porcentaje del exceso se guarda en la mochila.
+* `Meta Mensual` = `Meta Semanal` * 4
+
+- TIER 1 (Verde): Acumulado < 1 `Meta Mensual`. Eficiencia: 100%.
+- TIER 2 (Amarillo): Acumulado >= 1 `Meta Mensual`. Eficiencia: 50%.
+- TIER 3 (Rojo): Acumulado >= 3 `Metas Mensuales`. Eficiencia: 10%.
+- TIER 4 (Negro): Acumulado >= 5 `Metas Mensuales`. Eficiencia: 5%.
+
+F. INDICADORES VISUALES
+-----------------------
+- [NUEVO] (Verde): Jugador recién creado este ciclo.
+- [BANEADO] (Gris/Tachado): Jugador ausente en la lista importada.
+- Medallas (🥇🥈🥉): Top 5 jugadores por TOTAL histórico.
+
+PERFIL TÉCNICO
+--------------
+- Stack: HTML5, CSS3, JS (Vanilla).
+- Datos: JSON v2.
+- Persistencia: Firebase + IndexedDB.
