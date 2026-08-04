@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Donaciones Pocket Ants v1.3</title>
+    <title>Tracker Donaciones Pocket Ants v1.1</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -364,6 +364,10 @@
             background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);
         }
 
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #e05361 100%);
+        }
+
         .btn-cancel {
             background: linear-gradient(135deg, #6c757d 0%, #868e96 100%);
         }
@@ -531,6 +535,26 @@
             padding-left: clamp(4px, 1.5vw, 8px);
         }
 
+        /* Ajustes de ancho de columnas */
+        th:nth-child(1), td:nth-child(1) {
+            width: 35%;
+        }
+        
+        th:nth-child(6), td:nth-child(6) { /* %META */
+            width: 5%;
+        }
+        
+        th:nth-child(7), td:nth-child(7) { /* ACUMULADO */
+            width: 20%;
+        }
+        
+        th:nth-child(4), td:nth-child(4),
+        th:nth-child(5), td:nth-child(5) {
+            width: 8%;
+            padding-left: 2px;
+            padding-right: 2px;
+        }
+
         tfoot td {
             padding: clamp(8px, 2vw, 10px) clamp(3px, 1vw, 5px);
             text-align: center;
@@ -607,7 +631,7 @@
         .rank-medal {
             display: inline-block;
             margin-left: 4px;
-            font-size: clamp(12px, 3vw, 14px);
+            font-size: 22px;
         }
 
         /* Footer de info */
@@ -663,6 +687,18 @@
             font-weight: bold;
             min-height: unset;
             box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .btn-save:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-save:active {
+            transform: scale(0.95);
         }
 
         .btn-sync {
@@ -1047,7 +1083,7 @@
             }
 
             .btn-manual::after {
-                content: '⌨️';
+                content: '📋';
                 font-size: 18px;
             }
 
@@ -1144,13 +1180,17 @@
             <div class="header-subtitle" id="headerLastUpdate">
                 Última actualización: Cargando...
             </div>
-            <div class="version-tag">v1.3.4</div>
+            <div class="version-tag">v1.2</div>
         </div>
 
         <!-- Botones de acción -->
         <div class="action-buttons">
-            <button class="btn btn-manual" onclick="showManual()" title="Ingresar donaciones manualmente">
-                <span>⌨️ Entrada Manual</span>
+            <button class="btn btn-manual" onclick="showDataInputOptions()" title="Opciones de entrada de datos">
+                <span>📋 Subir JSON</span>
+            </button>
+            <button id="undoImportBtn" class="btn btn-undo" onclick="undoImport()" style="display:none;"
+                title="Deshacer última importación">
+                <span>⏪ Deshacer Importación</span>
             </button>
             <button id="smartSyncBtn" class="btn btn-smart-sync" onclick="smartSyncAction()"
                 title="Sincronización Inteligente">
@@ -1161,8 +1201,7 @@
                 </svg>
             </button>
             <button class="btn btn-help" onclick="showInfo()" title="Ver guía de usuario">?</button>
-            <button class="btn-save" id="saveBtn" onclick="manualSave()"
-                title="Opciones de guardado y cierre de semana">✓</button>
+            <button class="btn-save" id="saveBtn" onclick="manualSave()" title="Guardar datos mostrados">✓</button>
 
             <button class="btn btn-edit-mode" id="editModeBtn" onclick="toggleEditMode()" style="display:none;"
                 title="Modo Edición">📝</button>
@@ -1170,6 +1209,32 @@
             <button class="btn btn-config" onclick="configGoal()" title="Cambiar la meta diaria">
                 <span>⚙️ Configurar Meta</span>
             </button>
+        </div>
+
+        <!-- Modal de opciones de entrada de datos -->
+        <div id="dataInputOptionsModal" class="modal-overlay">
+            <div class="modal-content">
+                <span class="modal-close" onclick="hideDataInputOptions()">&times;</span>
+                <h2 style="color: #8e24aa;">📋 Entrada de Datos</h2>
+                <p>Elige cómo quieres ingresar los datos:</p>
+
+                <input type="file" id="jsonFileInput" accept="application/json, text/plain, .json, */*" style="width: 0.1px; height: 0.1px; opacity: 0; overflow: hidden; position: absolute; z-index: -1;" onchange="handleJsonFileUpload(event)">
+                <label for="jsonFileInput" class="btn"
+                    style="width: 100%; margin-bottom: 15px; padding: 15px; background: linear-gradient(135deg, #8e24aa 0%, #ab47bc 100%); color: white; height: auto; white-space: normal; display: flex; flex-direction: column; align-items: flex-start; text-align: left; cursor: pointer;">
+                    <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">📂 Cargar archivo JSON</div>
+                    <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Sube un archivo JSON del clan. Se extraerán los nombres y donaciones automáticamente.</div>
+                </label>
+
+                <button class="btn" onclick="openManualTextEntry()"
+                    style="width: 100%; padding: 15px; background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%); color: white; height: auto; white-space: normal; display: flex; flex-direction: column; align-items: flex-start; text-align: left;">
+                    <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">⌨️ Escritura manual</div>
+                    <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Escribe los datos directamente en formato nombre,donación (uno por línea).</div>
+                </button>
+
+                <div class="section-buttons" style="margin-top: 20px;">
+                    <button class="btn btn-cancel" onclick="hideDataInputOptions()">Cancelar</button>
+                </div>
+            </div>
         </div>
 
         <!-- Indicador de cambios sin guardar -->
@@ -1204,12 +1269,13 @@
             <p>📱 Última actualización: <span id="lastUpdateTime">-</span></p>
             <p>🗓️ Semana iniciada: <span id="weekStartTime">-</span></p>
             <p id="admin-login-container" style="margin-top: 10px;"></p>
-            <div id="backupButtons" style="display: none; margin-top: 10px;">
-                <button class="btn-backup" id="backupBtn" onclick="backupData()">💾 Backup JSON v2</button>
-                <button class="btn-backup" id="restoreBtn" onclick="document.getElementById('restoreFile').click()">📂
-                    Restaurar Backup</button>
-                <input type="file" id="restoreFile" accept=".json,.txt" style="display: none;"
-                    onchange="restoreBackup(event)">
+            <div id="backupButtons" style="display: none; margin-top: 10px; flex-direction: column; align-items: center; gap: 10px;">
+                <button class="btn-backup" id="styleModeBtn" onclick="toggleStyleMode()" style="background-color: #6f42c1; color: white; border: none; width: 100%; max-width: 300px; justify-content: center; padding: 10px 15px; font-weight: bold;">🖌️ Editar Estilos</button>
+                <div style="display: flex; gap: 10px; justify-content: center; width: 100%; flex-wrap: wrap;">
+                    <button class="btn-backup" id="backupBtn" onclick="backupData()">💾 Backup JSON v2</button>
+                    <button class="btn-backup" id="restoreBtn" onclick="document.getElementById('restoreFile').click()">📂 Restaurar Backup</button>
+                </div>
+                <input type="file" id="restoreFile" accept=".json,.txt" style="display: none;" onchange="restoreBackup(event)">
             </div>
         </div>
     </div>
@@ -1257,6 +1323,107 @@
                     ✅ Importar a Tabla (Local)
                 </button>
                 <button class="btn btn-cancel" onclick="hideReview()">❌ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Estilo de Nombre -->
+    <div id="styleModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px; padding: 20px;">
+            <h2>🎨 Editar Estilo: <span id="stylePlayerName"></span></h2>
+            <!-- Preview Box -->
+            <div id="stylePreviewContainer" style="margin-top: 15px; border: 1px solid #ddd; padding: 15px; border-radius: 4px; background: #ffffff; min-height: 50px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
+                <span id="stylePreviewName" style="transition: all 0.2s; font-weight: 600; font-size: 14px;">Nombre de Prueba</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                <div>
+                    <label style="display:block; margin-bottom: 5px; font-size: 0.9em;">Color Letra:</label>
+                    <input type="color" id="styleColorPicker" oninput="updateStylePreview()" style="width: 100%; height: 40px; cursor: pointer; border: none; border-radius: 4px; padding: 0;">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom: 5px; font-size: 0.9em;">Color Celda:</label>
+                    <input type="color" id="styleBgColorPicker" value="#ffffff" oninput="updateStylePreview()" style="width: 100%; height: 40px; cursor: pointer; border: none; border-radius: 4px; padding: 0;">
+                </div>
+                <div style="grid-column: 1 / -1;">
+                    <label style="display:block; margin-bottom: 5px; font-size: 0.9em;">Fuente:</label>
+                    <select id="styleFont" onchange="updateStylePreview()" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc;">
+                        <option value="default">Por Defecto</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="Verdana, sans-serif">Verdana</option>
+                        <option value="'Courier New', monospace">Courier New</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                        <option value="'Comic Sans MS', cursive, sans-serif">Comic Sans</option>
+                        <option value="Georgia, serif">Georgia</option>
+                        <option value="Tahoma, sans-serif">Tahoma</option>
+                        <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                        <option value="Impact, fantasy">Impact</option>
+                        <option value="'Lucida Console', monospace">Lucida Console</option>
+                        <option value="Helvetica, sans-serif">Helvetica</option>
+                        <option value="Palatino, serif">Palatino</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom: 5px; font-size: 0.9em;">Tamaño:</label>
+                    <select id="styleFontSize" onchange="updateStylePreview()" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc;">
+                        <option value="default">Por Defecto</option>
+                        <option value="12px">12px</option>
+                        <option value="14px">14px</option>
+                        <option value="16px">16px</option>
+                        <option value="18px">18px</option>
+                        <option value="20px">20px</option>
+                        <option value="24px">24px</option>
+                        <option value="28px">28px</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom: 5px; font-size: 0.9em;">Estilo:</label>
+                    <select id="styleSelect" onchange="updateStylePreview()" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc;">
+                        <option value="normal">Normal</option>
+                        <option value="bold">Negrita</option>
+                        <option value="italic">Cursiva</option>
+                        <option value="bold italic">Negrita y Cursiva</option>
+                    </select>
+                </div>
+                <div style="grid-column: 1 / -1;">
+                    <label style="display:block; margin-bottom: 5px; font-size: 0.9em;">Alineación:</label>
+                    <select id="styleAlign" onchange="updateStylePreview()" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc;">
+                        <option value="default">Por Defecto</option>
+                        <option value="left">Izquierda</option>
+                        <option value="center">Centro</option>
+                        <option value="right">Derecha</option>
+                    </select>
+                </div>
+                <!-- Contorno de Letra -->
+                <div style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <label style="display:block; margin-bottom: 5px; font-size: 0.9em;">Color Borde Letra:</label>
+                        <input type="color" id="styleBorderColorPicker" value="#000000" oninput="updateStylePreview()" style="width: 100%; height: 40px; cursor: pointer; border: none; border-radius: 4px; padding: 0;">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 5px; font-size: 0.9em;">Grosor Borde:</label>
+                        <select id="styleBorderSize" onchange="updateStylePreview()" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc;">
+                            <option value="none">Ninguno</option>
+                            <option value="1px">Fino</option>
+                            <option value="2px">Medio</option>
+                            <option value="3px">Grueso</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Transparencia de celda -->
+                <div style="grid-column: 1 / -1;">
+                    <label style="display:flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9em;">
+                        <span>Transparencia Celda (Relleno):</span>
+                        <span id="styleBgOpacityValue">100%</span>
+                    </label>
+                    <input type="range" id="styleBgOpacity" min="0" max="100" value="100" oninput="document.getElementById('styleBgOpacityValue').textContent = this.value + '%'; updateStylePreview()" style="width: 100%;">
+                </div>
+            </div>
+            <div class="review-buttons" style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; flex-wrap: wrap;">
+                <button class="btn btn-danger" onclick="resetStyle()" style="margin-right: auto;">🔄 Restablecer</button>
+                <button class="btn btn-success" onclick="saveStyle()">Guardar</button>
+                <button class="btn btn-cancel" onclick="document.getElementById('styleModal').classList.remove('active')">Cancelar</button>
             </div>
         </div>
     </div>
@@ -1342,34 +1509,6 @@
         </div>
     </div>
 
-    <!-- Modal de opciones de guardado -->
-    <div id="saveOptionsModal" class="modal-overlay">
-        <div class="modal-content">
-            <span class="modal-close" onclick="hideSaveOptions()">&times;</span>
-            <h2>💾 Opciones de Guardado</h2>
-            <p>Elige qué acción deseas realizar:</p>
-
-            <button class="btn btn-success" onclick="executeSave('UPDATE')"
-                style="width: 100%; margin-bottom: 15px; padding: 15px; height: auto; white-space: normal; display: flex; flex-direction: column; align-items: flex-start; text-align: left;">
-                <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">✅ Guardar Cambios</div>
-                <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Actualiza los datos locales y en
-                    Firebase. La semana continúa normalmente.</div>
-            </button>
-
-            <button class="btn btn-manual" onclick="executeSave('NEW_WEEK')"
-                style="width: 100%; padding: 15px; background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); height: auto; white-space: normal; display: flex; flex-direction: column; align-items: flex-start; text-align: left;">
-                <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">🔄 Cerrar Semana e Iniciar Nueva
-                </div>
-                <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Calcula acumulados finales, reinicia
-                    contadores a cero y guarda todo en Firebase.</div>
-            </button>
-
-            <div class="section-buttons" style="margin-top: 20px;">
-                <button class="btn btn-cancel" onclick="hideSaveOptions()">Cancelar</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Modal de opciones de Sincronización (Smart Sync) -->
     <div id="syncOptionsModal" class="modal-overlay">
         <div class="modal-content">
@@ -1426,6 +1565,7 @@
 
         // Variables globales
         let players = {};
+        let playersBackup = null;
         let goalDaily = CONFIG.DEFAULT_GOAL;
         let lastUpdate = Date.now();
         let weekStart = getWeekStart();
@@ -1981,29 +2121,36 @@
             }
         }
 
-        async function saveData() {
+        async function saveData(dataSnapshot = null, updateTimestamp = true) {
             // Verificar que Firebase esté disponible
             if (!firestoreDB) {
                 showStatus('⚠️ Servidor no disponible. Guardando solo localmente.', 'warning');
-                await saveToLocal({
+                const localData = dataSnapshot || {
                     players,
                     goalDaily,
-                    lastUpdate: Date.now(),
+                    lastUpdate: updateTimestamp ? Date.now() : lastUpdate,
                     weekStart
-                });
+                };
+                await saveToLocal(localData);
                 showStatus('✅ Datos guardados localmente (pendiente sincronización)', 'success');
                 return;
             }
 
             try {
-                const dataToSave = {
-                    players,
+                // Usar el snapshot si existe, o crear uno nuevo del estado actual
+                const dataToSave = dataSnapshot || {
+                    players: JSON.parse(JSON.stringify(players)),
                     goalDaily,
-                    lastUpdate: Date.now(),
+                    lastUpdate: updateTimestamp ? Date.now() : lastUpdate,
                     weekStart
                 };
 
+                // Forzamos actualización de timestamp si no venía en el snapshot
+                if (!dataSnapshot && updateTimestamp) dataToSave.lastUpdate = Date.now();
+
                 await firebase.firestore().collection('data').doc('main').set(dataToSave);
+
+                // Guardar también en local para consistencia offline
                 await saveToLocal(dataToSave);
 
                 lastUpdate = dataToSave.lastUpdate;
@@ -2038,8 +2185,35 @@
                 showStatus('❌ Debes iniciar sesión como admin.', 'error');
                 return;
             }
-            // Restaurado el menú de opciones a petición del usuario
-            showSaveOptions();
+
+            if (!confirm('⚠️ ¿Quieres GUARDAR los datos mostrados en la nube?\n\nLos datos se guardarán exactamente como los ves ahora.')) {
+                return;
+            }
+
+            try {
+                showStatus('⏳ Guardando datos...', 'processing');
+
+                // Congelar bases para la próxima importación
+                // Esto NO recalcula nada, solo dice: "los valores actuales son la nueva base"
+                Object.keys(players).forEach(name => {
+                    const player = players[name];
+                    if (player.total !== undefined) player.total_base = player.total;
+                    if (player.accumulatedExcess !== undefined) player.acc_base = player.accumulatedExcess;
+                });
+
+                // Guardar estado actual en Firebase (sin cálculos, solo persistir)
+                await saveData();
+
+                // Ocultar botón de deshacer ya que los datos fueron oficializados
+                playersBackup = null;
+                const undoBtn = document.getElementById('undoImportBtn');
+                if (undoBtn) undoBtn.style.display = 'none';
+
+                showStatus('✅ Datos guardados correctamente.', 'success');
+            } catch (error) {
+                console.error('Error en manualSave:', error);
+                showStatus('❌ Error al guardar: ' + error.message, 'error');
+            }
         }
 
         // --- FUNCIONES DE RENDERIZADO Y FORMATO ---
@@ -2065,27 +2239,27 @@
         }
 
         function calculatePercentages(player) {
-            const semanal = (player.current || 0) - (player.previous || 0);
+            const semanal = Math.max(0, (player.current || 0) - (player.previous || 0));
             const weeklyGoal = goalDaily * 7;
             const avgDaily = semanal / 7;
             const avgDailyPerc = (avgDaily / goalDaily) * 100;
 
-            const availableExcess = Math.max(0, player.accumulatedExcess || 0);
-            const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
-            const coveredWithAccumulated = Math.min(weeklyDeficit, availableExcess);
-            const effectiveDonation = semanal + coveredWithAccumulated;
-            const metaPerc = coveredWithAccumulated > 0
-                ? Math.min(100, (effectiveDonation / weeklyGoal) * 100)
-                : (semanal / weeklyGoal) * 100;
+            // LÓGICA DE META CON DÉFICIT CUBIERTO (Visualización Fija)
+            // Usamos el dato histórico guardado 'deficit_covered' para que no cambie al recargar
+            const covered = player.deficit_covered || 0;
+
+            const effectiveDonation = semanal + covered;
+            const metaPerc = (effectiveDonation / weeklyGoal) * 100;
 
             const totalPerc = (player.total || 0) / weeklyGoal * 100;
 
             return {
-                semanal: Math.max(0, semanal),
-                avgDaily: Math.max(0, avgDaily),
-                avgDailyPerc: Math.max(0, avgDailyPerc),
-                metaPerc: Math.max(0, metaPerc),
-                totalPerc: Math.max(0, totalPerc)
+                semanal: semanal,
+                avgDaily: avgDaily,
+                avgDailyPerc: avgDailyPerc,
+                metaPerc: metaPerc,
+                covered: covered,
+                totalPerc: totalPerc
             };
         }
 
@@ -2113,20 +2287,16 @@
 
         function renderTable() {
             try {
-                // Selección defensiva de elementos
                 const tbody = document.getElementById('tableBody') || document.querySelector('#table tbody');
                 const tfoot = document.querySelector('#table tfoot');
                 const tableHeader = document.getElementById('tableHeader') || document.querySelector('.table-header');
 
-                if (!tbody) { console.error('Error crítico: No se encuentra tbody'); return; }
-                if (!tfoot) { console.error('Error crítico: No se encuentra tfoot'); return; }
-                if (!tableHeader) { console.error('Error crítico: No se encuentra tableHeader'); return; }
+                if (!tbody || !tfoot || !tableHeader) return;
 
                 tbody.innerHTML = '';
 
-                // Actualizar header dinámicamente según modo edición
-                if (isEditMode) {
-                    tableHeader.innerHTML = `
+                // Header dinámico
+                tableHeader.innerHTML = `
                     <tr>
                         <th>NOMBRE</th>
                         <th>TENÍA</th>
@@ -2136,230 +2306,180 @@
                         <th>%META</th>
                         <th>ACUMULADO</th>
                         <th>TOTAL</th>
-                        <th>ACCIONES</th>
+                        ${(isEditMode || window.isStyleEditMode) ? '<th>ACCIONES</th>' : ''}
                     </tr>
                 `;
-                } else {
-                    tableHeader.innerHTML = `
-                    <tr>
-                        <th>NOMBRE</th>
-                        <th>TENÍA</th>
-                        <th>TIENE</th>
-                        <th>SEMANAL</th>
-                        <th>Ø DIARIO</th>
-                        <th>%META</th>
-                        <th>ACUMULADO</th>
-                        <th>TOTAL</th>
-                    </tr>
-                `;
-                }
 
                 const playerNames = Object.keys(players);
                 if (playerNames.length === 0) {
-                    const colspan = isEditMode ? 9 : 8;
-                    tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center; padding: 40px; color: #6c757d;">No hay datos. Inicia sesión como admin para añadir jugadores.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="${isEditMode ? 9 : 8}" style="text-align: center; padding: 40px; color: #6c757d;">No hay datos. Inicia sesión como admin para añadir jugadores.</td></tr>`;
                     tfoot.innerHTML = '';
                     return;
                 }
 
+                // Ordenar por total histórico (Top 5 visible)
                 const sorted = playerNames.sort((a, b) => {
-                    const playerA = players[a], playerB = players[b];
-                    const aIsAbsent = playerA.absent || false, bIsAbsent = playerB.absent || false;
-                    if (aIsAbsent !== bIsAbsent) return aIsAbsent ? 1 : -1;
-                    if (aIsAbsent && bIsAbsent) return a.localeCompare(b);
-                    const aTotal = playerA?.total || 0, bTotal = playerB?.total || 0;
-                    return bTotal - aTotal;
+                    const pA = players[a], pB = players[b];
+                    if (pA.absent !== pB.absent) return pA.absent ? 1 : -1;
+                    return (pB.total || 0) - (pA.total || 0);
                 });
 
                 let maxWeeklyDonation = 0;
                 sorted.forEach(name => {
-                    const player = players[name];
-                    const semanal = (player.current || 0) - (player.previous || 0);
-                    if (!player.absent && semanal > maxWeeklyDonation) maxWeeklyDonation = semanal;
+                    const p = players[name];
+                    if (!p.absent && !p.isNew) {
+                        const sem = (p.current || 0) - (p.previous || 0);
+                        if (sem > maxWeeklyDonation) maxWeeklyDonation = sem;
+                    }
                 });
 
-                let totalSemanal = 0, totalAcumulado = 0, totalAcumuladoExceso = 0, playersActive = 0, activePlayerRank = 0;
+                let totalSemanal = 0, totalAcumuladoHistorico = 0, totalAcumuladoMochila = 0, playersActive = 0, rankCounter = 0;
 
                 sorted.forEach(name => {
                     const player = players[name];
-                    if (!player) return;
-                    player.weeklyTotal = (player.current || 0) - (player.previous || 0);
-                    player.accumulatedExcess = player.accumulatedExcess || 0;
-                    player.isNew = player.isNew || false;
                     const row = tbody.insertRow();
 
                     if (player.absent) {
                         row.className = 'absent-player';
-                        const colspan = isEditMode ? 8 : 7;
-                        row.innerHTML = `<td>${name}</td><td colspan="${colspan}">❌ Baneado</td>`;
-                        return;
-                    }
-
-                    if (player.isNew) {
-                        if (isEditMode) {
-                            row.innerHTML = `<td style="font-weight: 500; text-align: center;">${name}<br><span style="color: #28a745; font-size: 0.9em; font-weight: bold;">NUEVO</span></td><td>-</td><td>${formatNumber(player.current || 0)}</td><td>0</td><td>0</td><td>0%</td><td>0</td><td>0</td><td></td>`;
-                        } else {
-                            row.innerHTML = `<td style="font-weight: 500; text-align: center;">${name}<br><span style="color: #28a745; font-size: 0.9em; font-weight: bold;">NUEVO</span></td><td>-</td><td>${formatNumber(player.current || 0)}</td><td>0</td><td>0</td><td>0%</td><td>0</td><td>0</td>`;
-                        }
-                        return;
-                    }
-
-                    // Si está en modo edición para este jugador
-                    if (editingPlayer === name) {
-                        const semanal = (player.current || 0) - (player.previous || 0);
-                        const weeklyGoal = goalDaily * 7;
-                        const weeklyExcess = Math.max(0, semanal - weeklyGoal);
-                        const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
-                        const availableExcess = Math.max(0, player.accumulatedExcess || 0);
-                        const deficitDraw = Math.min(weeklyDeficit, availableExcess);
-                        const finalPotentialExcess = availableExcess - deficitDraw + weeklyExcess;
-
-                        const calc = calculatePercentages(player);
-
-                        let nameHtml = name;
-                        if (activePlayerRank <= 5) {
-                            const starColors = ['#FFD700', '#FFC107', '#FFFF00', '#FFFFE0', '#FFFACD'];
-                            const starIcons = ['🌟', '✶', '★', '✶', '⭑'];
-                            const rank = activePlayerRank - 1;
-                            const starShadow = '-1px -1px 0 #4A4A4A, 1px -1px 0 #4A4A4A, -1px 1px 0 #4A4A4A, 1px 1px 0 #4A4A4A';
-                            let currentStarFontSize = activePlayerRank === 2 ? '20px' : '18px';
-                            nameHtml += `<span style="position: absolute; top: 1px; right: 4px; font-size: ${currentStarFontSize}; color: ${starColors[rank]}; text-shadow: ${starShadow};" title="Top ${activePlayerRank} donador total">${starIcons[rank]}</span>`;
-                        }
-
-                        row.innerHTML = `
-                        <td style="font-weight: 600; padding: 16px 5px; position: relative;">
-                            <input type="text" id="edit-name-${name}" value="${name}"
-                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
-                        </td>
-                        <td>
-                            <input type="number" id="edit-previous-${name}" value="${player.previous || 0}"
-                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
-                        </td>
-                        <td>
-                            <input type="number" id="edit-current-${name}" value="${player.current || 0}"
-                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
-                        </td>
-                        <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
-                            ${formatNumber(calc.semanal)}
-                        </td>
-                        <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
-                            ${formatNumber(calc.avgDaily)}
-                        </td>
-                        <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
-                            ${calc.metaPerc.toFixed(1)}%
-                        </td>
-                        <td>
-                            <input type="number" id="edit-accumulated-${name}" value="${player.accumulatedExcess || 0}"
-                                   style="width: 100%; padding: 6px 8px; border: 2px solid #007bff; border-radius: 6px; font-size: inherit; font-weight: 600; background: #e7f3ff; color: #333;">
-                        </td>
-                        <td style="background: #f8f9fa; color: #6c757d; font-style: italic; font-size: clamp(9px, 2.2vw, 11px);">
-                            ${formatNumber(player.total || 0)}
-                        </td>
-                        <td style="text-align: center; padding: clamp(4px, 1vw, 8px);">
-                            <button class="btn-save" onclick="saveEditing()" title="Guardar" style="margin-right: clamp(2px, 0.5vw, 4px); font-size: clamp(12px, 3vw, 16px); padding: clamp(4px, 1vw, 8px);">✓</button>
-                            <button class="btn btn-cancel" onclick="cancelEditing()" title="Cancelar" style="font-size: clamp(12px, 3vw, 16px); padding: clamp(4px, 1vw, 8px);">✗</button>
-                        </td>
-                    `;
+                        row.innerHTML = `<td>${name}</td><td colspan="${isEditMode ? 8 : 7}">❌ Baneado</td>`;
                         return;
                     }
 
                     playersActive++;
-                    activePlayerRank++;
+                    rankCounter++;
+
                     let nameHtml = name;
-                    if (activePlayerRank <= 5) {
-                        const starColors = ['#FFD700', '#FFC107', '#FFFF00', '#FFFFE0', '#FFFACD'];
-                        const starIcons = ['🌟', '✶', '★', '✶', '⭑'];
-                        const rank = activePlayerRank - 1;
-                        const starShadow = '-1px -1px 0 #4A4A4A, 1px -1px 0 #4A4A4A, -1px 1px 0 #4A4A4A, 1px 1px 0 #4A4A4A';
-                        let currentStarFontSize = activePlayerRank === 2 ? '20px' : '18px';
-                        nameHtml += `<span style="position: absolute; top: 1px; right: 4px; font-size: ${currentStarFontSize}; color: ${starColors[rank]}; text-shadow: ${starShadow};" title="Top ${activePlayerRank} donador total">${starIcons[rank]}</span>`;
+                    if (rankCounter <= 5) {
+                        const medalIcons = ['🥇', '🥈', '🥉', '🏅', '🏅'];
+                        const medalSizes = [22, 20, 18, 16, 14];
+                        const rankIdx = rankCounter - 1;
+                        nameHtml += `<span class="rank-medal" style="font-size:${medalSizes[rankIdx]}px" title="Top ${rankCounter} histórico">${medalIcons[rankIdx]}</span>`;
                     }
 
-                    const semanal = (player.current || 0) - (player.previous || 0);
-                    const weeklyGoal = goalDaily * 7;
-                    const weeklyExcess = Math.max(0, semanal - weeklyGoal);
-                    const weeklyDeficit = Math.max(0, weeklyGoal - semanal);
-                    const availableExcess = Math.max(0, player.accumulatedExcess || 0);
-                    const deficitDraw = Math.min(weeklyDeficit, availableExcess);
-
-                    // LÓGICA DE EFICIENCIA EN VIVO
-                    // Para mostrar el valor "Neto" que realmente se guardará.
-                    const oneWeek = (goalDaily || 0) * 7;
-                    const oneMonth = oneWeek * 4;
-                    const currentAccumulated = player.accumulatedExcess || 0;
-                    let efficiency = 1.0;
-
-                    if (currentAccumulated >= (oneMonth * 5)) {
-                        efficiency = 0.05;  // Tier 4
-                    } else if (currentAccumulated >= (oneMonth * 3)) {
-                        efficiency = 0.10;  // Tier 3
-                    } else if (currentAccumulated >= oneMonth) {
-                        efficiency = 0.50;  // Tier 2
-                    } else {
-                        efficiency = 1.0;   // Tier 1
+                    let customStyleBase = `font-weight: 600;`;
+                    if (player.nameColor) customStyleBase += ` color: ${player.nameColor};`;
+                    if (player.cellBgColor && (player.cellBgColor !== '#ffffff' || player.cellBgOpacity < 1)) {
+                        let op = player.cellBgOpacity !== undefined ? player.cellBgOpacity : 1;
+                        if (op < 1) {
+                            let r = parseInt(player.cellBgColor.slice(1, 3), 16);
+                            let g = parseInt(player.cellBgColor.slice(3, 5), 16);
+                            let b = parseInt(player.cellBgColor.slice(5, 7), 16);
+                            customStyleBase += ` background-color: rgba(${r}, ${g}, ${b}, ${op});`;
+                        } else {
+                            customStyleBase += ` background-color: ${player.cellBgColor};`;
+                        }
+                    }
+                    if (player.nameBorderSize && player.nameBorderSize !== 'none') customStyleBase += ` -webkit-text-stroke: ${player.nameBorderSize} ${player.nameBorderColor || '#000000'};`;
+                    if (player.nameFont && player.nameFont !== 'default') customStyleBase += ` font-family: ${player.nameFont};`;
+                    if (player.nameSize && player.nameSize !== 'default') customStyleBase += ` font-size: ${player.nameSize};`;
+                    if (player.nameAlign && player.nameAlign !== 'default') customStyleBase += ` text-align: ${player.nameAlign};`;
+                    if (player.nameStyle) {
+                        if (player.nameStyle.includes('italic')) customStyleBase += ` font-style: italic;`;
+                        if (player.nameStyle.includes('bold')) customStyleBase += ` font-weight: bold;`;
+                        if (player.nameStyle === 'normal') customStyleBase = customStyleBase.replace('font-weight: 600;', 'font-weight: normal;');
                     }
 
-                    const effectiveWeeklyExcess = weeklyExcess * efficiency;
-                    const finalPotentialExcess = availableExcess - deficitDraw + effectiveWeeklyExcess;
+                    if (player.isNew) {
+                        let actionsHtmlNew = '';
+                        if (isEditMode || window.isStyleEditMode) {
+                            actionsHtmlNew = '<td style="text-align: center;">';
+                            if (window.isStyleEditMode) {
+                                actionsHtmlNew += `<button class="btn btn-edit" style="background-color: #6f42c1; margin-left: 4px;" title="Editar estilo" onclick="openStyleEditor('${name}')">🎨</button>`;
+                            }
+                            actionsHtmlNew += '</td>';
+                        }
+                        row.innerHTML = `
+                            <td style="${customStyleBase} padding: 16px 5px; position: relative;">
+                                ${nameHtml}
+                                <br><span style="color: #28a745; font-size: 0.8em; font-weight: normal; font-style: normal;">[NUEVO]</span>
+                            </td>
+                            <td>-</td><td>${formatNumber(player.current)}</td>
+                            <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+                            ${(isEditMode || window.isStyleEditMode) ? actionsHtmlNew : ''}
+                        `;
+                        return;
+                    }
 
+                    const semanal = Math.max(0, (player.current || 0) - (player.previous || 0));
                     const calc = calculatePercentages(player);
+
                     let metaContent = `${calc.metaPerc.toFixed(1)}%`;
-                    if (maxWeeklyDonation > 0 && (player.current - player.previous) === maxWeeklyDonation) {
+                    if (semanal > 0 && semanal === maxWeeklyDonation) {
                         metaContent += ' <span title="Mayor donación de la semana">⭐</span>';
                     }
 
-                    let deficitHtml = '';
-                    if (deficitDraw > 0) {
-                        deficitHtml = `<br/><span style="color: red;">(-${formatNumber(deficitDraw)})</span>`;
-                    }
+                    const acc = player.accumulatedExcess || 0;
+                    const oneWeek = goalDaily * 7;
+                    const oneMonth = oneWeek * 4;
+                    let tierColor = '#28a745', tierTitle = 'Tier 1: 100%';
+                    if (acc >= oneMonth * 5) { tierColor = '#343a40'; tierTitle = 'Tier 4: 5%'; }
+                    else if (acc >= oneMonth * 3) { tierColor = '#dc3545'; tierTitle = 'Tier 3: 10%'; }
+                    else if (acc >= oneMonth) { tierColor = '#ffc107'; tierTitle = 'Tier 2: 50%'; }
 
-                    totalSemanal += calc.semanal;
-                    totalAcumulado += (player.total || 0);
-                    totalAcumuladoExceso += finalPotentialExcess;
-
-                    // Calculo de Color de Nivel de Acumulado (Tier Color)
-                    const oneWeekC = (goalDaily || 0) * 7;
-                    const oneMonthC = oneWeekC * 4;
-                    const acc = finalPotentialExcess;
-                    let tierColor = '#28a745'; // Default Green (Tier 1)
-                    let tierTitle = 'Nivel Verde: Eficiencia 100%';
-
-                    if (acc >= (oneMonthC * 5)) {
-                        tierColor = '#343a40'; // Black (Tier 4)
-                        tierTitle = 'Nivel Tope: Eficiencia 5%';
-                    } else if (acc >= (oneMonthC * 3)) {
-                        tierColor = '#dc3545'; // Red (Tier 3)
-                        tierTitle = 'Nivel Rojo: Eficiencia 10%';
-                    } else if (acc >= oneMonthC) {
-                        tierColor = '#ffc107'; // Yellow (Tier 2)
-                        tierTitle = 'Nivel Amarillo: Eficiencia 50%';
-                    }
-
-                    // Estilo para el triángulo discreto en la esquina superior izquierda
                     const triangleMarker = `<div style="position: absolute; top: 0; left: 0; width: 0; height: 0; border-top: 8px solid ${tierColor}; border-right: 8px solid transparent;" title="${tierTitle}"></div>`;
 
-                    if (isEditMode && auth.currentUser) {
-                        const actionsHtml = `<td style="text-align: center; padding: 8px;">
-                        <button class="btn btn-edit" onclick="enableEditing('${name}')" title="Editar jugador">✏️</button>
-                    </td>`;
-                        row.innerHTML = `<td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}</td><td>${formatNumber(player.previous || 0)}</td><td>${formatNumber(player.current || 0)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(calc.semanal)}</td><td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td><td style="position: relative;" title="${tierTitle}">${triangleMarker}${formatNumber(finalPotentialExcess)}${deficitHtml}${formatExtraDonationTime(finalPotentialExcess / (goalDaily || 1))}</td><td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>${actionsHtml}`;
-                    } else {
-                        row.innerHTML = `<td style="font-weight: 600; padding: 16px 5px; position: relative;">${nameHtml}</td><td>${formatNumber(player.previous || 0)}</td><td>${formatNumber(player.current || 0)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(calc.semanal)}</td><td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td><td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td><td style="position: relative;" title="${tierTitle}">${triangleMarker}${formatNumber(finalPotentialExcess)}${deficitHtml}${formatExtraDonationTime(finalPotentialExcess / (goalDaily || 1))}</td><td class="${getColorClass(calc.totalPerc, 'total')}">${formatNumber(player.total || 0)}</td>`;
+                    // Lógica de déficit visual (en rojo debajo del acumulado)
+                    let deficitHtml = '';
+                    if (calc.covered > 0) {
+                        deficitHtml = `<br/><span style="color: red; font-size: 0.85em;">(-${formatNumber(calc.covered)})</span>`;
                     }
 
+                    if (editingPlayer === name) {
+                        // Fila en edición
+                        row.innerHTML = `
+                            <td style="font-weight: 600; padding: 16px 5px; position: relative;">
+                                <input type="text" id="edit-name-${name}" value="${name}" style="width:100%; font-weight:600; background:#e7f3ff;">
+                            </td>
+                            <td><input type="number" id="edit-previous-${name}" value="${player.previous || 0}" style="width:100%;"></td>
+                            <td><input type="number" id="edit-current-${name}" value="${player.current || 0}" style="width:100%;"></td>
+                            <td style="background:#f8f9fa;">${formatNumber(calc.semanal)}</td>
+                            <td style="background:#f8f9fa;">${formatNumber(calc.avgDaily)}</td>
+                            <td style="background:#f8f9fa;">${calc.metaPerc.toFixed(1)}%</td>
+                            <td><input type="number" id="edit-accumulated-${name}" value="${player.accumulatedExcess || 0}" style="width:100%;"></td>
+                            <td style="background:#f8f9fa;">${formatNumber(player.total || 0)}</td>
+                            <td style="text-align: center;">
+                                <button class="btn-save" onclick="saveEditing()">✓</button>
+                                <button class="btn btn-cancel" onclick="cancelEditing()">✗</button>
+                            </td>
+                        `;
+                    } else {
+                        // Fila normal
+                        let actionsHtml = '';
+                        if (isEditMode || window.isStyleEditMode) {
+                            actionsHtml = '<td style="text-align: center;">';
+                            if (isEditMode) {
+                                actionsHtml += `<button class="btn btn-edit" onclick="enableEditing('${name}')">✏️</button>`;
+                            }
+                            if (window.isStyleEditMode) {
+                                actionsHtml += `<button class="btn btn-edit" style="background-color: #6f42c1; margin-left: 4px;" title="Editar estilo" onclick="openStyleEditor('${name}')">🎨</button>`;
+                            }
+                            actionsHtml += '</td>';
+                        }
+                        row.innerHTML = `
+                            <td style="${customStyleBase} padding: 16px 5px; position: relative;">
+                                ${nameHtml}
+                            </td>
+                            <td>${formatNumber(player.previous)}</td>
+                            <td>${formatNumber(player.current)}</td>
+                            <td class="${getColorClass(calc.metaPerc, 'percentage')}">${formatNumber(semanal)}</td>
+                            <td class="${getColorClass(calc.avgDailyPerc, 'percentage')}">${formatNumber(calc.avgDaily)}</td>
+                            <td class="${getColorClass(calc.metaPerc, 'percentage')}">${metaContent}</td>
+                            <td style="position: relative;" title="${tierTitle}">${triangleMarker}${formatNumber(acc)}${deficitHtml}${formatExtraDonationTime(acc / (goalDaily || 1))}</td>
+                            <td>${formatNumber(player.total || 0)}</td>
+                            ${actionsHtml}
+                        `;
+                    }
+
+                    totalSemanal += semanal;
+                    totalAcumuladoHistorico += (player.total || 0);
+                    totalAcumuladoMochila += acc;
                 });
 
                 const avgSemanal = playersActive > 0 ? totalSemanal / playersActive : 0;
-                const colspan = isEditMode ? 9 : 8;
-
-                let footerContent = `📊 TOTALES (${playersActive} jugadores): ${formatNumber(totalSemanal)} donaciones semanales | Promedio: ${formatNumber(avgSemanal)} | Acumulado: ${formatNumber(totalAcumulado)}`;
-
-                tfoot.innerHTML = `<tr class="total-row"><td colspan="${colspan}">${footerContent}</td></tr>`;
+                tfoot.innerHTML = `<tr><td colspan="${isEditMode ? 9 : 8}">📊 TOTALES: ${formatNumber(totalSemanal)} semanales | Ø: ${formatNumber(avgSemanal)} | Histórico: ${formatNumber(totalAcumuladoHistorico)}</td></tr>`;
             } catch (error) {
                 console.error("Error crítico en renderTable:", error);
             }
-
-
         }
 
 
@@ -2652,60 +2772,6 @@
         // --- FUNCIONES DE ACTUALIZACIÓN DE DATOS (ADMIN) ---
 
         // Función updatePlayers obsoleta eliminada (estaba duplicada)
-
-
-        async function startNewWeek() {
-            if (!auth.currentUser) return;
-
-            const weeklyGoal = goalDaily * 7;
-            const updates = {};
-
-            Object.keys(players).forEach(name => {
-                const player = players[name];
-
-                // Si está baneado, no hacemos nada (o podríamos resetear, depende la lógica, dejémoslo quieto)
-                if (player.absent) return;
-
-                // LÓGICA CRÍTICA: JUGADORES NUEVOS (Modo Referencia)
-                if (player.isNew) {
-                    // Simplemente "oficializamos" su entrada.
-                    // Su 'current' se convierte en el 'previous' de la semana siguiente.
-                    // NO calculamos deuda ni exceso esta vez.
-                    player.previous = player.current || 0;
-                    player.isNew = false; // Ya no es nuevo para la próxima
-                } else {
-                    // LÓGICA ESTÁNDAR (Jugadores Activos)
-                    const previous = player.previous || 0;
-                    const current = player.current || 0;
-                    const weeklyDonation = current - previous;
-
-                    // Calcular Exceso o Déficit
-                    if (weeklyDonation >= weeklyGoal) {
-                        // Superávit: Se suma al acumulado
-                        const surplus = weeklyDonation - weeklyGoal;
-                        player.accumulatedExcess = (player.accumulatedExcess || 0) + surplus;
-                    } else {
-                        // Déficit: Se descuenta del acumulado
-                        const deficit = weeklyGoal - weeklyDonation;
-                        const availableExcess = Math.max(0, player.accumulatedExcess || 0);
-                        const amountToDeduct = Math.min(deficit, availableExcess);
-
-                        // Restamos lo que se pudo cubrir
-                        player.accumulatedExcess = availableExcess - amountToDeduct;
-                        // Nota: El "déficit no cubierto" no se guarda como deuda negativa en este modelo lineal simple,
-                        // simplemente se queda en 0 acumulado y ya. (Según lógica Lineal v1)
-                    }
-
-                    // AVANZAR SEMANA: El 'current' actual es el 'previous' de la siguiente.
-                    player.previous = current;
-                }
-            });
-
-            weekStart = Date.now(); // Guardar timestamp real de inicio
-            showUnsavedIndicator();
-            renderTable();
-            showStatus('🔄 Nueva semana iniciada. Los "Nuevos" ahora son activos.', 'success');
-        }
 
 
         function levenshteinDistance(str1, str2) {
@@ -3057,26 +3123,35 @@
             currentDataForReview = {};
         }
 
+        function undoImport() {
+            if (!playersBackup) return;
+            players = JSON.parse(JSON.stringify(playersBackup));
+            playersBackup = null;
+            renderTable();
+            showStatus('⏪ Importación deshecha.', 'success');
+            const undoBtn = document.getElementById('undoImportBtn');
+            if (undoBtn) undoBtn.style.display = 'none';
+        }
+
         async function confirmNameMapping() {
             console.log('--- Iniciando confirmNameMapping ---');
             try {
                 const newNames = Object.keys(currentDataForReview);
-                console.log('Nombres a procesar:', newNames.length);
-
                 const pendingCount = newNames.filter(name => !nameMapping.hasOwnProperty(name)).length;
 
                 if (pendingCount > 0) {
                     if (!confirm(`Aún hay ${pendingCount} nombres pendientes de revisión. ¿Deseas procesarlos como nuevos usuarios?`)) {
-                        console.log('Usuario canceló confirmación de pendientes');
                         return;
                     }
-
                     newNames.forEach(name => {
-                        if (!nameMapping.hasOwnProperty(name)) {
-                            nameMapping[name] = null;
-                        }
+                        if (!nameMapping.hasOwnProperty(name)) nameMapping[name] = null;
                     });
                 }
+
+                // BACKUP PARA DESHACER
+                playersBackup = JSON.parse(JSON.stringify(players));
+                const undoBtn = document.getElementById('undoImportBtn');
+                if (undoBtn) undoBtn.style.display = 'flex';
 
                 const mappedData = {};
                 Object.keys(currentDataForReview).forEach(newName => {
@@ -3085,64 +3160,110 @@
                     mappedData[finalName] = currentDataForReview[newName];
                 });
 
-                console.log('Datos mapeados:', Object.keys(mappedData).length);
-
                 hideReview();
 
-                console.log('Aplicando cambios de mapeo...');
+                // CÁLCULOS MAESTROS
+                const weeklyGoal = goalDaily * 7;
+                const oneMonth = weeklyGoal * 4;
 
-                // Aplicar cambios directamente al estado local
                 Object.keys(mappedData).forEach(name => {
                     const donationValue = mappedData[name];
 
                     if (!players[name]) {
-                        // Es un jugador totalmente nuevo
+                        // Es un jugador totalmente nuevo (Semana de Referencia)
+                        // TENÍA = 0 (no tenía nada), TIENE = donación ingresada
+                        // Todo lo demás = "-" (sin cálculos esta semana)
                         players[name] = {
                             previous: 0,
                             current: donationValue,
                             accumulatedExcess: 0,
                             total: 0,
-                            isNew: true, // Marcar como nuevo para la lógica de referencia
+                            total_base: 0,
+                            acc_base: 0,
+                            deficit_covered: 0,
+                            isNew: true,
                             absent: false
                         };
                     } else {
-                        // Es un jugador existente, actualizamos su donación actual
-                        players[name].current = donationValue;
-                        players[name].isNew = false; // Asegurar que no sea tratado como nuevo si ya existía
-                        players[name].absent = false;
+                        // Jugador existente
+                        const player = players[name];
+
+                        // LÓGICA DE AVANCE NATURAL DE SEMANA
+                        // El valor que tenía "Actualmente" pasa a ser su "Tenía" (Previous)
+                        // Y el nuevo valor importado se convierte en su nuevo "Tiene" (Current)
+                        const previous = player.current || 0;
+                        const current = donationValue;
+                        const weeklyDonation = Math.max(0, current - previous);
+
+                        // Inicializar bases si no existen (migración o seguridad)
+                        if (player.total_base === undefined) player.total_base = player.total || 0;
+                        if (player.acc_base === undefined) player.acc_base = player.accumulatedExcess || 0;
+
+                        // 1. ACTUALIZAR TOTAL HISTÓRICO
+                        // Sumamos lo nuevo a la BASE histórica (sagrada mientras no se guarde)
+                        player.total = (player.total_base || 0) + weeklyDonation;
+
+                        // 2. CALCULAR ACUMULADO (CON TIERS)
+                        // Usamos SIEMPRE la base (saldo inicial) para calcular
+                        const accStartingBalance = player.acc_base || 0;
+
+                        if (weeklyDonation >= weeklyGoal) {
+                            // Superávit
+                            const surplus = weeklyDonation - weeklyGoal;
+
+                            let efficiency = 1.0;
+                            if (accStartingBalance >= (oneMonth * 5)) efficiency = 0.05;
+                            else if (accStartingBalance >= (oneMonth * 3)) efficiency = 0.10;
+                            else if (accStartingBalance >= oneMonth) efficiency = 0.50;
+
+                            // El nuevo saldo es: Lo que tenía al inicio + (Exceso * Eficiencia)
+                            player.accumulatedExcess = accStartingBalance + (surplus * efficiency);
+                            player.deficit_covered = 0; // No hubo déficit
+                        } else {
+                            // Déficit
+                            const deficit = weeklyGoal - weeklyDonation;
+                            // Calculamos cuánto cubrimos realmente usando la base INTACTA
+                            const covered = Math.min(deficit, accStartingBalance);
+
+                            // El nuevo saldo es: Lo que tenía al inicio - Lo cubierto
+                            player.accumulatedExcess = accStartingBalance - covered;
+
+                            // Guardamos el dato fijo para visualización perfecta posterior
+                            player.deficit_covered = covered;
+                        }
+
+                        // 3. ACTUALIZAR ESTADO
+                        player.previous = previous;
+                        player.current = current;
+                        player.isNew = false;
+                        player.absent = false;
+
+                        // NOTA CRÍTICA: NO actualizamos total_base ni acc_base aquí.
+                        // Eso solo debe ocurrir al darle al botón GUARDAR.
                     }
                 });
 
-                // DETECCIÓN DE JUGADORES AUSENTES (BANEADOS)
-                // Si el usuario pega una lista completa, los que faltan deberían ser baneados/ausentes.
+                // DETECCIÓN DE BANEADOS / LIMPIEZA
                 const allCurrentNames = Object.keys(players);
-                // mappedData tiene las claves finales (nombres reales)
                 const updatedNames = Object.keys(mappedData);
 
-                // Buscar jugadores que existen, NO están en la lista nueva y NO estaban ya baneados
-                const missing = allCurrentNames.filter(name => !updatedNames.includes(name) && !players[name].absent);
-
-                if (missing.length > 0) {
-                    // Preguntar al usuario para evitar banear en cargas parciales
-                    if (confirm(`⚠️ Hay ${missing.length} jugadores registrados que NO están en la lista introducida.\n\n¿Deseas marcarlos como BANEADOS/AUSENTES?\n\n[Aceptar] = Marcar como Baneados (0 donación)\n[Cancelar] = Mantenerlos activos (Cargas parciales)`)) {
-                        missing.forEach(name => {
-                            players[name].absent = true;
-                            players[name].current = 0; // Resetear donación actual al ser baneado
-                        });
-                        showStatus(`🚫 ${missing.length} jugadores marcados como baneados.`, 'warning');
+                allCurrentNames.forEach(name => {
+                    if (!updatedNames.includes(name)) {
+                        if (players[name].absent) {
+                            delete players[name]; // Segunda semana ausente -> Eliminar
+                        } else {
+                            players[name].absent = true; // Primera semana ausente -> Marcar
+                            players[name].current = players[name].previous;
+                        }
                     }
-                }
+                });
 
                 showUnsavedIndicator();
                 renderTable();
-                showStatus(`✅ ${Object.keys(mappedData).length} registros procesados correctamente.`, 'success');
-                console.log('Mapeo finalizado y tabla renderizada.');
-
                 hideManual();
-                showStatus('✅ Datos importados localmente. Recuerda usar el botón ✓ para guardar en la nube o iniciar semana.', 'success');
+                showStatus('✅ Datos procesados localmente. Revisa la tabla y pulsa "Cerrar Semana" para confirmar.', 'success');
             } catch (error) {
                 console.error('CRITICAL ERROR in confirmNameMapping:', error);
-                alert('Error crítico al importar: ' + error.message);
                 showStatus('❌ Error crítico: ' + error.message, 'error');
             }
         }
@@ -3260,7 +3381,10 @@
                     datos_core: {
                         previous: player.previous || 0,
                         current: player.current || 0,
-                        accumulated_base: player.accumulatedExcess || 0
+                        accumulated_base: player.accumulatedExcess || 0,
+                        total_base: player.total_base || 0,
+                        acc_base: player.acc_base || 0,
+                        deficit_covered: player.deficit_covered || 0
                     },
                     estado_calculado: {
                         semanal: semanal,
@@ -3272,7 +3396,16 @@
                     },
                     flags: {
                         is_new: player.isNew || false,
-                        is_absent: player.absent || false
+                        is_absent: player.absent || false,
+                        nameColor: player.nameColor || null,
+                        nameStyle: player.nameStyle || null,
+                        nameFont: player.nameFont || null,
+                        nameSize: player.nameSize || null,
+                        nameAlign: player.nameAlign || null,
+                        cellBgColor: player.cellBgColor || null,
+                        nameBorderColor: player.nameBorderColor || null,
+                        nameBorderSize: player.nameBorderSize || null,
+                        cellBgOpacity: player.cellBgOpacity !== undefined ? player.cellBgOpacity : null
                     },
                     total_historico: player.total || 0
                 };
@@ -3431,8 +3564,20 @@
                                 current: datosCore.current || 0,
                                 accumulatedExcess: datosCore.accumulated_base || 0,
                                 total: player.total_historico || 0,
+                                total_base: datosCore.total_base || (player.total_historico || 0),
+                                acc_base: datosCore.acc_base || (datosCore.accumulated_base || 0),
+                                deficit_covered: datosCore.deficit_covered || 0,
                                 isNew: player.flags?.is_new || false,
-                                absent: player.flags?.is_absent || false
+                                absent: player.flags?.is_absent || false,
+                                nameColor: player.flags?.nameColor || null,
+                                nameStyle: player.flags?.nameStyle || null,
+                                nameFont: player.flags?.nameFont || null,
+                                nameSize: player.flags?.nameSize || null,
+                                nameAlign: player.flags?.nameAlign || null,
+                                cellBgColor: player.flags?.cellBgColor || null,
+                                nameBorderColor: player.flags?.nameBorderColor || null,
+                                nameBorderSize: player.flags?.nameBorderSize || null,
+                                cellBgOpacity: player.flags?.cellBgOpacity !== undefined ? player.flags?.cellBgOpacity : null
                             };
                         });
 
@@ -3604,75 +3749,33 @@
 
         // --- FUNCIONES DE GUARDADO CENTRALIZADO ---
 
-        function showSaveOptions() {
-            if (!auth.currentUser) {
-                showStatus('❌ Debes iniciar sesión como admin.', 'error');
-                return;
-            }
-            hideAllSections(); // Asegurar que no haya solapamientos
-            document.getElementById('saveOptionsModal').classList.add('active');
-        }
+        async function startNewWeek() {
+            if (!auth.currentUser) return;
 
-        function hideSaveOptions() {
-            document.getElementById('saveOptionsModal').classList.remove('active');
-        }
+            // Shift de valores: El "Tiene" de hoy es el "Tenía" de mañana
+            Object.keys(players).forEach(name => {
+                const player = players[name];
+                player.previous = player.current;
+                player.total_base = player.total || 0;
+                player.acc_base = player.accumulatedExcess || 0;
+            });
 
-        async function executeSave(mode) {
-            hideSaveOptions();
+            weekStart = Date.now();
+            playersBackup = null;
+            const undoBtn = document.getElementById('undoImportBtn');
+            if (undoBtn) undoBtn.style.display = 'none';
 
-            // Verificar si hay datos manuales pendientes (Vista Previa activa)
-            const manualText = document.getElementById('manualInput').value.trim();
-            let pendingDataProcessed = false;
-
-            if (manualText && mode === 'NEW_WEEK') {
-                if (confirm('📝 Hay datos manuales en la vista previa. ¿Quieres usarlos para cerrar la semana?\n(Si dices Cancelar, se ignorarán y se usará solo lo que ya estaba guardado)')) {
-                    // Procesar datos manuales rápidamente
-                    const lines = manualText.split('\n');
-                    const updates = {};
-                    let validLines = 0;
-
-                    lines.forEach(line => {
-                        const parts = line.split(',');
-                        if (parts.length === 2) {
-                            const name = parts[0].trim();
-                            const val = parseInt(parts[1].trim());
-                            if (name && !isNaN(val) && val >= 0) {
-                                updates[name] = val;
-                                validLines++;
-                            }
-                        }
-                    });
-
-                    if (validLines > 0) {
-                        // Aplicar actualizaciones a `players`
-                        updatePlayers(updates); // Reutilizamos la función existente que ya maneja la lógica correcta
-                        pendingDataProcessed = true;
-
-                        // Limpiar entrada manual
-                        document.getElementById('manualInput').value = '';
-                        renderTable(); // Refrescar para asegurar que la tabla base esté al día antes del cierre
-                    }
-                }
+            // Guardamos el nuevo estado base localmente
+            if (indexedDBInitialized) {
+                await saveToLocal({
+                    players,
+                    goalDaily,
+                    lastUpdate: Date.now(),
+                    weekStart
+                });
             }
 
-            if (mode === 'NEW_WEEK') {
-                let msg = '⚠️ ¿Estás seguro de CERRAR la semana actual?';
-                if (pendingDataProcessed) msg += '\n(Se incluirán los datos manuales que acabas de confirmar)';
-                msg += '\n\nEsto calculará los acumulados finales, reiniciará los contadores a cero y guardará todo en Firebase.';
-
-                if (!confirm(msg)) {
-                    return;
-                }
-                await startNewWeek();
-                await saveData(); // Guardar los cambios post-cierre
-                document.getElementById('manualSection').classList.remove('active'); // Ocultar panel manual si estaba abierto
-
-                showStatus('✅ ¡Semana cerrada y nueva semana iniciada correctamente!', 'success');
-            } else {
-                // UPDATE
-                await saveData();
-                showStatus('✅ Datos guardados en Firebase correctamente (Semana actual continúa).', 'success');
-            }
+            renderTable();
         }
 
         function hidemanualWrapper() {
@@ -3697,6 +3800,90 @@
             document.getElementById('loginSection').classList.remove('active');
             document.getElementById('loginEmail').value = '';
             document.getElementById('loginPass').value = '';
+        }
+
+        // --- FUNCIONES DEL MODAL DE OPCIONES DE ENTRADA DE DATOS ---
+
+        function showDataInputOptions() {
+            if (!auth.currentUser) return showLogin();
+            hideAllSections();
+            document.getElementById('dataInputOptionsModal').classList.add('active');
+        }
+
+        function hideDataInputOptions() {
+            document.getElementById('dataInputOptionsModal').classList.remove('active');
+        }
+
+        function openManualTextEntry() {
+            hideDataInputOptions();
+            showManual();
+        }
+
+        function handleJsonFileUpload(event) {
+            hideDataInputOptions();
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validar que sea un archivo JSON
+            if (!file.name.toLowerCase().endsWith('.json')) {
+                showStatus('❌ Solo se aceptan archivos .json', 'error');
+                event.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const jsonData = JSON.parse(e.target.result);
+
+                    if (!Array.isArray(jsonData)) {
+                        showStatus('❌ El JSON no tiene el formato esperado (debe ser un array).', 'error');
+                        event.target.value = '';
+                        return;
+                    }
+
+                    // Extraer nick y total[0] de cada miembro
+                    const lines = [];
+                    let skipped = 0;
+
+                    jsonData.forEach(member => {
+                        const nick = member.nick;
+                        const totalDonation = Array.isArray(member.total) ? member.total[0] : null;
+
+                        if (nick && totalDonation !== null && totalDonation !== undefined) {
+                            lines.push(`${nick},${totalDonation}`);
+                        } else {
+                            skipped++;
+                            console.warn('Miembro omitido (datos incompletos):', member);
+                        }
+                    });
+
+                    if (lines.length === 0) {
+                        showStatus('❌ No se encontraron datos válidos en el JSON.', 'error');
+                        event.target.value = '';
+                        return;
+                    }
+
+                    // Abrir el panel manual y rellenar el textarea con los datos extraídos
+                    hideAllSections();
+                    document.getElementById('manualSection').classList.add('active');
+                    document.getElementById('manualInput').value = lines.join('\n');
+
+                    let statusMsg = `✅ ${lines.length} miembros cargados desde el JSON.`;
+                    if (skipped > 0) {
+                        statusMsg += ` (${skipped} omitidos por datos incompletos)`;
+                    }
+                    showStatus(statusMsg, 'success');
+
+                } catch (err) {
+                    console.error('Error al parsear JSON:', err);
+                    showStatus('❌ Error al leer el archivo JSON: ' + err.message, 'error');
+                }
+
+                // Limpiar el input file para permitir subir el mismo archivo otra vez
+                event.target.value = '';
+            };
+            reader.readAsText(file);
         }
 
         function showManual() {
@@ -3738,6 +3925,130 @@
 
         function hideInfo() {
             document.getElementById('infoModal').classList.remove('active');
+        }
+
+        window.isStyleEditMode = false;
+        function toggleStyleMode() {
+            window.isStyleEditMode = !window.isStyleEditMode;
+            const btn = document.getElementById('styleModeBtn');
+            if (btn) {
+                if (window.isStyleEditMode) {
+                    btn.style.backgroundColor = '#28a745';
+                    btn.innerHTML = '✅ Fin Editar Estilos';
+                } else {
+                    btn.style.backgroundColor = '#6f42c1';
+                    btn.innerHTML = '🖌️ Editar Estilos';
+                }
+            }
+            renderTable();
+        }
+
+        let currentStylingPlayer = null;
+        function updateStylePreview() {
+            const previewName = document.getElementById('stylePreviewName');
+            const previewContainer = document.getElementById('stylePreviewContainer');
+            if (!previewName || !previewContainer) return;
+            
+            const color = document.getElementById('styleColorPicker').value;
+            const bgColor = document.getElementById('styleBgColorPicker').value;
+            const font = document.getElementById('styleFont').value;
+            const size = document.getElementById('styleFontSize').value;
+            const style = document.getElementById('styleSelect').value;
+            const align = document.getElementById('styleAlign').value;
+            const borderColor = document.getElementById('styleBorderColorPicker').value;
+            const borderSize = document.getElementById('styleBorderSize').value;
+            const bgOpacity = parseInt(document.getElementById('styleBgOpacity').value) / 100;
+
+            previewName.style.color = color;
+            
+            if (bgColor !== '#ffffff' || bgOpacity < 1) {
+                const r = parseInt(bgColor.slice(1, 3), 16);
+                const g = parseInt(bgColor.slice(3, 5), 16);
+                const b = parseInt(bgColor.slice(5, 7), 16);
+                previewContainer.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${bgOpacity})`;
+            } else {
+                previewContainer.style.backgroundColor = '#fff';
+            }
+            previewName.style.fontFamily = font !== 'default' ? font : 'inherit';
+            previewName.style.fontSize = size !== 'default' ? size : 'inherit';
+            
+            // Adjust flex properties for container based on align
+            if (align === 'left') previewContainer.style.justifyContent = 'flex-start';
+            else if (align === 'right') previewContainer.style.justifyContent = 'flex-end';
+            else previewContainer.style.justifyContent = 'center';
+
+            previewName.style.fontStyle = style.includes('italic') ? 'italic' : 'normal';
+            previewName.style.fontWeight = style.includes('bold') ? 'bold' : (style === 'normal' ? 'normal' : '600');
+            previewName.style.webkitTextStroke = borderSize !== 'none' ? `${borderSize} ${borderColor}` : '';
+        }
+
+        function openStyleEditor(name) {
+            if (!isEditMode && !window.isStyleEditMode) return;
+            currentStylingPlayer = name;
+            const p = players[name];
+            document.getElementById('stylePlayerName').textContent = name;
+            
+            const previewName = document.getElementById('stylePreviewName');
+            if (previewName) previewName.textContent = name;
+
+            document.getElementById('styleColorPicker').value = p.nameColor || '#333333';
+            document.getElementById('styleBgColorPicker').value = p.cellBgColor || '#ffffff';
+            document.getElementById('styleSelect').value = p.nameStyle || 'bold';
+            document.getElementById('styleFont').value = p.nameFont || 'default';
+            document.getElementById('styleFontSize').value = p.nameSize || 'default';
+            document.getElementById('styleAlign').value = p.nameAlign || 'default';
+            document.getElementById('styleBorderColorPicker').value = p.nameBorderColor || '#000000';
+            document.getElementById('styleBorderSize').value = p.nameBorderSize || 'none';
+            document.getElementById('styleBgOpacity').value = p.cellBgOpacity !== undefined ? Math.round(p.cellBgOpacity * 100) : 100;
+            document.getElementById('styleBgOpacityValue').textContent = document.getElementById('styleBgOpacity').value + '%';
+            
+            updateStylePreview();
+            document.getElementById('styleModal').classList.add('active');
+        }
+
+        function saveStyle() {
+            if (!currentStylingPlayer || !players[currentStylingPlayer]) return;
+            players[currentStylingPlayer].nameColor = document.getElementById('styleColorPicker').value;
+            players[currentStylingPlayer].cellBgColor = document.getElementById('styleBgColorPicker').value;
+            players[currentStylingPlayer].nameStyle = document.getElementById('styleSelect').value;
+            players[currentStylingPlayer].nameFont = document.getElementById('styleFont').value;
+            players[currentStylingPlayer].nameSize = document.getElementById('styleFontSize').value;
+            players[currentStylingPlayer].nameAlign = document.getElementById('styleAlign').value;
+            players[currentStylingPlayer].nameBorderColor = document.getElementById('styleBorderColorPicker').value;
+            players[currentStylingPlayer].nameBorderSize = document.getElementById('styleBorderSize').value;
+            players[currentStylingPlayer].cellBgOpacity = parseInt(document.getElementById('styleBgOpacity').value) / 100;
+            document.getElementById('styleModal').classList.remove('active');
+            renderTable();
+            saveData(null, false).then(() => {
+                showStatus(`Estilo guardado para ${currentStylingPlayer}.`, 'success');
+            }).catch(err => {
+                console.error('Error guardando estilo:', err);
+                showStatus('Error al guardar el estilo.', 'error');
+            });
+        }
+
+        function resetStyle() {
+            if (!currentStylingPlayer || !players[currentStylingPlayer]) return;
+            if (!confirm('¿Seguro que quieres restablecer el estilo por defecto de este jugador?')) return;
+            
+            delete players[currentStylingPlayer].nameColor;
+            delete players[currentStylingPlayer].cellBgColor;
+            delete players[currentStylingPlayer].nameStyle;
+            delete players[currentStylingPlayer].nameFont;
+            delete players[currentStylingPlayer].nameSize;
+            delete players[currentStylingPlayer].nameAlign;
+            delete players[currentStylingPlayer].nameBorderColor;
+            delete players[currentStylingPlayer].nameBorderSize;
+            delete players[currentStylingPlayer].cellBgOpacity;
+            
+            document.getElementById('styleModal').classList.remove('active');
+            renderTable();
+            saveData(null, false).then(() => {
+                showStatus(`Estilo restablecido para ${currentStylingPlayer}.`, 'success');
+            }).catch(err => {
+                console.error('Error restableciendo estilo:', err);
+                showStatus('Error al restablecer el estilo.', 'error');
+            });
         }
 
         function showStatus(message, type = 'success') {
